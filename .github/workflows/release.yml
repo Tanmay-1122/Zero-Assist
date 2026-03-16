@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  pages: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    name: CI Gate
+    uses: ./.github/workflows/ci.yml
+    with:
+      skip-emu-tests: true
+    secrets: inherit
+
+  release:
+    name: Build and Publish Release
+    runs-on: ubuntu-latest
+    needs: [ci]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Apply submodule patches
+        run: if ls patches/*.patch 1>/dev/null 2>&1; then cd zeroclaw && git apply ../patches/*.patch; fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, x86_64-linux-android, armv7-linux-androideabi, i686-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: zeroclaw-android -> target
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.jks
+
+      - name: Write signing properties
+        run: |
+          printf 'RELEASE_STORE_FILE=../release.jks\n' >> local.properties
+          printf 'RELEASE_STORE_PASSWORD=%s\n' "${{ secrets.RELEASE_STORE_PASSWORD }}" >> local.properties
+          printf 'RELEASE_KEY_ALIAS=%s\n' "${{ secrets.RELEASE_KEY_ALIAS }}" >> local.properties
+          printf 'RELEASE_KEY_PASSWORD=%s\n' "${{ secrets.RELEASE_KEY_PASSWORD }}" >> local.properties
+
+      - name: Build release AAR
+        run: ./gradlew :lib:assembleRelease
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease
+
+      - name: Rename APK
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/zeroclaw_android.apk
+
+      - name: Clean up signing material
+        if: always()
+        run: rm -f release.jks local.properties
+
+      - name: Publish AAR to GitHub Packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew :lib:publishReleasePublicationToGitHubPackagesRepository
+
+      - name: Extract tag version
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          CARGO_VERSION=$(grep '^version' zeroclaw-android/zeroclaw-ffi/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "::error::Tag v${TAG_VERSION} does not match Cargo.toml version ${CARGO_VERSION}"
+            exit 1
+          fi
+
+      - name: Detect pre-release
+        id: prerelease
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+-.+'; then
+            echo "flag=--prerelease" >> "$GITHUB_OUTPUT"
+            echo "Detected pre-release tag: $TAG"
+          else
+            echo "flag=" >> "$GITHUB_OUTPUT"
+            echo "Detected stable release tag: $TAG"
+          fi
+
+      - name: Extract ZeroClaw upstream version
+        id: upstream
+        run: |
+          ZC_VERSION=$(grep '^version' zeroclaw/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          ZC_COMMIT=$(git -C zeroclaw rev-parse --short HEAD)
+          echo "version=${ZC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit=${ZC_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "ZeroClaw upstream: v${ZC_VERSION} (${ZC_COMMIT})"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name="${{ steps.version.outputs.tag }}" \
+            --jq '.body' > /tmp/auto-notes.md
+          printf '## ZeroClaw Upstream\n' > /tmp/release-notes.md
+          printf 'Built against [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) v%s (`%s`)\n\n' \
+            "${{ steps.upstream.outputs.version }}" "${{ steps.upstream.outputs.commit }}" >> /tmp/release-notes.md
+          cat /tmp/auto-notes.md >> /tmp/release-notes.md
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file /tmp/release-notes.md \
+            ${{ steps.prerelease.outputs.flag }} \
+            lib/build/outputs/aar/lib-release.aar \
+            app/build/outputs/apk/release/zeroclaw_android.apk

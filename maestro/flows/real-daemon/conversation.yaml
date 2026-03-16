@@ -1,0 +1,34 @@
+appId: com.zeroclaw.android
+tags:
+  - real-daemon
+  - conversation
+---
+- runFlow: ../../subflows/complete-onboarding.yaml
+- runFlow: ../../subflows/start-daemon.yaml
+
+# Navigate to console
+- tapOn: "Console"
+
+# Send first message
+- tapOn: "Type a message"
+- inputText: "What is 2+2?"
+- tapOn: "Send message"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+
+# Send follow-up
+- tapOn: "Type a message"
+- inputText: "Now multiply that by 3"
+- tapOn: "Send message"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+
+# Send closing message
+- tapOn: "Type a message"
+- inputText: "Thank you"
+- tapOn: "Send message"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000

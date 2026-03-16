@@ -1,0 +1,21 @@
+appId: com.zeroclaw.android
+tags:
+  - journey
+  - settings
+---
+- runFlow: ../subflows/complete-onboarding.yaml
+
+# Navigate to Settings tab (no conflict with metric cards)
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Daemon"
+    timeout: 10000
+- assertVisible: "Security"
+
+# Scroll to bottom to find About (settings has 7+ sections)
+- scroll
+- scroll
+- scroll
+- scroll
+- scroll
+- assertVisible: "About"

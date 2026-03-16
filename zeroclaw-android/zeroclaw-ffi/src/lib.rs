@@ -1,0 +1,1572 @@
+/*
+ * Copyright 2026 ZeroClaw Community
+ *
+ * Licensed under the MIT License. See LICENSE in the project root.
+ */
+
+#![deny(missing_docs)]
+
+//! UniFFI-annotated facade for `ZeroClaw` Android bindings.
+//!
+//! This crate provides a thin FFI layer over the `ZeroClaw` daemon,
+//! exposing daemon lifecycle, health, cost, events, cron, skills, tools,
+//! and memory browsing functions to Kotlin via UniFFI-generated bindings.
+
+uniffi::setup_scaffolding!();
+
+mod auth_profiles;
+mod cost;
+mod cron;
+mod error;
+mod estop;
+mod events;
+mod ffi_health;
+mod gateway_client;
+mod health;
+mod memory_browse;
+mod models;
+mod repl;
+mod runtime;
+mod session;
+mod skills;
+mod streaming;
+mod tools_browse;
+mod traces;
+mod types;
+mod url_helpers;
+mod vision;
+mod workspace;
+
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::sync::Arc;
+
+pub use error::FfiError;
+
+/// Extracts a human-readable message from a caught panic payload.
+fn panic_detail(payload: &Box<dyn std::any::Any + Send>) -> String {
+    payload
+        .downcast_ref::<&str>()
+        .map(std::string::ToString::to_string)
+        .or_else(|| payload.downcast_ref::<String>().cloned())
+        .unwrap_or_else(|| "unknown panic".to_string())
+}
+
+/// Starts the `ZeroClaw` daemon with the given TOML configuration.
+///
+/// Parses `config_toml`, overrides paths using `data_dir` (typically
+/// `context.filesDir` from Kotlin), and spawns the gateway on
+/// `host:port`. All daemon components run as supervised async tasks.
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] for TOML parse failures,
+/// [`FfiError::StateError`] if the daemon is already running,
+/// [`FfiError::SpawnError`] on spawn failure,
+/// [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn start_daemon(
+    config_toml: String,
+    data_dir: String,
+    host: String,
+    port: u16,
+) -> Result<(), FfiError> {
+    catch_unwind(|| runtime::start_daemon_inner(config_toml, data_dir, host, port)).unwrap_or_else(
+        |e| {
+            Err(FfiError::InternalPanic {
+                detail: panic_detail(&e),
+            })
+        },
+    )
+}
+
+/// Stops the running `ZeroClaw` daemon.
+///
+/// Signals all component supervisors to shut down and waits for
+/// their tasks to complete.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn stop_daemon() -> Result<(), FfiError> {
+    catch_unwind(runtime::stop_daemon_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns a JSON string describing daemon and component health.
+///
+/// The JSON includes upstream health fields (`pid`, `uptime_seconds`,
+/// `components`) plus a `daemon_running` boolean.
+///
+/// # Errors
+///
+/// Returns [`FfiError::SpawnError`] on serialisation failure,
+/// [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_status() -> Result<String, FfiError> {
+    catch_unwind(runtime::get_status_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns structured health detail for all daemon components.
+///
+/// Unlike [`get_status`] which returns raw JSON, this function returns
+/// typed component-level data including restart counts and last errors.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_health_detail() -> Result<health::FfiHealthDetail, FfiError> {
+    catch_unwind(health::get_health_detail_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns health for a single named component.
+///
+/// Returns `None` if no component with the given name exists.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_component_health(name: String) -> Result<Option<health::FfiComponentHealth>, FfiError> {
+    catch_unwind(|| Ok(health::get_component_health_inner(name))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Sends a message through the full agent loop and returns the response.
+///
+/// Routes through [`zeroclaw::agent::process_message`] which provides
+/// memory recall, tool access, and proper workspace identity injection.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if agent processing fails,
+/// [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn send_message(message: String) -> Result<String, FfiError> {
+    catch_unwind(|| {
+        if estop::is_engaged() {
+            return Err(FfiError::EstopEngaged {
+                detail: "Emergency stop is engaged. Resume before sending messages.".into(),
+            });
+        }
+        runtime::send_message_inner(message)
+    })
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Validates a TOML config string without starting the daemon.
+///
+/// Parses `config_toml` using the same `toml::from_str::<Config>()` path
+/// as [`start_daemon`]. Returns an empty string on success, or a
+/// human-readable error message on parse failure.
+///
+/// No state mutation, no mutex acquisition, no file I/O.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn validate_config(config_toml: String) -> Result<String, FfiError> {
+    catch_unwind(|| runtime::validate_config_inner(config_toml)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the TOML config the running daemon was started with.
+///
+/// Useful for verifying the daemon's active configuration matches
+/// what the Kotlin layer expects. The returned TOML may differ from
+/// the original input because path overrides and default-filling
+/// have been applied during [`start_daemon`].
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if serialisation fails,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_running_config() -> Result<String, FfiError> {
+    catch_unwind(runtime::get_running_config_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Hot-swaps the default provider and model without restarting the daemon.
+///
+/// The change takes effect on the next message send. Does not persist
+/// to disk; the Kotlin layer is responsible for persisting the setting
+/// and rebuilding the TOML on next full restart.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn swap_provider(
+    provider: String,
+    model: String,
+    api_key: Option<String>,
+) -> Result<(), FfiError> {
+    catch_unwind(|| runtime::swap_provider_inner(provider, model, api_key)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Runs channel health checks without starting the daemon.
+///
+/// Parses the TOML config, overrides paths with `data_dir`, then
+/// instantiates each configured channel and calls `health_check()` with
+/// a timeout. Returns a JSON array of channel statuses.
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] on TOML parse failure,
+/// [`FfiError::SpawnError`] on channel-check or serialisation failure,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn doctor_channels(config_toml: String, data_dir: String) -> Result<String, FfiError> {
+    catch_unwind(|| runtime::doctor_channels_inner(config_toml, data_dir)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the names of all channels with non-null config sections in
+/// the running daemon's parsed TOML.
+///
+/// Useful for UI progress tracking during daemon startup -- the caller
+/// knows which channels to expect without re-parsing the TOML.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_configured_channel_names() -> Result<Vec<String>, FfiError> {
+    catch_unwind(runtime::get_configured_channel_names_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Binds a user identity to a channel's allowlist in the running daemon.
+///
+/// Appends `user_id` to the appropriate allowlist field for `channel_name`
+/// (e.g. `allowed_users` for Telegram, `allowed_numbers` for WhatsApp).
+/// Returns the field name used on success, or `"already_bound"` if the
+/// identity was already present.
+///
+/// **Important:** This mutates the in-memory config only. The caller must
+/// restart the daemon for the change to take effect on the live channel.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::ConfigError`] if `channel_name` is unknown or not configured,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn bind_channel_identity(channel_name: String, user_id: String) -> Result<String, FfiError> {
+    catch_unwind(|| runtime::bind_channel_identity_inner(channel_name, user_id)).unwrap_or_else(
+        |e| {
+            Err(FfiError::InternalPanic {
+                detail: panic_detail(&e),
+            })
+        },
+    )
+}
+
+/// Returns the current allowlist for a named channel from the running daemon.
+///
+/// Returns an empty list if the channel is configured but has no entries.
+/// Useful for checking whether channel binding is needed after setup.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::ConfigError`] if `channel_name` is unknown or not configured,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_channel_allowlist(channel_name: String) -> Result<Vec<String>, FfiError> {
+    catch_unwind(|| runtime::get_channel_allowlist_inner(channel_name)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists all auth profiles from the daemon's workspace.
+///
+/// Reads `auth-profiles.json` from the running daemon's workspace directory
+/// and returns all stored profiles. Returns an empty list if the file does
+/// not exist yet (no profiles have been stored).
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on I/O or parse failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn list_auth_profiles() -> Result<Vec<auth_profiles::FfiAuthProfile>, FfiError> {
+    catch_unwind(auth_profiles::list_auth_profiles_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Removes an auth profile by provider and profile name.
+///
+/// Constructs the profile ID as `"provider:profile_name"`, removes it
+/// from the profiles map, and clears the active-profile entry if the
+/// removed profile was the active one. Writes the updated JSON back
+/// to disk.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or the
+/// auth-profiles file does not exist,
+/// [`FfiError::SpawnError`] on I/O, parse, or serialisation failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn remove_auth_profile(provider: String, profile_name: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        auth_profiles::remove_auth_profile_inner(provider, profile_name)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the version string of the native library.
+///
+/// Reads from the crate version set at compile time via `CARGO_PKG_VERSION`.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_version() -> Result<String, FfiError> {
+    catch_unwind(|| env!("CARGO_PKG_VERSION").to_string()).map_err(|e| FfiError::InternalPanic {
+        detail: panic_detail(&e),
+    })
+}
+
+/// Engages the emergency stop, cancelling all active agent execution.
+///
+/// While engaged, [`send_message`], [`session_send`], and
+/// [`send_message_streaming`] return [`FfiError::EstopEngaged`].
+/// State is persisted to disk and survives process death.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn engage_estop() -> Result<(), FfiError> {
+    catch_unwind(estop::engage_estop_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the current emergency stop status.
+///
+/// The returned [`estop::FfiEstopStatus`] includes whether the stop is
+/// engaged and the epoch-millisecond timestamp of engagement (if available).
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_estop_status() -> Result<estop::FfiEstopStatus, FfiError> {
+    catch_unwind(estop::get_estop_status_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Resumes from an engaged emergency stop.
+///
+/// Clears the kill-all flag and persists the resumed state to disk.
+/// Agent-executing functions will accept requests again immediately.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn resume_estop() -> Result<(), FfiError> {
+    catch_unwind(estop::resume_estop_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Scaffolds the `ZeroClaw` workspace directory with identity files.
+///
+/// Creates 5 subdirectories (`sessions/`, `memory/`, `state/`, `cron/`,
+/// `skills/`) and writes 8 markdown template files (`IDENTITY.md`,
+/// `AGENTS.md`, `HEARTBEAT.md`, `SOUL.md`, `USER.md`, `TOOLS.md`,
+/// `BOOTSTRAP.md`, `MEMORY.md`) inside `workspace_path`.
+///
+/// Idempotent: existing files are never overwritten. Empty parameter
+/// strings are replaced with upstream defaults (e.g. agent name
+/// defaults to `"ZeroClaw"`).
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] if directory creation or file
+/// writing fails, or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn scaffold_workspace(
+    workspace_path: String,
+    agent_name: String,
+    user_name: String,
+    timezone: String,
+    communication_style: String,
+) -> Result<(), FfiError> {
+    catch_unwind(|| {
+        workspace::create_workspace(
+            &workspace_path,
+            &agent_name,
+            &user_name,
+            &timezone,
+            &communication_style,
+        )
+    })
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the current cost summary for session, day, and month.
+///
+/// Requires the daemon to be running with cost tracking enabled.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// cost tracking is disabled,
+/// [`FfiError::SpawnError`] on tracker or serialisation failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_cost_summary() -> Result<cost::FfiCostSummary, FfiError> {
+    catch_unwind(cost::get_cost_summary_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the cost for a specific day in USD.
+///
+/// Requires the daemon to be running with cost tracking enabled.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// cost tracking is disabled,
+/// [`FfiError::SpawnError`] on invalid date or tracker failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_daily_cost(year: i32, month: u32, day: u32) -> Result<f64, FfiError> {
+    catch_unwind(|| cost::get_daily_cost_inner(year, month, day)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the cost for a specific month in USD.
+///
+/// Requires the daemon to be running with cost tracking enabled.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// cost tracking is disabled,
+/// [`FfiError::SpawnError`] on tracker failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_monthly_cost(year: i32, month: u32) -> Result<f64, FfiError> {
+    catch_unwind(|| cost::get_monthly_cost_inner(year, month)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Checks whether an estimated cost fits within configured budget limits.
+///
+/// Returns [`cost::FfiBudgetStatus::Allowed`] when within budget,
+/// [`cost::FfiBudgetStatus::Warning`] when approaching limits, or
+/// [`cost::FfiBudgetStatus::Exceeded`] when limits are breached.
+///
+/// Requires the daemon to be running with cost tracking enabled.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// cost tracking is disabled,
+/// [`FfiError::SpawnError`] on tracker failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn check_budget(estimated_cost_usd: f64) -> Result<cost::FfiBudgetStatus, FfiError> {
+    catch_unwind(|| cost::check_budget_inner(estimated_cost_usd)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Registers a Kotlin-side event listener to receive live observer events.
+///
+/// Only one listener can be registered at a time. Registering a new
+/// listener replaces the previous one.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn register_event_listener(
+    listener: Box<dyn events::FfiEventListener>,
+) -> Result<(), FfiError> {
+    let listener: Arc<dyn events::FfiEventListener> = Arc::from(listener);
+    catch_unwind(AssertUnwindSafe(|| {
+        events::register_event_listener_inner(listener)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Unregisters the current event listener.
+///
+/// After this call, events are still buffered in the ring buffer but
+/// no longer forwarded to Kotlin.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn unregister_event_listener() -> Result<(), FfiError> {
+    // Direct function reference preferred over closure by clippy::redundant_closure.
+    catch_unwind(events::unregister_event_listener_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the most recent events as a JSON array.
+///
+/// Events are ordered chronologically (oldest first). The `limit`
+/// parameter caps how many events to return.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if internal state is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_recent_events(limit: u32) -> Result<String, FfiError> {
+    catch_unwind(|| events::get_recent_events_inner(limit)).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists all cron jobs registered with the running daemon.
+///
+/// Requires the daemon to be running so the cron SQLite database is accessible.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on database access failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn list_cron_jobs() -> Result<Vec<cron::FfiCronJob>, FfiError> {
+    catch_unwind(cron::list_cron_jobs_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Retrieves a single cron job by its identifier.
+///
+/// Returns `None` if no job with the given `id` exists.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on database access failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_cron_job(id: String) -> Result<Option<cron::FfiCronJob>, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| cron::get_cron_job_inner(id))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Adds a new recurring cron job with the given expression and command.
+///
+/// The `expression` must be a valid cron expression (e.g. `"0 0/5 * * *"`).
+/// The `command` is the prompt or action the scheduler will execute.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on invalid expression or database failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn add_cron_job(expression: String, command: String) -> Result<cron::FfiCronJob, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        cron::add_cron_job_inner(expression, command)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Adds a one-shot job that fires once after the given delay.
+///
+/// The `delay` string uses human-readable durations (e.g. `"5m"`, `"2h"`).
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on invalid delay or database failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn add_one_shot_job(delay: String, command: String) -> Result<cron::FfiCronJob, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        cron::add_one_shot_job_inner(delay, command)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Adds a one-shot cron job that fires at a specific RFC 3339 timestamp.
+///
+/// The `timestamp_rfc3339` must be a valid RFC 3339 string (e.g.
+/// `"2026-12-31T23:59:59Z"`). The job self-deletes after firing.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on invalid timestamp or database failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn add_cron_job_at(
+    timestamp_rfc3339: String,
+    command: String,
+) -> Result<cron::FfiCronJob, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        cron::add_cron_job_at_inner(timestamp_rfc3339, command)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Adds a fixed-interval repeating cron job.
+///
+/// The `interval_ms` specifies the repeat interval in milliseconds.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on database failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn add_cron_job_every(interval_ms: u64, command: String) -> Result<cron::FfiCronJob, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        cron::add_cron_job_every_inner(interval_ms, command)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Removes a cron job by its identifier.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn remove_cron_job(id: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| cron::remove_cron_job_inner(id))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Pauses a cron job so it will not fire until resumed.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn pause_cron_job(id: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| cron::pause_cron_job_inner(id))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Resumes a previously paused cron job.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn resume_cron_job(id: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| cron::resume_cron_job_inner(id))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists all skills loaded from the workspace's `skills/` directory.
+///
+/// Each skill includes its name, description, version, author, tags,
+/// and the names of any tools it provides.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn list_skills() -> Result<Vec<skills::FfiSkill>, FfiError> {
+    catch_unwind(skills::list_skills_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists the tools provided by a specific skill.
+///
+/// Returns an empty list if the skill is not found or has no tools.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn get_skill_tools(skill_name: String) -> Result<Vec<skills::FfiSkillTool>, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        skills::get_skill_tools_inner(skill_name)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Installs a skill from a URL or local path.
+///
+/// For URLs, performs a `git clone --depth 1` into the skills directory.
+/// For local paths, creates a symlink (or copies on platforms without
+/// symlink support).
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on install failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn install_skill(source: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| skills::install_skill_inner(source))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Removes an installed skill by name.
+///
+/// Deletes the skill directory from the workspace's `skills/` folder.
+/// Path traversal attempts are rejected.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if removal fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn remove_skill(name: String) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| skills::remove_skill_inner(name))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists all available tools based on daemon config and installed skills.
+///
+/// Returns built-in tools (always present), conditional tools (browser,
+/// HTTP, Composio, delegate), and skill-provided tools.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn list_tools() -> Result<Vec<tools_browse::FfiToolSpec>, FfiError> {
+    catch_unwind(tools_browse::list_tools_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Lists memory entries, optionally filtered by category and/or session.
+///
+/// Categories: `"core"`, `"daily"`, `"conversation"`, or any custom
+/// category name. Pass `None` for all categories.
+///
+/// When `session_id` is provided, only entries from that session are returned.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// memory is unavailable,
+/// [`FfiError::SpawnError`] on backend failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn list_memories(
+    category: Option<String>,
+    limit: u32,
+    session_id: Option<String>,
+) -> Result<Vec<memory_browse::FfiMemoryEntry>, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        memory_browse::list_memories_inner(category, limit, session_id)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Searches memory entries by keyword query, optionally scoped to a session.
+///
+/// Returns up to `limit` entries ranked by relevance.
+///
+/// When `session_id` is provided, only entries from that session are searched.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// memory is unavailable,
+/// [`FfiError::SpawnError`] on backend failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn recall_memory(
+    query: String,
+    limit: u32,
+    session_id: Option<String>,
+) -> Result<Vec<memory_browse::FfiMemoryEntry>, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        memory_browse::recall_memory_inner(query, limit, session_id)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Deletes a memory entry by key.
+///
+/// Returns `true` if the entry was found and deleted, `false` otherwise.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// memory is unavailable,
+/// [`FfiError::SpawnError`] on backend failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn forget_memory(key: String) -> Result<bool, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| memory_browse::forget_memory_inner(key))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Sends a vision (image + text) message directly to the configured provider.
+///
+/// Bypasses `ZeroClaw`'s text-only agent loop and calls the provider's
+/// multimodal API directly. `image_data` contains base64-encoded images
+/// and `mime_types` contains the corresponding MIME type for each image.
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] for validation failures,
+/// [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] for unsupported providers or HTTP failures, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn send_vision_message(
+    text: String,
+    image_data: Vec<String>,
+    mime_types: Vec<String>,
+) -> Result<String, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        if estop::is_engaged() {
+            return Err(FfiError::EstopEngaged {
+                detail: "Emergency stop is engaged. Resume before sending messages.".into(),
+            });
+        }
+        vision::send_vision_message_inner(text, image_data, mime_types)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the total number of memory entries.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running or
+/// memory is unavailable,
+/// [`FfiError::SpawnError`] on backend failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn memory_count() -> Result<u32, FfiError> {
+    catch_unwind(memory_browse::memory_count_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Evaluates a Rhai expression against the embedded REPL engine.
+///
+/// The REPL engine has all gateway functions registered as native Rhai
+/// calls. Structured return values are serialised to JSON; unit results
+/// become `"ok"`; primitives are converted to strings.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if the engine mutex is poisoned,
+/// [`FfiError::SpawnError`] if the Rhai evaluation fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn eval_repl(expression: String) -> Result<String, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| repl::eval_repl_inner(expression))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Queries runtime trace events from the daemon's JSONL trace file.
+///
+/// Returns a JSON array of trace event objects, newest last.
+/// Returns `"[]"` if tracing is disabled or no events match.
+///
+/// # Arguments
+///
+/// * `filter` - Optional case-insensitive substring match on message/payload.
+/// * `event_type` - Optional exact match on event_type (e.g. `"tool_call"`, `"model_reply"`).
+/// * `limit` - Maximum events to return.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] on I/O or serialisation failure, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn query_runtime_traces(
+    filter: Option<String>,
+    event_type: Option<String>,
+    limit: u32,
+) -> Result<String, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        traces::query_traces_inner(filter, event_type, limit)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Sends a streaming message directly to the configured provider.
+///
+/// Bypasses the full agent loop and calls the provider's streaming API
+/// directly. Chunks are classified as thinking or response content and
+/// delivered to the [listener] callback in real time. The stream can be
+/// cancelled by calling [`cancel_streaming`].
+///
+/// Falls back path: if the provider does not support streaming, returns
+/// an error. Callers should use [`send_message`] for non-streaming providers.
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] for oversized messages,
+/// [`FfiError::StateError`] if the daemon is not running,
+/// [`FfiError::SpawnError`] if provider creation or streaming fails, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn send_message_streaming(
+    message: String,
+    listener: Box<dyn streaming::FfiStreamListener>,
+) -> Result<(), FfiError> {
+    let listener: Arc<dyn streaming::FfiStreamListener> = Arc::from(listener);
+    catch_unwind(AssertUnwindSafe(|| {
+        if estop::is_engaged() {
+            return Err(FfiError::EstopEngaged {
+                detail: "Emergency stop is engaged. Resume before sending messages.".into(),
+            });
+        }
+        streaming::send_message_streaming_inner(message, listener)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Signals the current streaming operation to cancel.
+///
+/// Sets an internal cancel flag that is checked between stream chunks.
+/// The streaming callback will receive an `on_error("Request cancelled")`
+/// call at the next chunk boundary.
+///
+/// Safe to call at any time, including when no streaming is in progress.
+///
+/// # Errors
+///
+/// Returns [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn cancel_streaming() -> Result<(), FfiError> {
+    catch_unwind(streaming::cancel_streaming_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+// ── Live agent session ──────────────────────────────────────────────────
+
+/// Creates a new live agent session from the running daemon's configuration.
+///
+/// Builds the system prompt, tools registry, and provider configuration.
+/// Only one session may exist at a time; call [`session_destroy`] first
+/// if a previous session is still active.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if a session is already active or the
+/// daemon is not running, [`FfiError::StateCorrupted`] if the session
+/// mutex is poisoned, [`FfiError::SpawnError`] if provider creation fails,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_start() -> Result<(), FfiError> {
+    catch_unwind(session::session_start_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Injects seed messages into the active session's conversation history.
+///
+/// Used to restore prior context from Room persistence before the first
+/// [`session_send`] call. At most 20 entries are accepted; system-role
+/// messages are silently skipped.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if no session is active,
+/// [`FfiError::StateCorrupted`] if the session mutex is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_seed(messages: Vec<session::SessionMessage>) -> Result<(), FfiError> {
+    catch_unwind(AssertUnwindSafe(|| session::session_seed_inner(messages))).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Sends a message through the live agent session's tool-call loop.
+///
+/// Runs the full agent loop with memory recall, tool execution, streaming
+/// progress, and auto-compaction. Events are delivered to the `listener`
+/// callback in real time. The send can be cancelled by calling
+/// [`session_cancel`].
+///
+/// Images are optional. When provided, each entry in `image_data` is a
+/// base64-encoded image and `mime_types` holds the corresponding MIME
+/// type (e.g. `image/jpeg`). The images are embedded as `[IMAGE:...]`
+/// markers in the user message so the upstream provider can convert
+/// them to multimodal content parts.
+///
+/// # Errors
+///
+/// Returns [`FfiError::ConfigError`] for oversized messages or
+/// mismatched image arrays, [`FfiError::StateError`] if no session is
+/// active, [`FfiError::StateCorrupted`] if the session mutex is
+/// poisoned, [`FfiError::SpawnError`] if the agent loop or provider
+/// creation fails, or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_send(
+    message: String,
+    image_data: Vec<String>,
+    mime_types: Vec<String>,
+    listener: Box<dyn session::FfiSessionListener>,
+) -> Result<(), FfiError> {
+    let listener: Arc<dyn session::FfiSessionListener> = Arc::from(listener);
+    catch_unwind(AssertUnwindSafe(|| {
+        if estop::is_engaged() {
+            return Err(FfiError::EstopEngaged {
+                detail: "Emergency stop is engaged. Resume before sending messages.".into(),
+            });
+        }
+        session::session_send_inner(message, image_data, mime_types, listener)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Cancels the currently running [`session_send`] call.
+///
+/// Sets the internal cancellation token. The agent loop aborts at the
+/// next check point and fires `on_cancelled()` on the listener.
+/// No-op if no send is in progress.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateCorrupted`] if the cancel token mutex is
+/// poisoned, or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_cancel() -> Result<(), FfiError> {
+    catch_unwind(|| {
+        session::session_cancel_inner();
+        Ok(())
+    })
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Clears the active session's conversation history.
+///
+/// Retains the system prompt but discards all user, assistant, and tool
+/// messages. The session remains active and ready for new sends.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if no session is active,
+/// [`FfiError::StateCorrupted`] if the session mutex is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_clear() -> Result<(), FfiError> {
+    catch_unwind(session::session_clear_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Returns the current conversation history as a list of session messages.
+///
+/// Includes the system prompt as the first entry, followed by user,
+/// assistant, and tool messages in chronological order.
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if no session is active,
+/// [`FfiError::StateCorrupted`] if the session mutex is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_history() -> Result<Vec<session::SessionMessage>, FfiError> {
+    catch_unwind(session::session_history_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Discovers available models from a provider's API.
+///
+/// Returns a JSON array of `{"id": "model-id", "name": "display-name"}` objects.
+/// For Anthropic, returns a hardcoded list of known models. For Ollama, queries
+/// the local `/api/tags` endpoint. All other providers use the `OpenAI`-compatible
+/// `/v1/models` endpoint.
+///
+/// This function does NOT require the daemon to be running. It creates its own
+/// HTTP client and queries the provider API directly.
+///
+/// # Errors
+///
+/// Returns [`FfiError::SpawnError`] on HTTP client, network, or parse errors,
+/// or [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn discover_models(
+    provider: String,
+    api_key: String,
+    base_url: Option<String>,
+) -> Result<String, FfiError> {
+    catch_unwind(AssertUnwindSafe(|| {
+        models::discover_models_inner(provider, api_key, base_url)
+    }))
+    .unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+/// Destroys the active session and releases all resources.
+///
+/// Cancels any in-flight send, drops the tools registry, and clears
+/// the session slot. A new session may be created afterwards with
+/// [`session_start`].
+///
+/// # Errors
+///
+/// Returns [`FfiError::StateError`] if no session is active,
+/// [`FfiError::StateCorrupted`] if the session mutex is poisoned, or
+/// [`FfiError::InternalPanic`] if native code panics.
+#[uniffi::export]
+pub fn session_destroy() -> Result<(), FfiError> {
+    catch_unwind(session::session_destroy_inner).unwrap_or_else(|e| {
+        Err(FfiError::InternalPanic {
+            detail: panic_detail(&e),
+        })
+    })
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_version() {
+        let version = get_version().unwrap();
+        assert_eq!(version, "0.0.37");
+    }
+
+    #[test]
+    fn test_start_daemon_invalid_toml() {
+        let result = start_daemon(
+            "this is not valid toml {{{{".to_string(),
+            "/tmp/test".to_string(),
+            "127.0.0.1".to_string(),
+            8080,
+        );
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::ConfigError { detail } => {
+                assert!(detail.contains("failed to parse config TOML"));
+            }
+            other => panic!("expected ConfigError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_stop_daemon_not_running() {
+        let result = stop_daemon();
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => {
+                assert!(detail.contains("not running"));
+            }
+            other => panic!("expected StateError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_send_message_not_running() {
+        let result = send_message("hello".to_string());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => {
+                assert!(detail.contains("not running"));
+            }
+            other => panic!("expected StateError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_get_status_returns_json() {
+        let status = get_status().unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&status).unwrap();
+        assert!(parsed.get("daemon_running").is_some());
+    }
+
+    #[test]
+    fn test_validate_config_valid() {
+        let toml = "default_temperature = 0.7\n";
+        let result = validate_config(toml.to_string()).unwrap();
+        assert!(
+            result.is_empty(),
+            "expected empty string for valid config, got: {result}"
+        );
+    }
+
+    #[test]
+    fn test_validate_config_invalid() {
+        let toml = "this is not valid {{{{";
+        let result = validate_config(toml.to_string()).unwrap();
+        assert!(
+            !result.is_empty(),
+            "expected non-empty error message for invalid config"
+        );
+    }
+
+    #[test]
+    fn test_doctor_channels_invalid_toml() {
+        let result = doctor_channels("not valid {{".to_string(), "/tmp/test".to_string());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::ConfigError { detail } => {
+                assert!(detail.contains("failed to parse config TOML"));
+            }
+            other => panic!("expected ConfigError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_get_configured_channel_names_no_daemon() {
+        let result = get_configured_channel_names();
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => {
+                assert!(detail.contains("daemon not running"));
+            }
+            other => panic!("expected StateError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_scaffold_workspace_creates_files() {
+        let dir = std::env::temp_dir().join("zeroclaw_test_scaffold");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let result = scaffold_workspace(
+            dir.to_string_lossy().to_string(),
+            "TestAgent".to_string(),
+            "TestUser".to_string(),
+            "America/New_York".to_string(),
+            String::new(),
+        );
+        assert!(result.is_ok());
+
+        for subdir in &["sessions", "memory", "state", "cron", "skills"] {
+            assert!(dir.join(subdir).is_dir(), "missing directory: {subdir}");
+        }
+
+        let expected_files = [
+            "IDENTITY.md",
+            "AGENTS.md",
+            "HEARTBEAT.md",
+            "SOUL.md",
+            "USER.md",
+            "TOOLS.md",
+            "BOOTSTRAP.md",
+            "MEMORY.md",
+        ];
+        for filename in &expected_files {
+            assert!(dir.join(filename).is_file(), "missing file: {filename}");
+        }
+
+        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        assert!(identity.contains("TestAgent"));
+
+        let user_md = std::fs::read_to_string(dir.join("USER.md")).unwrap();
+        assert!(user_md.contains("TestUser"));
+        assert!(user_md.contains("America/New_York"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_scaffold_workspace_idempotent() {
+        let dir = std::env::temp_dir().join("zeroclaw_test_idem");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        scaffold_workspace(
+            dir.to_string_lossy().to_string(),
+            "Agent1".to_string(),
+            String::new(),
+            String::new(),
+            String::new(),
+        )
+        .unwrap();
+
+        scaffold_workspace(
+            dir.to_string_lossy().to_string(),
+            "Agent2".to_string(),
+            String::new(),
+            String::new(),
+            String::new(),
+        )
+        .unwrap();
+
+        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        assert!(
+            identity.contains("Agent1"),
+            "existing file should not be overwritten"
+        );
+        assert!(!identity.contains("Agent2"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_scaffold_workspace_defaults() {
+        let dir = std::env::temp_dir().join("zeroclaw_test_defaults");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        scaffold_workspace(
+            dir.to_string_lossy().to_string(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+        )
+        .unwrap();
+
+        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        assert!(identity.contains("ZeroClaw"), "default agent name");
+
+        let user_md = std::fs::read_to_string(dir.join("USER.md")).unwrap();
+        assert!(user_md.contains("**Name:** User"), "default user name");
+        assert!(user_md.contains("**Timezone:** UTC"), "default timezone");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_bind_channel_identity_no_daemon() {
+        let result = bind_channel_identity("telegram".into(), "alice".into());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => assert!(detail.contains("not running")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_get_channel_allowlist_no_daemon() {
+        let result = get_channel_allowlist("telegram".into());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => assert!(detail.contains("not running")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_list_auth_profiles_no_daemon() {
+        let result = list_auth_profiles();
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => assert!(detail.contains("not running")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_remove_auth_profile_no_daemon() {
+        let result = remove_auth_profile("openai".into(), "default".into());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            FfiError::StateError { detail } => assert!(detail.contains("not running")),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_discover_models_anthropic() {
+        let result = discover_models("anthropic".into(), String::new(), None).unwrap();
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        assert!(!parsed.is_empty());
+        assert!(parsed[0].get("id").is_some());
+        assert!(parsed[0].get("name").is_some());
+    }
+}

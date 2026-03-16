@@ -1,0 +1,10 @@
+appId: com.zeroclaw.android
+tags:
+  - journey
+  - error
+---
+- runFlow: ../subflows/complete-onboarding.yaml
+- tapOn: "Start Daemon"
+- extendedWaitUntil:
+    visible: "Error|Failed|Running"
+    timeout: 15000

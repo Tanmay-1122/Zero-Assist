@@ -1,0 +1,6 @@
+appId: com.zeroclaw.android
+---
+- extendedWaitUntil:
+    visible: "Daemon Status"
+    timeout: 10000
+- tapOn: ${tab}
