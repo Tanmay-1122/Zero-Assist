@@ -20,7 +20,7 @@ thiserror = "2.0"
 # channel-lark, memory-postgres, observability-otel, hardware, browser-native,
 # sandbox-*, probe, rag-pdf, whatsapp-web are all excluded). The daemon
 # binary enables platform-specific features independently.
-zeroclaw = { path = "../../zeroclaw", default-features = false }
+zeroclaw = { package = "zeroclawlabs", path = "../../zeroclaw", default-features = false }
 tokio = { version = "1.42", features = ["rt-multi-thread", "sync", "macros"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 serde = { version = "1.0", features = ["derive"] }
