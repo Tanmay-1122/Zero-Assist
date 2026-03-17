@@ -55,3 +55,17 @@ agents.md
 # Git worktrees
 .worktrees/
 
+# Temporary build / diagnostic output files
+gradle_out.txt
+gradle_trace.txt
+gradle_trace_utf8.txt
+out.txt
+out_gradle.txt
+latest_commit.patch
+latest_commit_utf8.patch
+zeroclaw/check.txt
+zeroclaw-android/clippy.log
+
+# Rust toolchain installer binary (not part of the project)
+rustup-init.exe
+
