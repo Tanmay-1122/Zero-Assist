@@ -711,6 +711,7 @@ pub(crate) fn doctor_channels_inner(
         let mut channels = collect_channels(&config);
         let mut results = Vec::<serde_json::Value>::new();
 
+        #[cfg(feature = "channel-nostr")]
         if let Some(ref ns) = config.channels_config.nostr {
             match zeroclaw::channels::NostrChannel::new(
                 &ns.private_key,
@@ -1020,6 +1021,11 @@ fn collect_channels(config: &Config) -> Vec<(&'static str, Arc<dyn zeroclaw::cha
 /// Updated for upstream v0.1.7 channel roster. Checks all channel
 /// `Option` fields except CLI (which is not supervised).
 fn has_supervised_channels(config: &Config) -> bool {
+    #[cfg(feature = "channel-nostr")]
+    let nostr_configured = config.channels_config.nostr.is_some();
+    #[cfg(not(feature = "channel-nostr"))]
+    let nostr_configured = false;
+
     config.channels_config.telegram.is_some()
         || config.channels_config.discord.is_some()
         || config.channels_config.slack.is_some()
@@ -1036,7 +1042,7 @@ fn has_supervised_channels(config: &Config) -> bool {
         || config.channels_config.feishu.is_some()
         || config.channels_config.dingtalk.is_some()
         || config.channels_config.qq.is_some()
-        || config.channels_config.nostr.is_some()
+        || nostr_configured
         || config.channels_config.clawdtalk.is_some()
         || config.channels_config.linq.is_some()
         || config.channels_config.webhook.is_some()
@@ -1152,6 +1158,7 @@ pub(crate) fn bind_channel_identity_inner(
         "imessage" => bind!(cc.imessage, allowed_contacts, id),
         "email" => bind!(cc.email, allowed_senders, id),
         "linq" => bind!(cc.linq, allowed_senders, id),
+        #[cfg(feature = "channel-nostr")]
         "nostr" => bind!(cc.nostr, allowed_pubkeys, id),
         "clawdtalk" => bind!(cc.clawdtalk, allowed_destinations, id),
         _ => {
@@ -1275,6 +1282,7 @@ pub(crate) fn get_channel_allowlist_inner(channel_name: String) -> Result<Vec<St
                 .as_ref()
                 .ok_or_else(|| not_configured(&channel_name))
                 .map(|c| c.allowed_senders.clone()),
+            #[cfg(feature = "channel-nostr")]
             "nostr" => cc
                 .nostr
                 .as_ref()
@@ -1354,6 +1362,7 @@ pub(crate) fn get_configured_channel_names_inner() -> Result<Vec<String>, FfiErr
         if config.channels_config.qq.is_some() {
             names.push("qq".to_string());
         }
+        #[cfg(feature = "channel-nostr")]
         if config.channels_config.nostr.is_some() {
             names.push("nostr".to_string());
         }
