@@ -14,7 +14,7 @@ pub mod static_files;
 pub mod ws;
 
 use crate::channels::{
-    Channel, LinqChannel, NextcloudTalkChannel, SendMessage, WatiChannel, WhatsAppChannel,
+    Channel, LinqChannel, NextcloudTalkChannel, SendMessage, TwilioChannel, WatiChannel, WhatsAppChannel,
 };
 use crate::config::Config;
 use crate::cost::CostTracker;
@@ -303,6 +303,7 @@ pub struct AppState {
     /// Nextcloud Talk webhook secret for signature verification
     pub nextcloud_talk_webhook_secret: Option<Arc<str>>,
     pub wati: Option<Arc<WatiChannel>>,
+    pub twilio: Option<Arc<TwilioChannel>>,
     /// Observability backend for metrics scraping
     pub observer: Arc<dyn crate::observability::Observer>,
     /// Registered tool specs (for web dashboard tools page)
@@ -503,6 +504,16 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
             ))
         });
 
+    // Twilio channel (if configured)
+    let twilio_channel: Option<Arc<TwilioChannel>> = config.channels_config.twilio.as_ref().map(|tw| {
+        Arc::new(TwilioChannel::new(
+            tw.account_sid.clone(),
+            tw.auth_token.clone(),
+            tw.from_phone.clone(),
+            tw.allowed_numbers.clone(),
+        ))
+    });
+
     // Nextcloud Talk channel (if configured)
     let nextcloud_talk_channel: Option<Arc<NextcloudTalkChannel>> =
         config.channels_config.nextcloud_talk.as_ref().map(|nc| {
@@ -599,6 +610,9 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
     if nextcloud_talk_channel.is_some() {
         println!("  POST /nextcloud-talk — Nextcloud Talk bot webhook");
     }
+    if twilio_channel.is_some() {
+        println!("  POST /twilio      — Twilio message webhook (SMS/WhatsApp)");
+    }
     println!("  GET  /api/*     — REST API (bearer token required)");
     println!("  GET  /ws/chat   — WebSocket agent chat");
     if config.nodes.enabled {
@@ -658,6 +672,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         nextcloud_talk: nextcloud_talk_channel,
         nextcloud_talk_webhook_secret,
         wati: wati_channel,
+        twilio: twilio_channel,
         observer: broadcast_observer,
         tools_registry,
         cost_tracker,

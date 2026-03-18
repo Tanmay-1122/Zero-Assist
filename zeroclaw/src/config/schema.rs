@@ -3073,6 +3073,30 @@ impl ChannelConfig for PushConfig {
     }
 }
 
+/// Twilio SMS channel configuration (`[twilio]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct TwilioConfig {
+    /// Twilio Account SID.
+    pub account_sid: String,
+    /// Twilio Auth Token.
+    pub auth_token: String,
+    /// Twilio Phone Number (from phone).
+    pub from_phone: String,
+    /// Allowed numbers (E.164) or "*" for all.
+    #[serde(default)]
+    pub allowed_numbers: Vec<String>,
+}
+
+impl ChannelConfig for TwilioConfig {
+    fn name() -> &'static str {
+        "twilio"
+    }
+
+    fn desc() -> &'static str {
+        "Twilio SMS/WhatsApp channel."
+    }
+}
+
 /// Top-level channel configurations (`[channels_config]` section).
 ///
 /// Each channel sub-section (e.g. `telegram`, `discord`) is optional;

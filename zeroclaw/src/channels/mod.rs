@@ -30,6 +30,7 @@ pub mod mattermost;
 pub mod nextcloud_talk;
 #[cfg(feature = "channel-nostr")]
 pub mod nostr;
+pub mod push;
 pub mod qq;
 pub mod signal;
 pub mod slack;
@@ -37,6 +38,7 @@ pub mod telegram;
 pub mod traits;
 pub mod transcription;
 pub mod tts;
+pub mod twilio;
 pub mod wati;
 pub mod wecom;
 pub mod whatsapp;
@@ -61,6 +63,7 @@ pub use mattermost::MattermostChannel;
 pub use nextcloud_talk::NextcloudTalkChannel;
 #[cfg(feature = "channel-nostr")]
 pub use nostr::NostrChannel;
+pub use push::PushChannel;
 pub use qq::QQChannel;
 pub use signal::SignalChannel;
 pub use slack::SlackChannel;
@@ -68,6 +71,7 @@ pub use telegram::TelegramChannel;
 pub use traits::{Channel, SendMessage};
 #[allow(unused_imports)]
 pub use tts::{TtsManager, TtsProvider};
+pub use twilio::TwilioChannel;
 pub use wati::WatiChannel;
 pub use wecom::WeComChannel;
 pub use whatsapp::WhatsAppChannel;
@@ -1729,6 +1733,7 @@ async fn process_channel_message(
     msg: traits::ChannelMessage,
     cancellation_token: CancellationToken,
 ) {
+    crate::health::mark_channel_ok(&msg.channel);
     if cancellation_token.is_cancelled() {
         return;
     }
@@ -3055,6 +3060,13 @@ fn collect_configured_channels(
 ) -> Vec<ConfiguredChannel> {
     let _ = matrix_skip_context;
     let mut channels = Vec::new();
+
+    if let Some(ref p) = config.channels_config.push {
+        channels.push(ConfiguredChannel {
+            display_name: "Push Notifications",
+            channel: Arc::new(PushChannel::new(p.clone())),
+        });
+    }
 
     if let Some(ref tg) = config.channels_config.telegram {
         channels.push(ConfiguredChannel {
