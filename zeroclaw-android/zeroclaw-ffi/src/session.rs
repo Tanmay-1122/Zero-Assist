@@ -1219,6 +1219,9 @@ pub(crate) fn session_send_inner(
         let provider_runtime_options = zeroclaw::providers::ProviderRuntimeOptions {
             auth_profile_override: None,
             provider_api_url: config.api_url.clone(),
+            api_path: None,
+            extra_headers: std::collections::HashMap::new(),
+            provider_timeout_secs: None,
             zeroclaw_dir: config.config_path.parent().map(std::path::PathBuf::from),
             secrets_encrypt: config.secrets.encrypt,
             reasoning_enabled: config.runtime.reasoning_enabled,
