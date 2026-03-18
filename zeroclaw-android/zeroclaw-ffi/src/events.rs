@@ -218,10 +218,17 @@ fn event_to_kind_and_data(event: &ObserverEvent) -> (&'static str, String) {
             ),
         ),
         ObserverEvent::ToolCallStart { tool, arguments } => {
-            let args_json = arguments.as_ref().map_or_else(|| "null".to_string(), |a| format!(r#""{}""#, escape_json_string(a)));
+            let args_json = arguments.as_ref().map_or_else(
+                || "null".to_string(),
+                |a| format!(r#""{}""#, escape_json_string(a)),
+            );
             (
                 "tool_call_start",
-                format!(r#"{{"tool":"{}","arguments":{}}}"#, escape_json_string(tool), args_json),
+                format!(
+                    r#"{{"tool":"{}","arguments":{}}}"#,
+                    escape_json_string(tool),
+                    args_json
+                ),
             )
         }
         ObserverEvent::ChannelMessage { channel, direction } => (
