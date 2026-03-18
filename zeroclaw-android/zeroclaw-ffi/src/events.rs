@@ -217,10 +217,13 @@ fn event_to_kind_and_data(event: &ObserverEvent) -> (&'static str, String) {
                 duration.as_millis()
             ),
         ),
-        ObserverEvent::ToolCallStart { tool } => (
-            "tool_call_start",
-            format!(r#"{{"tool":"{}"}}"#, escape_json_string(tool)),
-        ),
+        ObserverEvent::ToolCallStart { tool, arguments } => {
+            let args_json = arguments.as_ref().map_or_else(|| "null".to_string(), |a| format!(r#""{}""#, escape_json_string(a)));
+            (
+                "tool_call_start",
+                format!(r#"{{"tool":"{}","arguments":{}}}"#, escape_json_string(tool), args_json),
+            )
+        }
         ObserverEvent::ChannelMessage { channel, direction } => (
             "channel_message",
             format!(
@@ -577,11 +580,13 @@ mod tests {
     fn test_format_event_json_tool_call_start() {
         let event = ObserverEvent::ToolCallStart {
             tool: "web_search".into(),
+            arguments: Some("{\"query\":\"rust\"}".into()),
         };
         let json_str = format_event_json(11, &event);
         let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
         assert_eq!(parsed["kind"], "tool_call_start");
         assert_eq!(parsed["data"]["tool"], "web_search");
+        assert_eq!(parsed["data"]["arguments"], "{\"query\":\"rust\"}");
     }
 
     #[test]

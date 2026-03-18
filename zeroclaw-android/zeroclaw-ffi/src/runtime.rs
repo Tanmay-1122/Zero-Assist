@@ -708,6 +708,7 @@ pub(crate) fn doctor_channels_inner(
     let handle = get_or_create_runtime()?;
 
     let results = handle.block_on(async {
+        #[allow(unused_mut)]
         let mut channels = collect_channels(&config);
         let mut results = Vec::<serde_json::Value>::new();
 
@@ -841,7 +842,9 @@ fn collect_channels(config: &Config) -> Vec<(&'static str, Arc<dyn zeroclaw::cha
             "Slack",
             Arc::new(SlackChannel::new(
                 sl.bot_token.clone(),
+                sl.app_token.clone(),
                 sl.channel_id.clone(),
+                vec![],
                 sl.allowed_users.clone(),
             )),
         ));
