@@ -717,6 +717,7 @@ fn check_workspace(config: &Config, items: &mut Vec<DiagItem>) {
     // Key workspace files
     check_file_exists(ws, "SOUL.md", false, cat, items);
     check_file_exists(ws, "AGENTS.md", false, cat, items);
+    check_file_exists(ws, "HEARTBEAT.md", false, cat, items);
 }
 
 fn check_file_exists(
@@ -856,6 +857,55 @@ fn check_daemon_state(config: &Config, items: &mut Vec<DiagItem>) {
             }
         } else {
             items.push(DiagItem::warn(cat, "scheduler component not tracked yet"));
+        }
+
+        // Heartbeat
+        if let Some(heartbeat) = components.get("heartbeat") {
+            let heartbeat_ok = heartbeat
+                .get("status")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|s| s == "ok");
+            let heartbeat_age = heartbeat
+                .get("last_ok")
+                .and_then(serde_json::Value::as_str)
+                .and_then(parse_rfc3339)
+                .map_or(i64::MAX, |dt| {
+                    Utc::now().signed_duration_since(dt).num_seconds()
+                });
+
+            // Threshold: 10 mins or interval + 2 mins
+            let threshold = i64::max(600, i64::from(config.heartbeat.interval_minutes) * 60 + 120);
+
+            if !config.heartbeat.enabled {
+                items.push(DiagItem::ok(cat, "heartbeat component disabled"));
+            } else if heartbeat_ok && heartbeat_age <= threshold {
+                items.push(DiagItem::ok(
+                    cat,
+                    format!("heartbeat healthy (last ok {heartbeat_age}s ago)"),
+                ));
+            } else {
+                items.push(DiagItem::error(
+                    cat,
+                    format!("heartbeat unhealthy (ok={heartbeat_ok}, age={heartbeat_age}s)"),
+                ));
+            }
+        } else {
+            items.push(DiagItem::warn(cat, "heartbeat component not tracked yet"));
+        }
+
+        // Gateway
+        if let Some(gateway) = components.get("gateway") {
+            let gateway_ok = gateway
+                .get("status")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|s| s == "ok");
+            if gateway_ok {
+                items.push(DiagItem::ok(cat, "gateway server running"));
+            } else {
+                items.push(DiagItem::error(cat, "gateway server unhealthy"));
+            }
+        } else {
+            items.push(DiagItem::warn(cat, "gateway component not tracked yet"));
         }
 
         // Channels

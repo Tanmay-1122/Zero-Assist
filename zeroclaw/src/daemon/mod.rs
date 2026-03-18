@@ -97,6 +97,9 @@ pub async fn run(config: Config, host: String, port: u16) -> Result<()> {
                 async move { Box::pin(run_heartbeat_worker(cfg)).await }
             },
         ));
+    } else {
+        crate::health::mark_component_ok("heartbeat");
+        tracing::info!("Heartbeat disabled; heartbeat supervisor not started");
     }
 
     if config.cron.enabled {
@@ -217,9 +220,15 @@ async fn run_heartbeat_worker(config: Config) -> Result<()> {
 
     let interval_mins = config.heartbeat.interval_minutes.max(5);
     let mut interval = tokio::time::interval(Duration::from_secs(u64::from(interval_mins) * 60));
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+    crate::health::mark_component_ok("heartbeat");
 
     loop {
         interval.tick().await;
+
+        // Keep heartbeat liveness fresh in health checks even during idle cycles.
+        crate::health::mark_component_ok("heartbeat");
 
         // Collect runnable tasks (active only, sorted by priority)
         let mut tasks = engine.collect_runnable_tasks().await?;

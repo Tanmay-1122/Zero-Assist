@@ -3048,6 +3048,31 @@ impl<T: ChannelConfig> crate::config::traits::ConfigHandle for ConfigWrapper<T> 
     }
 }
 
+/// Push Notification channel configuration (`[push]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PushConfig {
+    /// ntfy.sh topic or self-hosted URL.
+    pub ntfy_url: Option<String>,
+    /// Pushover API token.
+    pub pushover_token: Option<String>,
+    /// Pushover user key.
+    pub pushover_user: Option<String>,
+    /// Gotify URL.
+    pub gotify_url: Option<String>,
+    /// Gotify token.
+    pub gotify_token: Option<String>,
+}
+
+impl ChannelConfig for PushConfig {
+    fn name() -> &'static str {
+        "push"
+    }
+
+    fn desc() -> &'static str {
+        "Push notification channel using ntfy, Pushover, or Gotify."
+    }
+}
+
 /// Top-level channel configurations (`[channels_config]` section).
 ///
 /// Each channel sub-section (e.g. `telegram`, `discord`) is optional;
@@ -3114,6 +3139,10 @@ pub struct ChannelsConfig {
     /// not forwarded as individual channel messages. Default: `true`.
     #[serde(default = "default_true")]
     pub show_tool_calls: bool,
+    /// Twilio SMS channel configuration.
+    pub twilio: Option<TwilioConfig>,
+    /// Push Notification channel configuration.
+    pub push: Option<PushConfig>,
 }
 
 impl ChannelsConfig {
@@ -3199,8 +3228,16 @@ impl ChannelsConfig {
                 self.nostr.is_some(),
             ),
             (
+                Box::new(ConfigWrapper::new(self.twilio.as_ref())),
+                self.twilio.is_some(),
+            ),
+            (
                 Box::new(ConfigWrapper::new(self.clawdtalk.as_ref())),
                 self.clawdtalk.is_some(),
+            ),
+            (
+                Box::new(ConfigWrapper::new(self.push.as_ref())),
+                self.push.is_some(),
             ),
         ]
     }
@@ -3245,6 +3282,8 @@ impl Default for ChannelsConfig {
             #[cfg(feature = "channel-nostr")]
             nostr: None,
             clawdtalk: None,
+            twilio: None,
+            push: None,
             message_timeout_secs: default_channel_message_timeout_secs(),
             ack_reactions: true,
             show_tool_calls: true,

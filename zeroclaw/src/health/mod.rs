@@ -15,16 +15,24 @@ pub struct ComponentHealth {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct ChannelHealth {
+    pub status: String,
+    pub last_message_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct HealthSnapshot {
     pub pid: u32,
     pub updated_at: String,
     pub uptime_seconds: u64,
     pub components: BTreeMap<String, ComponentHealth>,
+    pub channels: BTreeMap<String, ChannelHealth>,
 }
 
 struct HealthRegistry {
     started_at: Instant,
     components: Mutex<BTreeMap<String, ComponentHealth>>,
+    channels: Mutex<BTreeMap<String, ChannelHealth>>,
 }
 
 static REGISTRY: OnceLock<HealthRegistry> = OnceLock::new();
@@ -33,6 +41,7 @@ fn registry() -> &'static HealthRegistry {
     REGISTRY.get_or_init(|| HealthRegistry {
         started_at: Instant::now(),
         components: Mutex::new(BTreeMap::new()),
+        channels: Mutex::new(BTreeMap::new()),
     })
 }
 
@@ -82,14 +91,27 @@ pub fn bump_component_restart(component: &str) {
     });
 }
 
+pub fn mark_channel_ok(channel: &str) {
+    let mut map = registry().channels.lock();
+    let now = now_rfc3339();
+    let entry = map.entry(channel.to_string()).or_insert_with(|| ChannelHealth {
+        status: "starting".into(),
+        last_message_at: None,
+    });
+    entry.status = "ok".into();
+    entry.last_message_at = Some(now);
+}
+
 pub fn snapshot() -> HealthSnapshot {
     let components = registry().components.lock().clone();
+    let channels = registry().channels.lock().clone();
 
     HealthSnapshot {
         pid: std::process::id(),
         updated_at: now_rfc3339(),
         uptime_seconds: registry().started_at.elapsed().as_secs(),
         components,
+        channels,
     }
 }
 
