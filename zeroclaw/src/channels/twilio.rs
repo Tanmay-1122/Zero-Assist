@@ -1,9 +1,7 @@
-use crate::channels::{Channel, ChannelMessage, ReplyTarget, SendMessage};
-use crate::channels::traits::ChannelMetadata;
+use crate::channels::traits::{Channel, ChannelMessage, SendMessage};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use reqwest::Client;
-use serde_json::Value;
 use std::collections::HashMap;
 
 /// Twilio channel (SMS/WhatsApp)
@@ -50,10 +48,11 @@ impl TwilioChannel {
         vec![ChannelMessage {
             id: message_sid.clone(),
             sender: from.clone(),
+            reply_target: from.clone(),
             content: body,
-            timestamp: chrono::Utc::now().timestamp(),
-            reply_target: ReplyTarget::Number(from),
-            metadata: ChannelMetadata::default(),
+            channel: "twilio".to_string(),
+            timestamp: chrono::Utc::now().timestamp() as u64,
+            thread_ts: None,
         }]
     }
 }
@@ -65,10 +64,7 @@ impl Channel for TwilioChannel {
     }
 
     async fn send(&self, msg: &SendMessage) -> Result<()> {
-        let to = match &msg.to {
-            ReplyTarget::Number(n) => n,
-            _ => return Err(anyhow::anyhow!("Twilio channel only supports sending to phone numbers")),
-        };
+        let to = &msg.recipient;
 
         let url = format!(
             "https://api.twilio.com/2010-04-01/Accounts/{}/Messages.json",
@@ -94,6 +90,13 @@ impl Channel for TwilioChannel {
             return Err(anyhow::anyhow!("Twilio API returned error: {}", error_body));
         }
 
+        Ok(())
+    }
+
+    async fn listen(&self, _tx: tokio::sync::mpsc::Sender<ChannelMessage>) -> Result<()> {
+        // Webhook-based channel, so listen does nothing in this context since it receives messages via HTTP.
+        // The core HTTP server will invoke `parse_webhook_payload` and pass messages to the channel.
+        std::future::pending::<()>().await;
         Ok(())
     }
 }

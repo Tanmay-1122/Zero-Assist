@@ -2,7 +2,6 @@ use crate::channels::traits::{Channel, ChannelMessage, SendMessage};
 use crate::config::schema::PushConfig;
 use async_trait::async_trait;
 use reqwest::Client;
-use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 use tracing::{debug, error, info};
 
