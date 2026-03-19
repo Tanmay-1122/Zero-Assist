@@ -11,7 +11,7 @@
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use parking_lot::Mutex;
 use std::time::Instant;
 
 /// Maximum failed pairing attempts before lockout.
@@ -84,8 +84,8 @@ impl PairingGuard {
     }
 
     /// The one-time pairing code (only set when no tokens exist yet).
-    pub async fn pairing_code(&self) -> Option<String> {
-        self.pairing_code.lock().await.clone()
+    pub fn pairing_code(&self) -> Option<String> {
+        self.pairing_code.lock().clone()
     }
 
     /// Whether pairing is required at all.
@@ -96,13 +96,13 @@ impl PairingGuard {
     /// Attempt to pair with the given code. Returns a bearer token on success.
     /// Returns `Err(lockout_seconds)` if locked out due to brute force.
     /// `client_id` identifies the client for per-client lockout accounting.
-    pub async fn try_pair(&self, code: &str, client_id: &str) -> Result<Option<String>, u64> {
+    pub fn try_pair(&self, code: &str, client_id: &str) -> Result<Option<String>, u64> {
         let client_id = normalize_client_key(client_id);
         let now = Instant::now();
 
         // 1. Periodic sweep + lockout check
         {
-            let mut guard = self.failed_attempts.lock().await;
+            let mut guard = self.failed_attempts.lock();
             let (ref mut map, ref mut last_sweep) = *guard;
 
             // Sweep stale entries on interval
@@ -126,16 +126,16 @@ impl PairingGuard {
 
         // 2. Code verification
         {
-            let mut pairing_code = self.pairing_code.lock().await;
+            let mut pairing_code = self.pairing_code.lock();
             if let Some(ref expected) = *pairing_code {
                 if constant_time_eq(code.trim(), expected.trim()) {
                     // Reset failed attempts for this client on success
                     {
-                        let mut guard = self.failed_attempts.lock().await;
+                        let mut guard = self.failed_attempts.lock();
                         guard.0.remove(&client_id);
                     }
                     let token = generate_token();
-                    let mut tokens = self.paired_tokens.lock().await;
+                    let mut tokens = self.paired_tokens.lock();
                     tokens.insert(hash_token(&token));
 
                     // Consume the pairing code so it cannot be reused
@@ -148,7 +148,7 @@ impl PairingGuard {
 
         // 3. Increment failed attempts for this client
         {
-            let mut guard = self.failed_attempts.lock().await;
+            let mut guard = self.failed_attempts.lock();
             let (ref mut map, _) = *guard;
 
             // Enforce capacity bound: prune stale first, then LRU-evict if still full
@@ -184,24 +184,24 @@ impl PairingGuard {
     }
 
     /// Check if a bearer token is valid (compares against stored hashes).
-    pub async fn is_authenticated(&self, token: &str) -> bool {
+    pub fn is_authenticated(&self, token: &str) -> bool {
         if !self.require_pairing {
             return true;
         }
         let hashed = hash_token(token);
-        let tokens = self.paired_tokens.lock().await;
+        let tokens = self.paired_tokens.lock();
         tokens.contains(&hashed)
     }
 
     /// Returns true if the gateway is already paired (has at least one token).
-    pub async fn is_paired(&self) -> bool {
-        let tokens = self.paired_tokens.lock().await;
+    pub fn is_paired(&self) -> bool {
+        let tokens = self.paired_tokens.lock();
         !tokens.is_empty()
     }
 
     /// Get all paired token hashes (for persisting to config).
-    pub async fn tokens(&self) -> Vec<String> {
-        let tokens = self.paired_tokens.lock().await;
+    pub fn tokens(&self) -> Vec<String> {
+        let tokens = self.paired_tokens.lock();
         tokens.iter().cloned().collect()
     }
 
@@ -209,12 +209,12 @@ impl PairingGuard {
     ///
     /// This allows adding additional clients without restarting the gateway.
     /// The new code can be used exactly once to pair a new client.
-    pub async fn generate_new_pairing_code(&self) -> Option<String> {
+    pub fn generate_new_pairing_code(&self) -> Option<String> {
         if !self.require_pairing {
             return None;
         }
         let new_code = generate_code();
-        *self.pairing_code.lock().await = Some(new_code.clone());
+        *self.pairing_code.lock() = Some(new_code.clone());
         Some(new_code)
     }
 }
@@ -336,82 +336,82 @@ mod tests {
     // ── PairingGuard ─────────────────────────────────────────
 
     #[test]
-    async fn new_guard_generates_code_when_no_tokens() {
+    fn new_guard_generates_code_when_no_tokens() {
         let guard = PairingGuard::new(true, &[]);
-        assert!(guard.pairing_code().await.is_some());
-        assert!(!guard.is_paired().await);
+        assert!(guard.pairing_code().is_some());
+        assert!(!guard.is_paired());
     }
 
     #[test]
-    async fn new_guard_no_code_when_tokens_exist() {
+    fn new_guard_no_code_when_tokens_exist() {
         let guard = PairingGuard::new(true, &["zc_existing".into()]);
-        assert!(guard.pairing_code().await.is_none());
-        assert!(guard.is_paired().await);
+        assert!(guard.pairing_code().is_none());
+        assert!(guard.is_paired());
     }
 
     #[test]
-    async fn new_guard_no_code_when_pairing_disabled() {
+    fn new_guard_no_code_when_pairing_disabled() {
         let guard = PairingGuard::new(false, &[]);
-        assert!(guard.pairing_code().await.is_none());
+        assert!(guard.pairing_code().is_none());
     }
 
     #[test]
-    async fn try_pair_correct_code() {
+    fn try_pair_correct_code() {
         let guard = PairingGuard::new(true, &[]);
-        let code = guard.pairing_code().await.unwrap().to_string();
-        let token = guard.try_pair(&code, "test_client").await.unwrap();
+        let code = guard.pairing_code().unwrap().to_string();
+        let token = guard.try_pair(&code, "test_client").unwrap();
         assert!(token.is_some());
         assert!(token.unwrap().starts_with("zc_"));
-        assert!(guard.is_paired().await);
+        assert!(guard.is_paired());
     }
 
     #[test]
-    async fn try_pair_wrong_code() {
+    fn try_pair_wrong_code() {
         let guard = PairingGuard::new(true, &[]);
-        let result = guard.try_pair("000000", "test_client").await.unwrap();
+        let result = guard.try_pair("000000", "test_client").unwrap();
         // Might succeed if code happens to be 000000, but extremely unlikely
         // Just check it returns Ok(None) normally
         let _ = result;
     }
 
     #[test]
-    async fn try_pair_empty_code() {
+    fn try_pair_empty_code() {
         let guard = PairingGuard::new(true, &[]);
-        assert!(guard.try_pair("", "test_client").await.unwrap().is_none());
+        assert!(guard.try_pair("", "test_client").unwrap().is_none());
     }
 
     #[test]
-    async fn is_authenticated_with_valid_token() {
+    fn is_authenticated_with_valid_token() {
         // Pass plaintext token — PairingGuard hashes it on load
         let guard = PairingGuard::new(true, &["zc_valid".into()]);
-        assert!(guard.is_authenticated("zc_valid").await);
+        assert!(guard.is_authenticated("zc_valid"));
     }
 
     #[test]
-    async fn is_authenticated_with_prehashed_token() {
+    fn is_authenticated_with_prehashed_token() {
         // Pass an already-hashed token (64 hex chars)
         let hashed = hash_token("zc_valid");
         let guard = PairingGuard::new(true, &[hashed]);
-        assert!(guard.is_authenticated("zc_valid").await);
+        assert!(guard.is_authenticated("zc_valid"));
     }
 
     #[test]
-    async fn is_authenticated_with_invalid_token() {
+    fn is_authenticated_with_invalid_token() {
         let guard = PairingGuard::new(true, &["zc_valid".into()]);
-        assert!(!guard.is_authenticated("zc_invalid").await);
+        assert!(!guard.is_authenticated("zc_invalid"));
     }
 
     #[test]
-    async fn is_authenticated_when_pairing_disabled() {
+    fn is_authenticated_when_pairing_disabled() {
         let guard = PairingGuard::new(false, &[]);
-        assert!(guard.is_authenticated("anything").await);
-        assert!(guard.is_authenticated("").await);
+        assert!(guard.is_authenticated("anything"));
+        assert!(guard.is_authenticated(""));
     }
 
     #[test]
-    async fn tokens_returns_hashes() {
+    fn tokens_returns_hashes() {
         let guard = PairingGuard::new(true, &["zc_a".into(), "zc_b".into()]);
-        let tokens = guard.tokens().await;
+        let tokens = guard.tokens();
         assert_eq!(tokens.len(), 2);
         // Tokens should be stored as 64-char hex hashes, not plaintext
         for t in &tokens {
@@ -422,35 +422,35 @@ mod tests {
     }
 
     #[test]
-    async fn pair_then_authenticate() {
+    fn pair_then_authenticate() {
         let guard = PairingGuard::new(true, &[]);
-        let code = guard.pairing_code().await.unwrap().to_string();
-        let token = guard.try_pair(&code, "test_client").await.unwrap().unwrap();
-        assert!(guard.is_authenticated(&token).await);
-        assert!(!guard.is_authenticated("wrong").await);
+        let code = guard.pairing_code().unwrap().to_string();
+        let token = guard.try_pair(&code, "test_client").unwrap().unwrap();
+        assert!(guard.is_authenticated(&token));
+        assert!(!guard.is_authenticated("wrong"));
     }
 
     // ── Token hashing ────────────────────────────────────────
 
     #[test]
-    async fn hash_token_produces_64_hex_chars() {
+    fn hash_token_produces_64_hex_chars() {
         let hash = hash_token("zc_test_token");
         assert_eq!(hash.len(), 64);
         assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
-    async fn hash_token_is_deterministic() {
+    fn hash_token_is_deterministic() {
         assert_eq!(hash_token("zc_abc"), hash_token("zc_abc"));
     }
 
     #[test]
-    async fn hash_token_differs_for_different_inputs() {
+    fn hash_token_differs_for_different_inputs() {
         assert_ne!(hash_token("zc_a"), hash_token("zc_b"));
     }
 
     #[test]
-    async fn is_token_hash_detects_hash_vs_plaintext() {
+    fn is_token_hash_detects_hash_vs_plaintext() {
         assert!(is_token_hash(&hash_token("zc_test")));
         assert!(!is_token_hash("zc_test_token"));
         assert!(!is_token_hash("too_short"));
@@ -460,7 +460,7 @@ mod tests {
     // ── is_public_bind ───────────────────────────────────────
 
     #[test]
-    async fn localhost_variants_not_public() {
+    fn localhost_variants_not_public() {
         assert!(!is_public_bind("127.0.0.1"));
         assert!(!is_public_bind("localhost"));
         assert!(!is_public_bind("::1"));
@@ -468,12 +468,12 @@ mod tests {
     }
 
     #[test]
-    async fn zero_zero_is_public() {
+    fn zero_zero_is_public() {
         assert!(is_public_bind("0.0.0.0"));
     }
 
     #[test]
-    async fn real_ip_is_public() {
+    fn real_ip_is_public() {
         assert!(is_public_bind("192.168.1.100"));
         assert!(is_public_bind("10.0.0.1"));
     }
@@ -481,13 +481,13 @@ mod tests {
     // ── constant_time_eq ─────────────────────────────────────
 
     #[test]
-    async fn constant_time_eq_same() {
+    fn constant_time_eq_same() {
         assert!(constant_time_eq("abc", "abc"));
         assert!(constant_time_eq("", ""));
     }
 
     #[test]
-    async fn constant_time_eq_different() {
+    fn constant_time_eq_different() {
         assert!(!constant_time_eq("abc", "abd"));
         assert!(!constant_time_eq("abc", "ab"));
         assert!(!constant_time_eq("a", ""));
@@ -496,14 +496,14 @@ mod tests {
     // ── generate helpers ─────────────────────────────────────
 
     #[test]
-    async fn generate_code_is_6_digits() {
+    fn generate_code_is_6_digits() {
         let code = generate_code();
         assert_eq!(code.len(), 6);
         assert!(code.chars().all(|c| c.is_ascii_digit()));
     }
 
     #[test]
-    async fn generate_code_is_not_deterministic() {
+    fn generate_code_is_not_deterministic() {
         // Two codes should differ with overwhelming probability. We try
         // multiple pairs so a single 1-in-10^6 collision doesn't cause
         // a flaky CI failure. All 10 pairs colliding is ~1-in-10^60.
@@ -516,7 +516,7 @@ mod tests {
     }
 
     #[test]
-    async fn generate_token_has_prefix_and_hex_payload() {
+    fn generate_token_has_prefix_and_hex_payload() {
         let token = generate_token();
         let payload = token
             .strip_prefix("zc_")
@@ -534,16 +534,16 @@ mod tests {
     // ── Brute force protection ───────────────────────────────
 
     #[test]
-    async fn brute_force_lockout_after_max_attempts() {
+    fn brute_force_lockout_after_max_attempts() {
         let guard = PairingGuard::new(true, &[]);
         let client = "attacker_client";
         // Exhaust all attempts with wrong codes
         for i in 0..MAX_PAIR_ATTEMPTS {
-            let result = guard.try_pair(&format!("wrong_{i}"), client).await;
+            let result = guard.try_pair(&format!("wrong_{i}"), client);
             assert!(result.is_ok(), "Attempt {i} should not be locked out yet");
         }
         // Next attempt should be locked out
-        let result = guard.try_pair("another_wrong", client).await;
+        let result = guard.try_pair("another_wrong", client);
         assert!(
             result.is_err(),
             "Should be locked out after {MAX_PAIR_ATTEMPTS} attempts"
@@ -557,27 +557,27 @@ mod tests {
     }
 
     #[test]
-    async fn correct_code_resets_failed_attempts() {
+    fn correct_code_resets_failed_attempts() {
         let guard = PairingGuard::new(true, &[]);
-        let code = guard.pairing_code().await.unwrap().to_string();
+        let code = guard.pairing_code().unwrap().to_string();
         let client = "test_client";
         // Fail a few times
         for _ in 0..3 {
-            let _ = guard.try_pair("wrong", client).await;
+            let _ = guard.try_pair("wrong", client);
         }
         // Correct code should still work (under MAX_PAIR_ATTEMPTS)
-        let result = guard.try_pair(&code, client).await.unwrap();
+        let result = guard.try_pair(&code, client).unwrap();
         assert!(result.is_some(), "Correct code should work before lockout");
     }
 
     #[test]
-    async fn lockout_returns_remaining_seconds() {
+    fn lockout_returns_remaining_seconds() {
         let guard = PairingGuard::new(true, &[]);
         let client = "test_client";
         for _ in 0..MAX_PAIR_ATTEMPTS {
-            let _ = guard.try_pair("wrong", client).await;
+            let _ = guard.try_pair("wrong", client);
         }
-        let err = guard.try_pair("wrong", client).await.unwrap_err();
+        let err = guard.try_pair("wrong", client).unwrap_err();
         // Should be close to PAIR_LOCKOUT_SECS (within a second)
         assert!(
             err >= PAIR_LOCKOUT_SECS - 1,
@@ -586,24 +586,24 @@ mod tests {
     }
 
     #[test]
-    async fn successful_pair_resets_only_requesting_client_state() {
+    fn successful_pair_resets_only_requesting_client_state() {
         let guard = PairingGuard::new(true, &[]);
-        let code = guard.pairing_code().await.unwrap().to_string();
+        let code = guard.pairing_code().unwrap().to_string();
         let client_a = "client_a";
         let client_b = "client_b";
 
         // Both clients fail a few times
         for _ in 0..3 {
-            let _ = guard.try_pair("wrong", client_a).await;
-            let _ = guard.try_pair("wrong", client_b).await;
+            let _ = guard.try_pair("wrong", client_a);
+            let _ = guard.try_pair("wrong", client_b);
         }
 
         // client_a pairs successfully — only its state should reset
-        let result = guard.try_pair(&code, client_a).await.unwrap();
+        let result = guard.try_pair(&code, client_a).unwrap();
         assert!(result.is_some(), "client_a should pair successfully");
 
         // client_b's failed count should still be intact (3 failures recorded)
-        let state = guard.failed_attempts.lock().await;
+        let state = guard.failed_attempts.lock();
         let b_state = state.0.get(client_b);
         assert!(b_state.is_some(), "client_b state should still exist");
         assert_eq!(
@@ -620,12 +620,12 @@ mod tests {
     }
 
     #[test]
-    async fn failed_attempt_state_is_bounded_by_max_clients() {
+    fn failed_attempt_state_is_bounded_by_max_clients() {
         let guard = PairingGuard::new(true, &[]);
 
         // Fill the map to MAX_TRACKED_CLIENTS with stale entries
         {
-            let mut state = guard.failed_attempts.lock().await;
+            let mut state = guard.failed_attempts.lock();
             let past = Instant::now()
                 .checked_sub(std::time::Duration::from_secs(
                     FAILED_ATTEMPT_RETENTION_SECS + 60,
@@ -644,10 +644,10 @@ mod tests {
         }
 
         // A new client triggers an attempt — should prune stale entries and fit
-        let result = guard.try_pair("wrong", "new_client").await;
+        let result = guard.try_pair("wrong", "new_client");
         assert!(result.is_ok(), "New client should not be blocked");
 
-        let state = guard.failed_attempts.lock().await;
+        let state = guard.failed_attempts.lock();
         assert!(
             state.0.len() <= MAX_TRACKED_CLIENTS,
             "Map size should stay within bound, got {}",
@@ -660,12 +660,12 @@ mod tests {
     }
 
     #[test]
-    async fn failed_attempt_sweep_prunes_expired_clients() {
+    fn failed_attempt_sweep_prunes_expired_clients() {
         let guard = PairingGuard::new(true, &[]);
 
         // Seed a stale entry and set last_sweep to long ago so sweep triggers
         {
-            let mut state = guard.failed_attempts.lock().await;
+            let mut state = guard.failed_attempts.lock();
             let past = Instant::now()
                 .checked_sub(std::time::Duration::from_secs(
                     FAILED_ATTEMPT_RETENTION_SECS + 60,
@@ -688,9 +688,9 @@ mod tests {
         }
 
         // Any attempt triggers sweep
-        let _ = guard.try_pair("wrong", "fresh_client").await;
+        let _ = guard.try_pair("wrong", "fresh_client");
 
-        let state = guard.failed_attempts.lock().await;
+        let state = guard.failed_attempts.lock();
         assert!(
             !state.0.contains_key("stale_client"),
             "Stale client should have been pruned by sweep"
@@ -702,23 +702,24 @@ mod tests {
     }
 
     #[test]
-    async fn lockout_is_per_client() {
+    fn lockout_is_per_client() {
         let guard = PairingGuard::new(true, &[]);
         let attacker = "attacker_ip";
         let legitimate = "legitimate_ip";
 
         // Attacker exhausts attempts
         for i in 0..MAX_PAIR_ATTEMPTS {
-            let _ = guard.try_pair(&format!("wrong_{i}"), attacker).await;
+            let _ = guard.try_pair(&format!("wrong_{i}"), attacker);
         }
         // Attacker is locked out
-        assert!(guard.try_pair("wrong", attacker).await.is_err());
+        assert!(guard.try_pair("wrong", attacker).is_err());
 
         // Legitimate client is NOT locked out
-        let result = guard.try_pair("wrong", legitimate).await;
+        let result = guard.try_pair("wrong", legitimate);
         assert!(
             result.is_ok(),
             "Legitimate client should not be locked out by attacker"
         );
     }
+}
 }

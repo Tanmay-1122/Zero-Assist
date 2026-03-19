@@ -775,7 +775,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
 async fn handle_health(State(state): State<AppState>) -> impl IntoResponse {
     let body = serde_json::json!({
         "status": "ok",
-        "paired": state.pairing.is_paired().await,
+        "paired": state.pairing.is_paired(),
         "require_pairing": state.pairing.require_pairing(),
         "runtime": crate::health::snapshot_json(),
     });
@@ -842,7 +842,7 @@ async fn handle_pair(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
-    match state.pairing.try_pair(code, &rate_key).await {
+    match state.pairing.try_pair(code, &rate_key) {
         Ok(Some(token)) => {
             tracing::info!("🔐 New client paired successfully");
             if let Err(err) = persist_pairing_tokens(state.config.clone(), &state.pairing).await {
@@ -884,8 +884,6 @@ async fn handle_pair(
 
 async fn persist_pairing_tokens(config: Arc<Mutex<Config>>, pairing: &PairingGuard) -> Result<()> {
     let paired_tokens = pairing.tokens();
-    // This is needed because parking_lot's guard is not Send so we clone the inner
-    // this should be removed once async mutexes are used everywhere
     let mut updated_cfg = { config.lock().clone() };
     updated_cfg.gateway.paired_tokens = paired_tokens;
     updated_cfg
@@ -893,7 +891,6 @@ async fn persist_pairing_tokens(config: Arc<Mutex<Config>>, pairing: &PairingGua
         .await
         .context("Failed to persist paired tokens to config.toml")?;
 
-    // Keep shared runtime config in sync with persisted tokens.
     *config.lock() = updated_cfg;
     Ok(())
 }

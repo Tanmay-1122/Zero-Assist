@@ -10,12 +10,13 @@ plugins {
 android {
     namespace = "com.zeroclaw.lib"
     compileSdk = 35
+    ndkVersion = "27.2.12479018"
 
     defaultConfig {
         minSdk = 26
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86"))
         }
 
         consumerProguardFiles("consumer-rules.pro")
@@ -32,7 +33,8 @@ android {
 }
 
 cargo {
-    packageDirectory = file("../zeroclaw-android/zeroclaw-ffi")
+    packageDirectory = project.file("../zeroclaw-android/zeroclaw-ffi")
+    targets = listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
 }
 
 uniffi {

@@ -22,8 +22,7 @@ fn extract_bearer_token(headers: &HeaderMap) -> Option<&str> {
         .and_then(|auth| auth.strip_prefix("Bearer "))
 }
 
-/// Verify bearer token against PairingGuard. Returns error response if unauthorized.
-async fn require_auth(
+fn require_auth(
     state: &AppState,
     headers: &HeaderMap,
 ) -> Result<(), (StatusCode, Json<serde_json::Value>)> {
@@ -32,7 +31,7 @@ async fn require_auth(
     }
 
     let token = extract_bearer_token(headers).unwrap_or("");
-    if state.pairing.is_authenticated(token).await {
+    if state.pairing.is_authenticated(token) {
         Ok(())
     } else {
         Err((
@@ -78,7 +77,7 @@ pub async fn handle_api_status(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -99,7 +98,7 @@ pub async fn handle_api_status(
         "gateway_port": config.gateway.port,
         "locale": "en",
         "memory_backend": state.mem.name(),
-        "paired": state.pairing.is_paired().await,
+        "paired": state.pairing.is_paired(),
         "channels": channels,
         "health": health,
     });
@@ -112,7 +111,7 @@ pub async fn handle_api_config_get(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -144,7 +143,7 @@ pub async fn handle_api_config_put(
     headers: HeaderMap,
     body: String,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -191,7 +190,7 @@ pub async fn handle_api_tools(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -215,7 +214,7 @@ pub async fn handle_api_cron_list(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -252,7 +251,7 @@ pub async fn handle_api_cron_add(
     headers: HeaderMap,
     Json(body): Json<CronAddBody>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -294,7 +293,7 @@ pub async fn handle_api_cron_runs(
     Path(id): Path<String>,
     Query(params): Query<CronRunsQuery>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -342,7 +341,7 @@ pub async fn handle_api_cron_delete(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -362,7 +361,7 @@ pub async fn handle_api_integrations(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -390,7 +389,7 @@ pub async fn handle_api_integrations_settings(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -419,7 +418,7 @@ pub async fn handle_api_doctor(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -456,7 +455,7 @@ pub async fn handle_api_memory_list(
     headers: HeaderMap,
     Query(params): Query<MemoryQuery>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -496,7 +495,7 @@ pub async fn handle_api_memory_store(
     headers: HeaderMap,
     Json(body): Json<MemoryStoreBody>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -531,7 +530,7 @@ pub async fn handle_api_memory_delete(
     headers: HeaderMap,
     Path(key): Path<String>,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -552,7 +551,7 @@ pub async fn handle_api_cost(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -585,7 +584,7 @@ pub async fn handle_api_cli_tools(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
@@ -599,7 +598,7 @@ pub async fn handle_api_health(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    if let Err(e) = require_auth(&state, &headers).await {
+    if let Err(e) = require_auth(&state, &headers) {
         return e.into_response();
     }
 
