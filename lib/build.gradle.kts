@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +13,11 @@ android {
     namespace = "com.zeroclaw.lib"
     compileSdk = 35
     ndkVersion = "27.2.12479018"
+
+    // Fix for Gobley plugin NPE: Gobley 0.3.7 directly accesses the deprecated ndkDirectory
+    // which can be null in AGP 8.x. We explicitly set it here.
+    @Suppress("DEPRECATION")
+    ndkDirectory = sdkDirectory.resolve("ndk/$ndkVersion")
 
     defaultConfig {
         minSdk = 26
@@ -34,7 +41,6 @@ android {
 
 cargo {
     packageDirectory = project.file("../zeroclaw-android/zeroclaw-ffi")
-    targets = listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
 }
 
 uniffi {
