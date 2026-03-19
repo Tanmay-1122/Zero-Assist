@@ -33,6 +33,7 @@ use axum::{
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json},
     routing::{delete, get, post, put},
+    ServiceExt,
     Router,
 };
 use parking_lot::Mutex;
@@ -964,13 +965,7 @@ async fn handle_webhook(
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
         let token = auth.strip_prefix("Bearer ").unwrap_or("");
-        if !state.pairing.is_authenticated(token).await {
-            tracing::warn!("Webhook: rejected — not paired / invalid bearer token");
-            let err = serde_json::json!({
-                "error": "Unauthorized — pair first via POST /pair, then send Authorization: Bearer <token>"
-            });
-            return (StatusCode::UNAUTHORIZED, Json(err));
-        }
+            if !state.pairing.is_authenticated(token) {
     }
 
     // ── Webhook secret auth (optional, additional layer) ──
@@ -1984,7 +1979,7 @@ mod tests {
         let guard = PairingGuard::new(true, &[]);
         let code = guard.pairing_code().unwrap();
         let token = guard.try_pair(&code, "test_client").await.unwrap().unwrap();
-        assert!(guard.is_authenticated(&token).await);
+        assert!(guard.is_authenticated(&token));
 
         let shared_config = Arc::new(Mutex::new(config));
         persist_pairing_tokens(shared_config.clone(), &guard)

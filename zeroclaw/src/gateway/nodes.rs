@@ -252,7 +252,7 @@ pub async fn handle_ws_nodes(
     // Fall back to pairing auth if no node-specific token
     if nodes_config.auth_token.is_none() && state.pairing.require_pairing() {
         let token = extract_node_ws_token(&headers, params.token.as_deref()).unwrap_or("");
-        if !state.pairing.is_authenticated(token).await {
+        if !state.pairing.is_authenticated(token) {
             return (
                 axum::http::StatusCode::UNAUTHORIZED,
                 "Unauthorized — provide Authorization header or ?token= query param",
