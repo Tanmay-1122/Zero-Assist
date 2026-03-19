@@ -1380,30 +1380,42 @@ Allowlist Telegram username (without '@') or numeric user ID.",
     /// This mirrors OpenClaw's markdownToTelegramHtml approach.
     fn markdown_to_telegram_html(text: &str) -> String {
         let lines: Vec<&str> = text.split('\n').collect();
-        let mut result_lines: Vec<String> = Vec::new();
+        let mut final_out = String::with_capacity(text.len());
+        let mut in_code_block = false;
+        let mut code_buf = String::new();
 
-        for line in &lines {
-            let trimmed_line = line.trim_start();
-            if trimmed_line.starts_with("```") {
-                // Preserve fence lines so the second-pass block parser can consume them
-                // without interference from inline backtick handling.
-                result_lines.push(trimmed_line.to_string());
+        for line in lines {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("```") {
+                if in_code_block {
+                    in_code_block = false;
+                    let escaped = Self::escape_html(code_buf.trim_end_matches('\n'));
+                    let _ = writeln!(final_out, "<pre><code>{escaped}</code></pre>");
+                    code_buf.clear();
+                } else {
+                    in_code_block = true;
+                    code_buf.clear();
+                }
                 continue;
             }
 
-            let mut line_out = String::new();
+            if in_code_block {
+                code_buf.push_str(line);
+                code_buf.push('\n');
+                continue;
+            }
 
-            // Handle code blocks (``` ... ```) - handled at text level below
             // Handle headers: ## Title → <b>Title</b>
             let stripped = line.trim_start_matches('#');
             let header_level = line.len() - stripped.len();
             if header_level > 0 && line.starts_with('#') && stripped.starts_with(' ') {
                 let title = Self::escape_html(stripped.trim());
-                result_lines.push(format!("<b>{title}</b>"));
+                let _ = writeln!(final_out, "<b>{title}</b>");
                 continue;
             }
 
             // Inline formatting
+            let mut line_out = String::new();
             let mut i = 0;
             let bytes = line.as_bytes();
             let len = bytes.len();
@@ -1486,38 +1498,13 @@ Allowlist Telegram username (without '@') or numeric user ID.",
                 }
                 i += ch.len_utf8();
             }
-            result_lines.push(line_out);
+            final_out.push_str(&line_out);
+            final_out.push('\n');
         }
 
-        // Second pass: handle ``` code blocks across lines
-        let joined = result_lines.join("\n");
-        let mut final_out = String::with_capacity(joined.len());
-        let mut in_code_block = false;
-        let mut code_buf = String::new();
-
-        for line in joined.split('\n') {
-            let trimmed = line.trim();
-            if trimmed.starts_with("```") {
-                if in_code_block {
-                    in_code_block = false;
-                    let escaped = code_buf.trim_end_matches('\n');
-                    // Telegram HTML parse mode supports <pre> and <code>, but not class attributes.
-                    let _ = writeln!(final_out, "<pre><code>{escaped}</code></pre>");
-                    code_buf.clear();
-                } else {
-                    in_code_block = true;
-                    code_buf.clear();
-                }
-            } else if in_code_block {
-                code_buf.push_str(line);
-                code_buf.push('\n');
-            } else {
-                final_out.push_str(line);
-                final_out.push('\n');
-            }
-        }
         if in_code_block && !code_buf.is_empty() {
-            let _ = writeln!(final_out, "<pre><code>{}</code></pre>", code_buf.trim_end());
+            let escaped = Self::escape_html(code_buf.trim_end_matches('\n'));
+            let _ = writeln!(final_out, "<pre><code>{escaped}</code></pre>");
         }
 
         final_out.trim_end_matches('\n').to_string()
