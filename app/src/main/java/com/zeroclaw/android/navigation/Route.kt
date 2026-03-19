@@ -103,6 +103,10 @@ data class ChannelDetailRoute(
     val channelType: String? = null,
 )
 
+/** Python script runner (DroidRun) screen. */
+@Serializable
+data object DroidRunRoute
+
 /** Interactive terminal REPL screen. */
 @Serializable
 data object TerminalRoute

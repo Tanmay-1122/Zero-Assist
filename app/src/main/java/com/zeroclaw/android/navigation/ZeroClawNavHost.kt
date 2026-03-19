@@ -34,6 +34,7 @@ import com.zeroclaw.android.ui.screen.agents.AddAgentScreen
 import com.zeroclaw.android.ui.screen.agents.AgentDetailScreen
 import com.zeroclaw.android.ui.screen.agents.AgentsScreen
 import com.zeroclaw.android.ui.screen.dashboard.DashboardScreen
+import com.zeroclaw.android.ui.screen.droidrun.DroidRunScreen
 import com.zeroclaw.android.ui.screen.onboarding.OnboardingScreen
 import com.zeroclaw.android.ui.screen.plugins.PluginDetailScreen
 import com.zeroclaw.android.ui.screen.plugins.PluginsScreen
@@ -190,6 +191,10 @@ fun ZeroClawNavHost(
 
         composable<TerminalRoute> {
             TerminalScreen(edgeMargin = edgeMargin)
+        }
+
+        composable<DroidRunRoute> {
+            DroidRunScreen(edgeMargin = edgeMargin)
         }
 
         composable<SettingsRoute> {

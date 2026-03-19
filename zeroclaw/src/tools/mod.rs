@@ -27,6 +27,7 @@ pub mod cron_run;
 pub mod cron_runs;
 pub mod cron_update;
 pub mod delegate;
+pub mod droidrun;
 pub mod file_edit;
 pub mod file_read;
 pub mod file_write;
@@ -73,6 +74,7 @@ pub use cron_run::CronRunTool;
 pub use cron_runs::CronRunsTool;
 pub use cron_update::CronUpdateTool;
 pub use delegate::DelegateTool;
+pub use droidrun::DroidRunTool;
 pub use file_edit::FileEditTool;
 pub use file_read::FileReadTool;
 pub use file_write::FileWriteTool;
@@ -190,12 +192,13 @@ pub fn default_tools_with_runtime(
     runtime: Arc<dyn RuntimeAdapter>,
 ) -> Vec<Box<dyn Tool>> {
     vec![
-        Box::new(ShellTool::new(security.clone(), runtime)),
+        Box::new(ShellTool::new(security.clone(), runtime.clone())),
         Box::new(FileReadTool::new(security.clone())),
         Box::new(FileWriteTool::new(security.clone())),
         Box::new(FileEditTool::new(security.clone())),
         Box::new(GlobSearchTool::new(security.clone())),
-        Box::new(ContentSearchTool::new(security)),
+        Box::new(ContentSearchTool::new(security.clone())),
+        Box::new(DroidRunTool::new(security, runtime)),
     ]
 }
 
@@ -262,6 +265,7 @@ pub fn all_tools_with_runtime(
         Arc::new(CronUpdateTool::new(config.clone(), security.clone())),
         Arc::new(CronRunTool::new(config.clone(), security.clone())),
         Arc::new(CronRunsTool::new(config.clone())),
+        Arc::new(DroidRunTool::new(security.clone(), runtime.clone())),
         Arc::new(MemoryStoreTool::new(memory.clone(), security.clone())),
         Arc::new(MemoryRecallTool::new(memory.clone())),
         Arc::new(MemoryForgetTool::new(memory, security.clone())),

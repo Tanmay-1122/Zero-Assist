@@ -28,7 +28,7 @@ pub async fn handle_sse_events(
             .and_then(|auth| auth.strip_prefix("Bearer "))
             .unwrap_or("");
 
-        if !state.pairing.is_authenticated(token) {
+        if !state.pairing.is_authenticated(token).await {
             return (
                 StatusCode::UNAUTHORIZED,
                 "Unauthorized — provide Authorization: Bearer <token>",

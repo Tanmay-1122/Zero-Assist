@@ -1,0 +1,34 @@
+﻿
+security\pairing.rs:41:// 
+TODO: I've just made this 
+work with parking_lot but it 
+should use either flume or 
+tokio's async mutexes
+security\pairing.rs:190:     
+   // TODO: make this 
+function the main one 
+without spawning a task
+security\policy.rs:1983:     
+   assert_eq!(p.forbidden_pat
+h_argument("grep -r todo 
+./src"), None);
+tools\browser_open.rs:136:   
+     // TODO(compat): remove 
+Brave fallback after 
+default-browser launch has 
+been stable across macOS 
+environments.
+tools\browser_open.rs:187:   
+     // TODO(compat): remove 
+Brave fallback commands 
+(brave-browser/brave) once 
+default launcher coverage is 
+validated.
+tools\browser_open.rs:208:   
+     // TODO(compat): remove 
+Brave fallback after 
+default-browser launch has 
+been stable across Windows 
+environments.
+
+

@@ -90,7 +90,7 @@ pub async fn handle_ws_chat(
     // Auth: check header, subprotocol, then query param (precedence order)
     if state.pairing.require_pairing() {
         let token = extract_ws_token(&headers, params.token.as_deref()).unwrap_or("");
-        if !state.pairing.is_authenticated(token) {
+        if !state.pairing.is_authenticated(token).await {
             return (
                 axum::http::StatusCode::UNAUTHORIZED,
                 "Unauthorized — provide Authorization header, Sec-WebSocket-Protocol bearer, or ?token= query param",

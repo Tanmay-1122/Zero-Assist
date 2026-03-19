@@ -1,0 +1,354 @@
+# DroidRun Configuration File
+# This file is auto-generated. Edit values as needed.
+
+_version: 3
+
+# === Agent Settings ===
+agent:
+  # Agent to use: "droidrun" (native) or external: "mai_ui", "autoglm"
+  name: droidrun
+  # Maximum number of steps per task
+  max_steps: 15
+  # Enable planning with reasoning mode
+  reasoning: false
+  # Enable streaming LLM responses to console in real-time
+  streaming: true
+  # Sleep duration after each action, waits for ui state to be updated (seconds)
+  after_sleep_action: 1.0
+  # Wait duration for UI to stabilize (seconds)
+  wait_for_stable_ui: 0.3
+
+  # Coordinate system for swipe and state bounds output
+  # false = absolute pixels (default)
+  # true = normalized [0-1000] range (resolution-independent)
+  use_normalized_coordinates: false
+
+  # Fast Agent Configuration
+  fast_agent:
+    # Enable vision capabilities (screenshots)
+    vision: false
+    # Enable code execution mode (generates and exec() Python code)
+    # false (default) = uses XML tool-calling (safer, no code execution)
+    # true = legacy code generation mode with exec()
+    codeact: false
+    # Allow multiple tool calls in a single response when safe
+    # Reduces round-trips by combining actions that don't depend on screen changes
+    parallel_tools: true
+    # System prompt path (relative or absolute)
+    # Default points to tools agent prompt; legacy codeact prompt used automatically when codeact: true
+    system_prompt: config/prompts/codeact/tools_system.jinja2
+    # User prompt path (relative or absolute)
+    user_prompt: config/prompts/codeact/tools_user.jinja2
+    # Enable safe code execution (restricts imports and builtins)
+    safe_execution: false
+    # Execution timeout per code block (seconds)
+    execution_timeout: 50.0
+
+  # Manager Agent Configuration
+  manager:
+    # Enable vision capabilities (screenshots)
+    vision: false
+    # System prompt path (relative or absolute)
+    system_prompt: config/prompts/manager/system.jinja2
+    # Use stateless manager (rebuilds context each turn, no chat history, experimental)
+    stateless: false
+
+  # Executor Agent Configuration
+  executor:
+    # Enable vision capabilities (screenshots)
+    vision: false
+    # System prompt path (relative or absolute)
+    system_prompt: config/prompts/executor/system.jinja2
+
+  # Scripter Agent Configuration
+  scripter:
+    # Enable scripter execution for off-device operations
+    enabled: true
+    # Maximum steps per scripter agent task
+    max_steps: 10
+    # Execution timeout per code block (seconds)
+    execution_timeout: 30.0
+    # System prompt path (relative or absolute)
+    system_prompt: config/prompts/scripter/system.jinja2
+    # Enable safe code execution (restricts imports and builtins)
+    safe_execution: false
+
+  # App Cards Configuration
+  app_cards:
+    # Enable app-specific instruction cards
+    enabled: true
+    # Mode: local (file-based), server (HTTP API), or composite (server with local fallback)
+    mode: local
+    # Directory containing app card files (for local/composite modes)
+    app_cards_dir: config/app_cards
+    # Server URL for remote app cards (for server/composite modes)
+    server_url: null
+    # Server request timeout in seconds
+    server_timeout: 10.0
+    # Number of server retry attempts
+    server_max_retries: 2
+
+# === LLM Profiles ===
+# Define LLM configurations for each agent type
+llm_profiles:
+  # Manager: Plans and reasons about task progress
+  manager:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-pro
+    temperature: 0.2
+    # kwargs: # optional kwargs, add api_key in kwargs if not already in .env
+    #   max_tokens: 8192
+      
+  # Executor: Selects and executes atomic actions
+  executor:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-flash
+    temperature: 0.1
+    # kwargs:
+    #   max_tokens: 4096
+      
+  # Fast Agent: Direct execution agent (XML tool-calling or code generation)
+  fast_agent:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-pro
+    temperature: 0.2
+    # kwargs:
+    #   max_tokens: 8192
+      
+  # Text Manipulator: Edits text in input fields
+  text_manipulator:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-flash
+    temperature: 0.3
+    # kwargs:
+    #   max_tokens: 4096
+      
+  # App Opener: Opens apps by name/description
+  app_opener:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-flash
+    temperature: 0.0
+    # kwargs:
+    #   max_tokens: 512
+
+  # Scripter: Executes Python scripts for off-device operations
+  scripter:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-flash
+    temperature: 0.1
+    # kwargs:
+    #   max_tokens: 4096
+
+  # Structured Output: Extracts structured data from final answers
+  structured_output:
+    provider: GoogleGenAI
+    model: models/gemini-2.5-flash
+    temperature: 0.0
+    # kwargs:
+    #   max_tokens: 2048
+
+# === Device Settings ===
+device:
+  # Default device serial (null = auto-detect)
+  serial: null
+  # Use TCP communication instead of usb
+  use_tcp: false
+  # Platform: android or ios but currently only android is supported
+  platform: android
+  # Auto-install/update Portal APK and enable accessibility before each run
+  auto_setup: true
+
+# === Telemetry Settings ===
+telemetry:
+  # Enable anonymous telemetry
+  enabled: true
+
+# === Tracing Settings ===
+tracing:
+  # Enable tracing
+  enabled: false
+  # Tracing provider: phoenix or langfuse
+  provider: phoenix
+  # Upload screenshots to Langfuse (cloud traces)
+  langfuse_screenshots: false
+  # Langfuse configuration (set as environment variables if not empty string)
+  langfuse_secret_key: ""  # LANGFUSE_SECRET_KEY
+  langfuse_public_key: ""  # LANGFUSE_PUBLIC_KEY
+  langfuse_host: ""        # LANGFUSE_HOST
+  langfuse_user_id: "anonymous"  # User ID for tracing
+  langfuse_session_id: ""  # Session ID (empty = auto-generate UUID per process)
+
+# === Logging Settings ===
+logging:
+  # Enable debug logging
+  debug: false
+  # Trajectory saving level (none, step, action)
+  save_trajectory: none
+  # Path for trajectory files (absolute or relative to cwd)
+  trajectory_path: trajectories
+  # Trajectory video/gif settings (False, true)
+  trajectory_gifs: true
+  rich_text: false
+
+# === Safe Execution Settings ===
+# Applied when agent.fast_agent.safe_execution or agent.scripter.safe_execution is true
+safe_execution:
+  # Allow all imports (ignores allowed_modules, respects blocked_modules)
+  allow_all_imports: true
+
+  # Allowed modules (empty + allow_all_imports=false = no imports allowed)
+  # Example: ['json', 'requests', 're', 'datetime', 'math', 'collections']
+  allowed_modules: []
+
+  # Blocked modules (takes precedence over allowed_modules and allow_all_imports)
+  # Prevents dangerous file operations, subprocess execution, and code manipulation
+  blocked_modules:
+    - os
+    - sys
+    - subprocess
+    - shutil
+    - pathlib
+    - pty
+    - fcntl
+    - resource
+    - pickle
+    - shelve
+    - marshal
+    - imp
+    - importlib
+    - ctypes
+    - code
+    - codeop
+    - tempfile
+    - glob
+    - socket
+    - socketserver
+    - asyncio
+
+  # Allow all builtins (ignores allowed_builtins, respects blocked_builtins)
+  allow_all_builtins: true
+
+  # Allowed builtins (empty + allow_all_builtins=false = use safe defaults)
+  # Safe defaults include: int, str, list, dict, print, len, range, etc.
+  allowed_builtins: []
+
+  # Blocked builtins (takes precedence over allowed_builtins and allow_all_builtins)
+  blocked_builtins:
+    - open
+    - compile
+    - exec
+    - eval
+    - __import__
+    - breakpoint
+    - exit
+    - quit
+    - input
+
+# === Tool Settings ===
+tools:
+  # Disabled tools - add tool names to disable them
+  # Available tools:
+  #   - click          # Tap UI elements by index
+  #   - click_at       # Tap at specific coordinates
+  #   - click_area     # Tap center of an area
+  #   - long_press     # Long press UI elements by index
+  #   - long_press_at  # Long press at specific coordinates
+  #   - type           # Type text into input fields
+  #   - system_button  # Press back, home, enter
+  #   - swipe          # Swipe gestures
+  #   - wait           # Wait for duration
+  #   - open_app       # Open apps by name
+  #   - type_secret    # Type credentials (requires credentials.enabled: true)
+  # Coordinate-based tools disabled by default (enable if needed)
+  disabled_tools:
+    - click_at
+    - click_area
+    - long_press_at
+
+# === Credential Settings ===
+credentials:
+  # Enable credential manager for secure secret storage
+  enabled: false
+  # Path to credentials file (see config/credentials_example.yaml for format)
+  file_path: config/credentials.yaml
+
+# === MCP (Model Context Protocol) Settings ===
+# Connect to MCP servers to extend agent capabilities with external tools
+# Requires: pip install mcp
+mcp:
+  # Enable MCP client
+  enabled: false
+
+  # MCP server configurations
+  # Each server exposes tools that become available to agents
+  servers:
+    # Example: Filesystem server for file operations
+    # filesystem:
+    #   command: npx
+    #   args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    #   prefix: "fs_"  # Tool names become fs_read_file, fs_write_file, etc.
+    #   # Optional: Only include specific tools
+    #   # include_tools: [read_file, list_directory]
+    #   # Optional: Exclude specific tools
+    #   # exclude_tools: [write_file]
+
+    # Example: Fetch server for HTTP requests
+    # fetch:
+    #   command: uvx
+    #   args: ["mcp-server-fetch"]
+    #   prefix: ""  # No prefix, tools keep original names
+
+    # Example: Custom Python MCP server
+    # my_server:
+    #   command: python
+    #   args: ["/path/to/my_server.py"]
+    #   env:
+    #     API_KEY: "your-api-key"
+    #   enabled: true
+
+# === External Agent Settings ===
+# External agents are selected via agent.name above.
+# Set agent.name to "mai_ui" or "autoglm" to use external agents.
+# Settings below are merged with agent-specific defaults.
+#
+# Example:
+#   agent:
+#     name: mai_ui
+#     max_steps: 20
+#
+# Optional overrides via external_agent section:
+# external_agent:
+#   llm:
+#     base_url: http://custom:8000/v1
+
+# External agent configurations (reference settings)
+external_agents:
+  # MAI-UI - Alibaba's GUI agent foundation model
+  # https://github.com/Tongyi-MAI/MAI-UI
+  # Requires vLLM server: vllm serve Tongyi-MAI/MAI-UI-8B
+  mai_ui:
+    llm:
+      provider: OpenAILike
+      model: Tongyi-MAI/MAI-UI-8B  # or mai-ui-2b, mai-ui-32b, mai-ui-235b-a22b
+      api_base: https://enjoyed-placed-theaters-survival.trycloudflare.com/v1
+      api_key: EMPTY
+      temperature: 0.0
+      max_tokens: 2048
+      top_p: 1.0
+      top_k: -1
+    history_n: 3  # Number of history steps with images
+
+  # AutoGLM - Open-AutoGLM phone agent
+  # https://github.com/zai-org/Open-AutoGLM/
+  autoglm:
+    llm:
+      provider: OpenAILike
+      model: autoglm-phone-9b
+      api_base: http://localhost:8000/v1
+      api_key: EMPTY
+      temperature: 0.0
+      top_p: 0.85
+      frequency_penalty: 0.2
+      max_tokens: 3000
+    lang: en      # cn or en
+    stream: true

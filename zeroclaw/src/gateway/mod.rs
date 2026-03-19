@@ -41,6 +41,7 @@ use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::services::ServeDir;
 use tower_http::timeout::TimeoutLayer;
 use uuid::Uuid;
 
@@ -733,8 +734,15 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         // ── WebSocket node discovery ──
         .route("/ws/nodes", get(nodes::handle_ws_nodes))
         // ── Static assets (web dashboard) ──
-        .route("/_app/{*path}", get(static_files::handle_static))
-        // ── Config PUT with larger body limit ──
+        .route("/_app/{*path}", get(static_files::handle_static));
+
+    // ── User static directory (configurable) ──
+    if let Some(ref static_dir) = config.gateway.static_dir {
+        app = app.nest_service("/static", ServeDir::new(static_dir));
+    }
+
+    // ── Config PUT with larger body limit ──
+    app = app
         .merge(config_put_router)
         .with_state(state)
         .layer(RequestBodyLimitLayer::new(MAX_BODY_SIZE))
@@ -767,7 +775,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
 async fn handle_health(State(state): State<AppState>) -> impl IntoResponse {
     let body = serde_json::json!({
         "status": "ok",
-        "paired": state.pairing.is_paired(),
+        "paired": state.pairing.is_paired().await,
         "require_pairing": state.pairing.require_pairing(),
         "runtime": crate::health::snapshot_json(),
     });
@@ -959,7 +967,7 @@ async fn handle_webhook(
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
         let token = auth.strip_prefix("Bearer ").unwrap_or("");
-        if !state.pairing.is_authenticated(token) {
+        if !state.pairing.is_authenticated(token).await {
             tracing::warn!("Webhook: rejected — not paired / invalid bearer token");
             let err = serde_json::json!({
                 "error": "Unauthorized — pair first via POST /pair, then send Authorization: Bearer <token>"
@@ -1979,7 +1987,7 @@ mod tests {
         let guard = PairingGuard::new(true, &[]);
         let code = guard.pairing_code().unwrap();
         let token = guard.try_pair(&code, "test_client").await.unwrap().unwrap();
-        assert!(guard.is_authenticated(&token));
+        assert!(guard.is_authenticated(&token).await);
 
         let shared_config = Arc::new(Mutex::new(config));
         persist_pairing_tokens(shared_config.clone(), &guard)

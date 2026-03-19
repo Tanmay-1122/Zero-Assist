@@ -9,11 +9,13 @@ package com.zeroclaw.android.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.Terminal
@@ -66,6 +68,14 @@ enum class TopLevelDestination(
         unselectedIcon = Icons.Outlined.Terminal,
         label = "Terminal",
         route = TerminalRoute,
+    ),
+
+    /** Python script runner for on-device automation. */
+    DROIDRUN(
+        selectedIcon = Icons.Filled.PlayArrow,
+        unselectedIcon = Icons.Outlined.PlayArrow,
+        label = "DroidRun",
+        route = DroidRunRoute,
     ),
 
     /** Application settings and configuration. */

@@ -1154,6 +1154,9 @@ pub struct GatewayConfig {
     /// Gateway host (default: 127.0.0.1)
     #[serde(default = "default_gateway_host")]
     pub host: String,
+    /// Static directory to serve at `/static` (default: None)
+    #[serde(default)]
+    pub static_dir: Option<String>,
     /// Require pairing before accepting requests (default: true)
     #[serde(default = "default_true")]
     pub require_pairing: bool,
