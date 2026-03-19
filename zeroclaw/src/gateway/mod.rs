@@ -965,7 +965,13 @@ async fn handle_webhook(
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
         let token = auth.strip_prefix("Bearer ").unwrap_or("");
-            if !state.pairing.is_authenticated(token) {
+        if !state.pairing.is_authenticated(token) {
+            tracing::warn!("Webhook: rejected — not paired / invalid bearer token");
+            let err = serde_json::json!({
+                "error": "Unauthorized — pair first via POST /pair, then send Authorization: Bearer <token>"
+            });
+            return (StatusCode::UNAUTHORIZED, Json(err));
+        }
     }
 
     // ── Webhook secret auth (optional, additional layer) ──
