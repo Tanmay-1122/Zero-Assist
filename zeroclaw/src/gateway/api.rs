@@ -9,6 +9,9 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use serde::Deserialize;
+use uuid;
+use hex;
+use chrono::{Utc, Duration};
 
 const MASKED_SECRET: &str = "***MASKED***";
 
@@ -32,15 +35,23 @@ fn require_auth(
 
     let token = extract_bearer_token(headers).unwrap_or("");
     if state.pairing.is_authenticated(token) {
-        Ok(())
-    } else {
-        Err((
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({
-                "error": "Unauthorized — pair first via POST /pair, then send Authorization: Bearer <token>"
-            })),
-        ))
+        return Ok(());
     }
+
+    // Secondary auth: check for static API keys.
+    if !token.is_empty() {
+        let config = state.config.lock();
+        if config.gateway.api_keys.iter().any(|k| k.token == token) {
+            return Ok(());
+        }
+    }
+
+    Err((
+        StatusCode::UNAUTHORIZED,
+        Json(serde_json::json!({
+            "error": "Unauthorized — pair first via POST /pair or use a valid static API key"
+        })),
+    ))
 }
 
 // ── Query parameters ─────────────────────────────────────────────
@@ -68,6 +79,12 @@ pub struct CronAddBody {
     pub name: Option<String>,
     pub schedule: String,
     pub command: String,
+}
+
+#[derive(Deserialize)]
+pub struct ApiKeyGenerateBody {
+    pub name: String,
+    pub expiry_days: Option<u32>,
 }
 
 // ── Handlers ────────────────────────────────────────────────────
@@ -604,6 +621,117 @@ pub async fn handle_api_health(
 
     let snapshot = crate::health::snapshot();
     Json(serde_json::json!({"health": snapshot})).into_response()
+}
+
+/// GET /api/api-keys — list registered static API keys
+pub async fn handle_api_keys_list(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let config = state.config.lock().clone();
+    let keys: Vec<serde_json::Value> = config
+        .gateway
+        .api_keys
+        .iter()
+        .map(|k| {
+            serde_json::json!({
+                "id": k.id,
+                "name": k.name,
+                "token_preview": format!("{}...", &k.token[..8.min(k.token.len())]),
+                "created_at": k.created_at,
+                "expires_at": k.expires_at,
+            })
+        })
+        .collect();
+
+    Json(serde_json::json!({"keys": keys})).into_response()
+}
+
+/// POST /api/api-keys — generate a new static API key
+pub async fn handle_api_keys_generate(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<ApiKeyGenerateBody>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let mut config = state.config.lock().clone();
+    let id = uuid::Uuid::new_v4().to_string();
+    
+    let rand_bytes: [u8; 24] = rand::random();
+    let token = format!(
+        "zk_{}",
+        hex::encode(rand_bytes)
+    );
+
+    let expires_at = body.expiry_days.map(|days| {
+        Utc::now() + Duration::days(days as i64)
+    });
+
+    let new_key = crate::config::schema::ApiKey {
+        id: id.clone(),
+        name: body.name,
+        token: token.clone(),
+        created_at: chrono::Utc::now(),
+        expires_at,
+    };
+
+    config.gateway.api_keys.push(new_key);
+
+    if let Err(e) = config.save().await {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to save config: {e}")})),
+        )
+            .into_response();
+    }
+
+    *state.config.lock() = config;
+
+    Json(serde_json::json!({
+        "status": "ok",
+        "id": id,
+        "token": token
+    }))
+    .into_response()
+}
+
+/// DELETE /api/api-keys/:id — remove a static API key
+pub async fn handle_api_keys_delete(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let mut config = state.config.lock().clone();
+    let initial_len = config.gateway.api_keys.len();
+    config.gateway.api_keys.retain(|k| k.id != id);
+
+    if config.gateway.api_keys.len() == initial_len {
+        return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error": "Key not found"})))
+            .into_response();
+    }
+
+    if let Err(e) = config.save().await {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to save config: {e}")})),
+        )
+            .into_response();
+    }
+
+    *state.config.lock() = config;
+
+    Json(serde_json::json!({"status": "ok"})).into_response()
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -1484,5 +1612,103 @@ mod tests {
             .embedding_routes
             .iter()
             .all(|route| route.api_key.as_deref() != Some(MASKED_SECRET)));
+    }
+}
+
+// ── API Key Management ───────────────────────────────────────────
+
+pub fn api_keys_router(_state: super::AppState) -> axum::Router<super::AppState> {
+    axum::Router::new()
+        .route("/", axum::routing::get(list_api_keys).post(create_api_key))
+        .route("/:id", axum::routing::delete(delete_api_key))
+}
+
+async fn list_api_keys(
+    State(state): State<super::AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+    let config = state.config.lock();
+    Json(config.gateway.api_keys.clone()).into_response()
+}
+
+#[derive(serde::Deserialize)]
+struct CreateApiKey {
+    name: String,
+    expires_in_days: Option<i64>,
+}
+
+async fn create_api_key(
+    State(state): State<super::AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<CreateApiKey>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+    let mut updated_cfg = { state.config.lock().clone() };
+    
+    let token = format!("zc_{}", uuid::Uuid::new_v4().to_string().replace("-", ""));
+    let expires_at = payload.expires_in_days.map(|days| Utc::now() + Duration::days(days));
+    
+    let new_key = crate::config::schema::ApiKey {
+        id: uuid::Uuid::new_v4().to_string(),
+        name: payload.name,
+        token: token.clone(),
+        created_at: Utc::now(),
+        expires_at,
+    };
+    
+    updated_cfg.gateway.api_keys.push(new_key);
+    
+    let res = if state.auto_save {
+        updated_cfg.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}")).into_response())
+    } else {
+        Ok(())
+    };
+    
+    match res {
+        Ok(()) => {
+            *state.config.lock() = updated_cfg;
+            Json(serde_json::json!({
+                "status": "ok",
+                "token": token
+            })).into_response()
+        },
+        Err(e) => e,
+    }
+}
+
+async fn delete_api_key(
+    State(state): State<super::AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+    let mut updated_cfg = { state.config.lock().clone() };
+    
+    let original_len = updated_cfg.gateway.api_keys.len();
+    updated_cfg.gateway.api_keys.retain(|k| k.id != id);
+    
+    if updated_cfg.gateway.api_keys.len() == original_len {
+        return (StatusCode::NOT_FOUND, "API key not found".to_string()).into_response();
+    }
+    
+    let res = if state.auto_save {
+        updated_cfg.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}")).into_response())
+    } else {
+        Ok(())
+    };
+    
+    match res {
+        Ok(()) => {
+            *state.config.lock() = updated_cfg;
+            Json(serde_json::json!({ "status": "ok" })).into_response()
+        },
+        Err(e) => e,
     }
 }
