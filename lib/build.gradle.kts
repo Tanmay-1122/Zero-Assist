@@ -12,7 +12,7 @@ plugins {
 android {
     namespace = "com.zeroclaw.lib"
     compileSdk = 35
-    ndkVersion = "27.2.12479018"
+    ndkVersion = "25.2.9519653"
 
     // Fix for Gobley plugin NPE: Gobley 0.3.7 directly accesses the deprecated ndkDirectory
     // which can be null in AGP 8.x. We explicitly set the NDK path here.

@@ -146,12 +146,14 @@ fun TerminalScreen(
 ) {
     val state by terminalViewModel.state.collectAsStateWithLifecycle()
     val streamingState by terminalViewModel.streamingState.collectAsStateWithLifecycle()
+    val hasPendingMessages by terminalViewModel.hasPendingMessages.collectAsStateWithLifecycle()
     val app = LocalContext.current.applicationContext as ZeroClawApplication
     val serviceState by app.daemonBridge.serviceState.collectAsStateWithLifecycle()
 
     TerminalContent(
         state = state,
         streamingState = streamingState,
+        hasPendingMessages = hasPendingMessages,
         serviceState = serviceState,
         onSubmit = terminalViewModel::submitInput,
         onAttachImages = terminalViewModel::attachImages,
@@ -184,6 +186,7 @@ fun TerminalScreen(
 internal fun TerminalContent(
     state: TerminalState,
     streamingState: StreamingState,
+    hasPendingMessages: Boolean,
     serviceState: ServiceState,
     onSubmit: (String) -> Unit,
     onAttachImages: (List<Uri>) -> Unit,
@@ -257,6 +260,7 @@ internal fun TerminalContent(
         ) {
             TerminalHeader(
                 serviceState = serviceState,
+                hasPendingMessages = hasPendingMessages,
                 modifier = Modifier.padding(horizontal = edgeMargin),
             )
 
@@ -393,6 +397,7 @@ internal fun TerminalContent(
 @Composable
 private fun TerminalHeader(
     serviceState: ServiceState,
+    hasPendingMessages: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val isPowerSave = LocalPowerSaveMode.current
@@ -453,6 +458,21 @@ private fun TerminalHeader(
                     .graphicsLayer { alpha = if (shouldPulse) pulseAlpha else 1f }
                     .background(dotColor, CircleShape),
         )
+
+        if (hasPendingMessages) {
+            Spacer(modifier = Modifier.weight(1f))
+            Surface(
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = RoundedCornerShape(4.dp),
+            ) {
+                Text(
+                    text = "PENDING",
+                    style = TerminalTypography.labelSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
+        }
     }
 }
 

@@ -13,6 +13,7 @@ import com.zeroclaw.android.model.KeyRejectionEvent
 import com.zeroclaw.android.model.MemoryConflict
 import com.zeroclaw.android.model.MemoryHealthResult
 import com.zeroclaw.android.model.ServiceState
+import com.zeroclaw.android.data.local.PersistentEpochBuffer
 import com.zeroclaw.ffi.FfiException
 import com.zeroclaw.ffi.getConfiguredChannelNames
 import com.zeroclaw.ffi.getStatus
@@ -57,6 +58,9 @@ class DaemonServiceBridge(
     private val dataDir: String,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
+    /** Persistent buffer for failed messages (Zero-Message-Drop). */
+    var persistentBuffer: PersistentEpochBuffer? = null
+
     /**
      * Optional [EventBridge] for daemon event callbacks.
      *
@@ -381,6 +385,16 @@ class DaemonServiceBridge(
             withContext(ioDispatcher) { sendMessage(message) }
         } catch (e: FfiException) {
             val detail = e.errorDetail()
+
+            // ZMD Hook: Buffer message if transmission fails or daemon is busy
+            if (detail.contains("timeout", ignoreCase = true) ||
+                detail.contains("busy", ignoreCase = true) ||
+                detail.contains("connection", ignoreCase = true)
+            ) {
+                persistentBuffer?.push(message)
+                Log.i(TAG, "ZMD: Buffered message due to failure: $detail")
+            }
+
             val errorType = ApiKeyErrorClassifier.classify(detail)
             if (errorType != null) {
                 _keyRejections.tryEmit(

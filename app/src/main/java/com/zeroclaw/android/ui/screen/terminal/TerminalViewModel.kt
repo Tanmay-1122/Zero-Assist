@@ -104,9 +104,34 @@ class TerminalViewModel(
     /** Observable streaming state for the live agent session. */
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
 
+    /** True if the message buffer contains messages pending delivery. */
+    val hasPendingMessages: StateFlow<Boolean> = app.epochBuffer.hasPending
+
     init {
         addWelcomeMessage()
         initAgentSession()
+        recoverPendingMessages()
+    }
+
+
+    /**
+     * Recovers any messages that failed to send in a previous session.
+     *
+     * Iterates through the [PersistentEpochBuffer] and re-submits them
+     * to the terminal flow.
+     */
+    private fun recoverPendingMessages() {
+        viewModelScope.launch {
+            val pending = withContext(Dispatchers.IO) { app.epochBuffer.getAll() }
+            if (pending.isNotEmpty()) {
+                logRepository.append(LogSeverity.INFO, TAG, "Recovering ${pending.size} pending messages")
+                pending.forEach { (id, text) ->
+                    // For now, re-submit as a chat message. 
+                    // In a more advanced implementation, we'd preserve the original command type.
+                    executeChatMessage(text, text, epochId = id)
+                }
+            }
+        }
     }
 
     /**
@@ -170,6 +195,35 @@ class TerminalViewModel(
             is CommandResult.RhaiExpression -> executeRhai(trimmed, result.expression)
             is CommandResult.LocalAction -> handleLocalAction(result.action)
             is CommandResult.ChatMessage -> executeChatMessage(trimmed, result.text)
+        }
+    }
+
+    /** Overload for [executeChatMessage] that supports an existing epoch ID for recovery. */
+    private fun executeChatMessage(displayText: String, escapedText: String, epochId: Long? = null) {
+        val images = pendingImagesState.value
+        if (epochId == null) {
+            pendingImagesState.value = emptyList()
+        }
+
+        val inputImageUris = images.map { it.originalUri }
+        viewModelScope.launch {
+            if (epochId == null) {
+                repository.append(
+                    content = displayText,
+                    entryType = ENTRY_TYPE_INPUT,
+                    imageUris = inputImageUris,
+                )
+            }
+
+            if (!isChatProviderConfigured()) {
+                repository.append(
+                    content = NO_PROVIDER_WARNING,
+                    entryType = ENTRY_TYPE_SYSTEM,
+                )
+                return@launch
+            }
+
+            executeAgentTurn(displayText, images, epochId = epochId)
         }
     }
 
@@ -264,29 +318,35 @@ class TerminalViewModel(
         loadingState.value = true
         viewModelScope.launch {
             repository.append(content = displayText, entryType = ENTRY_TYPE_INPUT)
+            // Store in buffer
+            val epochId = withContext(Dispatchers.IO) {
+                app.epochBuffer.push(expression).also { updatePendingStatus() }
+            }
+
             try {
                 val rawResult =
                     withContext(Dispatchers.IO) {
                         evalRepl(expression)
                     }
-                val cleaned = stripToolCallTags(rawResult)
-                val result =
-                    if (cachedSettings.value.stripThinkingTags) {
-                        stripThinkingTags(cleaned)
-                    } else {
-                        cleaned
-                    }
+                
                 val displayResult =
-                    result.ifBlank {
+                    if (cachedSettings.value.stripThinkingTags) {
+                        stripThinkingTags(stripToolCallTags(rawResult))
+                    } else {
+                        stripToolCallTags(rawResult)
+                    }.ifBlank {
                         rawResult.trim().ifBlank { EMPTY_RESPONSE_FALLBACK }
                     }
+
                 repository.append(content = displayResult, entryType = ENTRY_TYPE_RESPONSE)
+                
+                // Clear on success
+                withContext(Dispatchers.IO) {
+                    app.epochBuffer.remove(epochId)
+                }
+
                 handleBindResult(displayResult)
                 emitRefreshIfNeeded(expression)
-            } catch (e: FfiException) {
-                val sanitized = ErrorSanitizer.sanitizeForUi(e)
-                logRepository.append(LogSeverity.ERROR, TAG, "REPL eval failed: $sanitized")
-                repository.append(content = sanitized, entryType = ENTRY_TYPE_ERROR)
             } catch (e: Exception) {
                 val sanitized = ErrorSanitizer.sanitizeForUi(e)
                 logRepository.append(LogSeverity.ERROR, TAG, "REPL eval failed: $sanitized")
@@ -297,44 +357,6 @@ class TerminalViewModel(
         }
     }
 
-    /**
-     * Dispatches a chat message through the live agent session.
-     *
-     * Both text-only and vision (image-attached) messages are routed
-     * through [executeAgentTurn]. Images are passed as base64 data and
-     * MIME types to the FFI layer where they are embedded as `[IMAGE:...]`
-     * markers for the upstream provider.
-     *
-     * @param displayText The original user input shown in the scrollback.
-     * @param escapedText The Rhai-escaped message text (unused for agent path).
-     */
-    @Suppress("UnusedParameter")
-    private fun executeChatMessage(
-        displayText: String,
-        escapedText: String,
-    ) {
-        val images = pendingImagesState.value
-        pendingImagesState.value = emptyList()
-
-        val inputImageUris = images.map { it.originalUri }
-        viewModelScope.launch {
-            repository.append(
-                content = displayText,
-                entryType = ENTRY_TYPE_INPUT,
-                imageUris = inputImageUris,
-            )
-
-            if (!isChatProviderConfigured()) {
-                repository.append(
-                    content = NO_PROVIDER_WARNING,
-                    entryType = ENTRY_TYPE_SYSTEM,
-                )
-                return@launch
-            }
-
-            executeAgentTurn(displayText, images)
-        }
-    }
 
     /**
      * Executes a user message through the live agent session.
@@ -350,14 +372,22 @@ class TerminalViewModel(
      *
      * @param message The message text to send to the agent.
      * @param images Attached images to include in the request.
+     * @param epochId Optional ID if this message is already in the [PersistentEpochBuffer].
      */
     @Suppress("TooGenericExceptionCaught")
     private fun executeAgentTurn(
         message: String,
         images: List<ProcessedImage> = emptyList(),
+        epochId: Long? = null,
     ) {
         viewModelScope.launch {
             _streamingState.update { StreamingState(phase = StreamingPhase.THINKING) }
+
+            // Store in buffer if it's a new message
+            val currentEpochId =
+                epochId ?: withContext(Dispatchers.IO) {
+                    app.epochBuffer.push(message).also { updatePendingStatus() }
+                }
 
             try {
                 withContext(Dispatchers.IO) {
@@ -365,7 +395,7 @@ class TerminalViewModel(
                         message,
                         images.map { it.base64Data },
                         images.map { it.mimeType },
-                        KotlinSessionListener(),
+                        KotlinSessionListener(currentEpochId),
                     )
                 }
             } catch (e: FfiException) {
@@ -612,7 +642,9 @@ class TerminalViewModel(
      * All methods are called from the tokio runtime thread. State updates
      * use [MutableStateFlow.update] which is thread-safe.
      */
-    private inner class KotlinSessionListener : FfiSessionListener {
+    private inner class KotlinSessionListener(
+        private val epochId: Long,
+    ) : FfiSessionListener {
         override fun onThinking(text: String) {
             _streamingState.update { current ->
                 current.copy(
@@ -703,6 +735,10 @@ class TerminalViewModel(
 
             viewModelScope.launch {
                 repository.append(content = display, entryType = ENTRY_TYPE_RESPONSE)
+                // Clear from buffer on success
+                withContext(Dispatchers.IO) {
+                    app.epochBuffer.remove(epochId)
+                }
             }
 
             _streamingState.update { StreamingState(phase = StreamingPhase.COMPLETE) }
@@ -729,6 +765,10 @@ class TerminalViewModel(
                     content = "Request cancelled.",
                     entryType = ENTRY_TYPE_SYSTEM,
                 )
+                // Clear from buffer on cancel (intentional action)
+                withContext(Dispatchers.IO) {
+                    app.epochBuffer.remove(epochId)
+                }
             }
 
             _streamingState.update {

@@ -57,6 +57,7 @@ import com.zeroclaw.android.service.SkillsBridge
 import com.zeroclaw.android.service.ToolsBridge
 import com.zeroclaw.android.service.VisionBridge
 import com.zeroclaw.android.util.SessionLockManager
+import com.zeroclaw.android.data.local.PersistentEpochBuffer
 import com.zeroclaw.ffi.getVersion
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
@@ -170,6 +171,10 @@ class ZeroClawApplication :
     /** Bridge for direct-to-provider multimodal vision API calls. */
     val visionBridge: VisionBridge by lazy { VisionBridge() }
 
+    /** Persistent buffer for failed terminal messages (Zero-Message-Drop). */
+    lateinit var epochBuffer: PersistentEpochBuffer
+        private set
+
     /** App-wide session lock manager observing the process lifecycle. */
     lateinit var sessionLockManager: SessionLockManager
         private set
@@ -240,6 +245,8 @@ class ZeroClawApplication :
         memoryBridge = MemoryBridge()
         eventBridge = EventBridge(activityRepository, ioScope)
         daemonBridge.eventBridge = eventBridge
+        epochBuffer = PersistentEpochBuffer(context = this)
+        daemonBridge.persistentBuffer = epochBuffer
 
         sessionLockManager = SessionLockManager(settingsRepository.settings, ioScope)
         ProcessLifecycleOwner.get().lifecycle.addObserver(sessionLockManager)
