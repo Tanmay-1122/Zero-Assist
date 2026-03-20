@@ -46,6 +46,8 @@ pub struct PairingGuard {
     pairing_code: Arc<Mutex<Option<String>>>,
     /// Set of SHA-256 hashed bearer tokens (persisted across restarts).
     paired_tokens: Arc<Mutex<HashSet<String>>>,
+    /// Set of SHA-256 hashed static API keys (user-configured, not paired).
+    api_keys: HashSet<String>,
     /// Brute-force protection: per-client failed attempt state + last sweep timestamp.
     failed_attempts: Arc<Mutex<(HashMap<String, FailedAttemptState>, Instant)>>,
 }
@@ -59,8 +61,22 @@ impl PairingGuard {
     /// Existing tokens are accepted in both forms:
     /// - Plaintext (`zc_...`): hashed on load for backward compatibility
     /// - Already hashed (64-char hex): stored as-is
-    pub fn new(require_pairing: bool, existing_tokens: &[String]) -> Self {
+    pub fn new(
+        require_pairing: bool,
+        existing_tokens: &[String],
+        api_keys: &[String],
+    ) -> Self {
         let tokens: HashSet<String> = existing_tokens
+            .iter()
+            .map(|t| {
+                if is_token_hash(t) {
+                    t.clone()
+                } else {
+                    hash_token(t)
+                }
+            })
+            .collect();
+        let api_key_hashes: HashSet<String> = api_keys
             .iter()
             .map(|t| {
                 if is_token_hash(t) {
@@ -79,6 +95,7 @@ impl PairingGuard {
             require_pairing,
             pairing_code: Arc::new(Mutex::new(code)),
             paired_tokens: Arc::new(Mutex::new(tokens)),
+            api_keys: api_key_hashes,
             failed_attempts: Arc::new(Mutex::new((HashMap::new(), Instant::now()))),
         }
     }
@@ -189,6 +206,9 @@ impl PairingGuard {
             return true;
         }
         let hashed = hash_token(token);
+        if self.api_keys.contains(&hashed) {
+            return true;
+        }
         let tokens = self.paired_tokens.lock();
         tokens.contains(&hashed)
     }
@@ -337,27 +357,27 @@ mod tests {
 
     #[test]
     fn new_guard_generates_code_when_no_tokens() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         assert!(guard.pairing_code().is_some());
         assert!(!guard.is_paired());
     }
 
     #[test]
     fn new_guard_no_code_when_tokens_exist() {
-        let guard = PairingGuard::new(true, &["zc_existing".into()]);
+        let guard = PairingGuard::new(true, &["zc_existing".into()], &[]);
         assert!(guard.pairing_code().is_none());
         assert!(guard.is_paired());
     }
 
     #[test]
     fn new_guard_no_code_when_pairing_disabled() {
-        let guard = PairingGuard::new(false, &[]);
+        let guard = PairingGuard::new(false, &[], &[]);
         assert!(guard.pairing_code().is_none());
     }
 
     #[test]
     fn try_pair_correct_code() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let code = guard.pairing_code().unwrap().to_string();
         let token = guard.try_pair(&code, "test_client").unwrap();
         assert!(token.is_some());
@@ -367,7 +387,7 @@ mod tests {
 
     #[test]
     fn try_pair_wrong_code() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let result = guard.try_pair("000000", "test_client").unwrap();
         // Might succeed if code happens to be 000000, but extremely unlikely
         // Just check it returns Ok(None) normally
@@ -376,14 +396,14 @@ mod tests {
 
     #[test]
     fn try_pair_empty_code() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         assert!(guard.try_pair("", "test_client").unwrap().is_none());
     }
 
     #[test]
     fn is_authenticated_with_valid_token() {
         // Pass plaintext token — PairingGuard hashes it on load
-        let guard = PairingGuard::new(true, &["zc_valid".into()]);
+        let guard = PairingGuard::new(true, &["zc_valid".into()], &[]);
         assert!(guard.is_authenticated("zc_valid"));
     }
 
@@ -391,26 +411,26 @@ mod tests {
     fn is_authenticated_with_prehashed_token() {
         // Pass an already-hashed token (64 hex chars)
         let hashed = hash_token("zc_valid");
-        let guard = PairingGuard::new(true, &[hashed]);
+        let guard = PairingGuard::new(true, &[hashed], &[]);
         assert!(guard.is_authenticated("zc_valid"));
     }
 
     #[test]
     fn is_authenticated_with_invalid_token() {
-        let guard = PairingGuard::new(true, &["zc_valid".into()]);
+        let guard = PairingGuard::new(true, &["zc_valid".into()], &[]);
         assert!(!guard.is_authenticated("zc_invalid"));
     }
 
     #[test]
     fn is_authenticated_when_pairing_disabled() {
-        let guard = PairingGuard::new(false, &[]);
+        let guard = PairingGuard::new(false, &[], &[]);
         assert!(guard.is_authenticated("anything"));
         assert!(guard.is_authenticated(""));
     }
 
     #[test]
     fn tokens_returns_hashes() {
-        let guard = PairingGuard::new(true, &["zc_a".into(), "zc_b".into()]);
+        let guard = PairingGuard::new(true, &["zc_a".into(), "zc_b".into()], &[]);
         let tokens = guard.tokens();
         assert_eq!(tokens.len(), 2);
         // Tokens should be stored as 64-char hex hashes, not plaintext
@@ -423,7 +443,7 @@ mod tests {
 
     #[test]
     fn pair_then_authenticate() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let code = guard.pairing_code().unwrap().to_string();
         let token = guard.try_pair(&code, "test_client").unwrap().unwrap();
         assert!(guard.is_authenticated(&token));
@@ -535,7 +555,7 @@ mod tests {
 
     #[test]
     fn brute_force_lockout_after_max_attempts() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let client = "attacker_client";
         // Exhaust all attempts with wrong codes
         for i in 0..MAX_PAIR_ATTEMPTS {
@@ -558,7 +578,7 @@ mod tests {
 
     #[test]
     fn correct_code_resets_failed_attempts() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let code = guard.pairing_code().unwrap().to_string();
         let client = "test_client";
         // Fail a few times
@@ -572,7 +592,7 @@ mod tests {
 
     #[test]
     fn lockout_returns_remaining_seconds() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let client = "test_client";
         for _ in 0..MAX_PAIR_ATTEMPTS {
             let _ = guard.try_pair("wrong", client);
@@ -587,7 +607,7 @@ mod tests {
 
     #[test]
     fn successful_pair_resets_only_requesting_client_state() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let code = guard.pairing_code().unwrap().to_string();
         let client_a = "client_a";
         let client_b = "client_b";
@@ -621,7 +641,7 @@ mod tests {
 
     #[test]
     fn failed_attempt_state_is_bounded_by_max_clients() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
 
         // Fill the map to MAX_TRACKED_CLIENTS with stale entries
         {
@@ -661,7 +681,7 @@ mod tests {
 
     #[test]
     fn failed_attempt_sweep_prunes_expired_clients() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
 
         // Seed a stale entry and set last_sweep to long ago so sweep triggers
         {
@@ -703,7 +723,7 @@ mod tests {
 
     #[test]
     fn lockout_is_per_client() {
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let attacker = "attacker_ip";
         let legitimate = "legitimate_ip";
 

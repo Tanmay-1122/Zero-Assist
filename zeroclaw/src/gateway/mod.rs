@@ -550,10 +550,14 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
             })
             .map(Arc::from);
 
+    // Extract tokens from api_keys config
+    let api_keys_tokens: Vec<String> = config.gateway.api_keys.iter().map(|k| k.token.clone()).collect();
+    
     // ── Pairing guard ──────────────────────────────────────
     let pairing = Arc::new(PairingGuard::new(
         config.gateway.require_pairing,
         &config.gateway.paired_tokens,
+        &api_keys_tokens,
     ));
     let rate_limit_max_keys = normalize_max_keys(
         config.gateway.rate_limit_max_keys,
@@ -689,7 +693,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .layer(RequestBodyLimitLayer::new(1_048_576));
 
     // Build router with middleware
-    let app = Router::new()
+    let mut app = Router::new()
         // ── Admin routes (for CLI management) ──
         .route("/admin/shutdown", post(handle_admin_shutdown))
         .route("/admin/paircode", get(handle_admin_paircode))
@@ -730,6 +734,8 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .route("/api/health", get(api::handle_api_health))
         // ── SSE event stream ──
         .route("/api/events", get(sse::handle_sse_events))
+        // ── API keys management ──
+        .nest("/api/keys", api::api_keys_router(state.clone()))
         // ── WebSocket agent chat ──
         .route("/ws/chat", get(ws::handle_ws_chat))
         // ── WebSocket node discovery ──
@@ -743,9 +749,9 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
     }
 
     // ── Config PUT with larger body limit ──
-    app = app
+    let app = app
         .merge(config_put_router)
-        .with_state(state)
+        .with_state::<()>(state)
         .layer(RequestBodyLimitLayer::new(MAX_BODY_SIZE))
         .layer(TimeoutLayer::with_status_code(
             StatusCode::REQUEST_TIMEOUT,
@@ -1757,7 +1763,7 @@ mod tests {
             mem: Arc::new(MockMemory),
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -1809,7 +1815,7 @@ mod tests {
             mem: Arc::new(MockMemory),
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -1982,7 +1988,7 @@ mod tests {
         config.workspace_dir = workspace_path;
         config.save().await.unwrap();
 
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], &[]);
         let code = guard.pairing_code().unwrap();
         let token = guard.try_pair(&code, "test_client").await.unwrap().unwrap();
         assert!(guard.is_authenticated(&token));
@@ -2185,7 +2191,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2251,7 +2257,7 @@ mod tests {
             mem: memory,
             auto_save: true,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2329,7 +2335,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2379,7 +2385,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&valid_secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2434,7 +2440,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2494,7 +2500,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),
@@ -2550,7 +2556,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], &[])),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             idempotency_store: Arc::new(IdempotencyStore::new(Duration::from_secs(300), 1000)),

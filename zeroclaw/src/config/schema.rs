@@ -1143,6 +1143,30 @@ impl Default for PeripheralBoardConfig {
 
 // ── Gateway security ─────────────────────────────────────────────
 
+/// Authorized API keys for bypassing pairing.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ApiKey {
+    pub id: String,
+    pub name: String,
+    pub token: String,
+    #[schemars(with = "String")]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    #[schemars(with = "Option<String>")]
+    pub expires_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+impl Default for ApiKey {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            token: String::new(),
+            created_at: chrono::Utc::now(),
+            expires_at: None,
+        }
+    }
+}
+
 /// Gateway server configuration (`[gateway]` section).
 ///
 /// Controls the HTTP gateway for webhook and pairing endpoints.
@@ -1166,6 +1190,9 @@ pub struct GatewayConfig {
     /// Paired bearer tokens (managed automatically, not user-edited)
     #[serde(default)]
     pub paired_tokens: Vec<String>,
+    /// Authorized API keys for bypassing pairing.
+    #[serde(default)]
+    pub api_keys: Vec<ApiKey>,
 
     /// Max `/pair` requests per minute per client key.
     #[serde(default = "default_pair_rate_limit")]
@@ -1240,6 +1267,7 @@ impl Default for GatewayConfig {
             idempotency_ttl_secs: default_idempotency_ttl_secs(),
             idempotency_max_keys: default_gateway_idempotency_max_keys(),
             static_dir: None,
+            api_keys: Vec::new(),
         }
     }
 }
