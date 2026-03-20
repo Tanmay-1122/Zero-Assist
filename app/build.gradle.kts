@@ -43,8 +43,14 @@ android {
         versionCode = 39
         versionName = "0.0.37"
 
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
+        // Generate separate, tiny APKs for each architecture rather than one massive 1.3GB APK
+        splits {
+            abi {
+                isEnable = true
+                reset()
+                include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+                isUniversalApk = false // Do not generate a universal combined APK to save huge amounts of space
+            }
         }
 
         buildConfigField("String", "BUILD_DATE", "\"${LocalDate.now().format(DateTimeFormatter.ofPattern("MMM yyyy"))}\"")
