@@ -33,7 +33,6 @@ use axum::{
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json},
     routing::{delete, get, post, put},
-    ServiceExt,
     Router,
 };
 use parking_lot::Mutex;

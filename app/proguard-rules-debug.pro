@@ -1,6 +1,10 @@
 # Debug ProGuard rules – resource shrinking only.
 # Code is NOT obfuscated or stripped so stack traces remain readable.
 
+# Suppress warnings about missing classes since we are keeping all code (including dead code)
+-ignorewarnings
+-dontwarn **
+
 # Keep all classes and their members exactly as-is (no shrinking, no renaming).
 -keep class ** { *; }
 -keepattributes *Annotation*
