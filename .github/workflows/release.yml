@@ -74,8 +74,6 @@ jobs:
       - name: Build release APK
         run: ./gradlew :app:assembleRelease
 
-      - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/zeroclaw_android.apk
 
       - name: Clean up signing material
         if: always()
@@ -137,4 +135,4 @@ jobs:
             --notes-file /tmp/release-notes.md \
             ${{ steps.prerelease.outputs.flag }} \
             lib/build/outputs/aar/lib-release.aar \
-            app/build/outputs/apk/release/zeroclaw_android.apk
+            app/build/outputs/apk/release/*.apk
