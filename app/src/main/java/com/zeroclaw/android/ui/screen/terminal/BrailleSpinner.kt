@@ -43,8 +43,8 @@ private val BRAILLE_FRAMES =
         '\u280F',
     )
 
-/** Interval between spinner frame advances in milliseconds. */
-private const val SPINNER_INTERVAL_MS = 80L
+/** Interval between spinner frame advances in milliseconds – tuned for snappy feel. */
+private const val SPINNER_INTERVAL_MS = 65L
 
 /** Spacing between the spinner character and the label text. */
 private const val SPINNER_LABEL_SPACING_DP = 8

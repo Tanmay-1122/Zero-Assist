@@ -1,0 +1,140 @@
+    Checking zeroclawlabs v0.3.2 (C:\Users\tanma\Downloads\Zero-Assist\zeroclaw)
+error[E0425]: cannot find function `get` in this scope
+    --> src\gateway\api.rs:1622:21
+     |
+1622 |         .route("/", get(list_api_keys).post(create_api_key))
+     |                     ^^^ not found in this scope
+     |
+help: consider importing one of these functions
+     |
+   5 + use crate::gateway::get;
+     |
+   5 + use axum::routing::get;
+     |
+   5 + use hostname::get;
+     |
+   5 + use reqwest::blocking::get;
+     |
+     = and 1 other candidate
+
+error[E0425]: cannot find function `delete` in this scope
+    --> src\gateway\api.rs:1623:24
+     |
+1623 |         .route("/:id", delete(delete_api_key))
+     |                        ^^^^^^ not found in this scope
+     |
+help: consider importing one of these functions
+     |
+   5 + use crate::gateway::delete;
+     |
+   5 + use axum::routing::delete;
+     |
+
+error[E0308]: mismatched types
+   --> src\gateway\mod.rs:557:9
+    |
+554 |     let pairing = Arc::new(PairingGuard::new(
+    |                            ----------------- arguments to this function are incorrect
+...
+557 |         &config.gateway.api_keys,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^ expected `&[String]`, found `&Vec<ApiKey>`
+    |
+    = note: expected reference `&[std::string::String]`
+               found reference `&Vec<ApiKey>`
+note: associated function defined here
+   --> src\security\pairing.rs:64:12
+    |
+ 64 |     pub fn new(
+    |            ^^^
+...
+ 67 |         api_keys: &[String],
+    |         -------------------
+
+error[E0308]: mismatched types
+   --> src\gateway\mod.rs:749:11
+    |
+693 |       let app = Router::new()
+    |  _______________-
+694 | |         // ── Admin routes (for CLI management) ──
+695 | |         .route("/admin/shutdown", post(handle_admin_shutdown))
+696 | |         .route("/admin/paircode", get(handle_admin_paircode))
+...   |
+741 | |         .route("/_app/{*path}", get(static_files::handle_static));
+    | |_________________________________________________________________- expected due to this value
+...
+749 |       app = app
+    |  ___________^
+750 | |         .merge(config_put_router)
+751 | |         .with_state::<()>(state)
+752 | |         .layer(RequestBodyLimitLayer::new(MAX_BODY_SIZE))
+...   |
+758 | |         .fallback(get(static_files::handle_spa_fallback));
+    | |_________________________________________________________^ expected `Router<AppState>`, found `Router`
+    |
+    = note: expected struct `Router<AppState>`
+               found struct `Router<()>`
+
+error[E0599]: the method `into_make_service_with_connect_info` exists for struct `Router<AppState>`, but its trait bounds were not satisfied
+   --> src\gateway\mod.rs:763:13
+    |
+763 |         app.into_make_service_with_connect_info::<SocketAddr>(),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method cannot be called on `Router<AppState>` due to unsatisfied trait bounds
+    |
+   ::: C:\Users\tanma\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\axum-0.8.8\src\routing\mod.rs:68:1
+    |
+ 68 | pub struct Router<S = ()> {
+    | ------------------------- doesn't satisfy `Router<AppState>: ServiceExt<_>` or `Router<AppState>: tower_service::Service<_>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `Router<AppState>: tower_service::Service<_>`
+            which is required by `Router<AppState>: ServiceExt<_>`
+            `&Router<AppState>: tower_service::Service<_>`
+            which is required by `&Router<AppState>: ServiceExt<_>`
+            `&mut Router<AppState>: tower_service::Service<_>`
+            which is required by `&mut Router<AppState>: ServiceExt<_>`
+
+error[E0599]: no method named `map_err` found for opaque type `impl futures_util::Future<Output = Result<(), anyhow::Error>>` in the current scope
+    --> src\gateway\api.rs:1667:23
+     |
+1667 |         config.save().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}").into_response()))
+     |                       ^^^^^^^ method not found in `impl futures_util::Future<Output = Result<(), anyhow::Error>>`
+     |
+    ::: C:\Users\tanma\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\futures-util-0.3.32\src\future\try_future\mod.rs:308:8
+     |
+ 308 |     fn map_err<E, F>(self, f: F) -> MapErr<Self, F>
+     |        ------- the method is available for `impl futures_util::Future<Output = Result<(), anyhow::Error>>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1667 |         config.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}").into_response()))
+     |                       ++++++
+help: trait `TryFutureExt` which provides `map_err` is implemented but not in scope; perhaps you want to import it
+     |
+   5 + use futures_util::TryFutureExt;
+     |
+
+error[E0599]: no method named `map_err` found for opaque type `impl futures_util::Future<Output = Result<(), anyhow::Error>>` in the current scope
+    --> src\gateway\api.rs:1699:23
+     |
+1699 |         config.save().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}").into_response()))
+     |                       ^^^^^^^ method not found in `impl futures_util::Future<Output = Result<(), anyhow::Error>>`
+     |
+    ::: C:\Users\tanma\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\futures-util-0.3.32\src\future\try_future\mod.rs:308:8
+     |
+ 308 |     fn map_err<E, F>(self, f: F) -> MapErr<Self, F>
+     |        ------- the method is available for `impl futures_util::Future<Output = Result<(), anyhow::Error>>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1699 |         config.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}").into_response()))
+     |                       ++++++
+help: trait `TryFutureExt` which provides `map_err` is implemented but not in scope; perhaps you want to import it
+     |
+   5 + use futures_util::TryFutureExt;
+     |
+
+Some errors have detailed explanations: E0308, E0425, E0599.
+For more information about an error, try `rustc --explain E0308`.
+error: could not compile `zeroclawlabs` (lib) due to 7 previous errors

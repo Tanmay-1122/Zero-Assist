@@ -1,0 +1,93 @@
+cargo :     Checking 
+zeroclawlabs v0.3.2 (C:\Users
+\tanma\Downloads\Zero-Assist\
+zeroclaw)
+At line:1 char:1
++ cargo check --lib 2>&1 | 
+Out-File -FilePath build.txt 
+-Encoding ascii
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (    Che  
+  cking ze...ssist\zerocla   
+ w):String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+error[E0599]: the method `int
+o_make_service_with_connect_i
+nfo` exists for struct 
+`Router<AppState>`, but its 
+trait bounds were not 
+satisfied
+   --> 
+src\gateway\mod.rs:761:13
+    |
+761 |         app.into_make_s
+ervice_with_connect_info::<So
+cketAddr>(),
+    |             ^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^ 
+method cannot be called on 
+`Router<AppState>` due to 
+unsatisfied trait bounds
+    |
+   ::: C:\Users\tanma\.cargo\
+registry\src\index.crates.io-
+1949cf8c6b5b557f\axum-0.8.8\s
+rc\routing\mod.rs:68:1
+    |
+ 68 | pub struct Router<S = 
+()> {
+    | 
+------------------------- 
+doesn't satisfy 
+`Router<AppState>: 
+ServiceExt<_>` or 
+`Router<AppState>: 
+tower_service::Service<_>`
+    |
+    = note: the following 
+trait bounds were not 
+satisfied:
+            
+`Router<AppState>: 
+tower_service::Service<_>`
+            which is 
+required by 
+`Router<AppState>: 
+ServiceExt<_>`
+            
+`&Router<AppState>: 
+tower_service::Service<_>`
+            which is 
+required by 
+`&Router<AppState>: 
+ServiceExt<_>`
+            `&mut 
+Router<AppState>: 
+tower_service::Service<_>`
+            which is 
+required by `&mut 
+Router<AppState>: 
+ServiceExt<_>`
+
+error[E0063]: missing field 
+`api_keys` in initializer of 
+`GatewayConfig`
+    --> 
+src\config\schema.rs:1233:9
+     |
+1233 |         Self {
+     |         ^^^^ missing 
+`api_keys`
+
+Some errors have detailed 
+explanations: E0063, E0599.
+For more information about 
+an error, try `rustc 
+--explain E0063`.
+error: could not compile 
+`zeroclawlabs` (lib) due to 
+2 previous errors

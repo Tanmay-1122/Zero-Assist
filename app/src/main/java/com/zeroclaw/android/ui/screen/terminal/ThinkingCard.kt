@@ -9,7 +9,11 @@ package com.zeroclaw.android.ui.screen.terminal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -81,15 +85,31 @@ fun ThinkingCard(
     modifier: Modifier = Modifier,
 ) {
     val isPowerSave = LocalPowerSaveMode.current
-    val enterTransition =
-        if (isPowerSave) EnterTransition.None else expandVertically()
-    val exitTransition =
-        if (isPowerSave) ExitTransition.None else shrinkVertically()
 
     AnimatedVisibility(
         visible = visible,
-        enter = enterTransition,
-        exit = exitTransition,
+        enter =
+            if (isPowerSave) {
+                EnterTransition.None
+            } else {
+                expandVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+            },
+        exit =
+            if (isPowerSave) {
+                ExitTransition.None
+            } else {
+                shrinkVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMedium,
+                    ),
+                ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+            },
         modifier = modifier,
     ) {
         ElevatedCard(

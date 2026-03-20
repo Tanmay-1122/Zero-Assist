@@ -9,7 +9,11 @@ package com.zeroclaw.android.ui.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -84,9 +88,27 @@ fun CollapsibleSection(
             AnimatedVisibility(
                 visible = expanded,
                 enter =
-                    if (isPowerSave) EnterTransition.None else expandVertically(),
+                    if (isPowerSave) {
+                        EnterTransition.None
+                    } else {
+                        expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow,
+                            ),
+                        ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+                    },
                 exit =
-                    if (isPowerSave) ExitTransition.None else shrinkVertically(),
+                    if (isPowerSave) {
+                        ExitTransition.None
+                    } else {
+                        shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMedium,
+                            ),
+                        ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+                    },
             ) {
                 Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
                     content()

@@ -73,6 +73,18 @@ android {
                 "proguard-rules.pro",
             )
         }
+        debug {
+            // Shrink resources only (no code minification) – drastically reduces debug APK
+            // size without removing debuggability or obfuscating stack traces.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-debug.pro",
+            )
+            // Keep applicationId suffix-free so the debug APK replaces the release install
+            applicationIdSuffix = null
+        }
     }
 
     compileOptions {

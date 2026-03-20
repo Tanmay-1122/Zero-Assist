@@ -15,6 +15,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +61,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -389,6 +395,7 @@ private fun TerminalHeader(
     serviceState: ServiceState,
     modifier: Modifier = Modifier,
 ) {
+    val isPowerSave = LocalPowerSaveMode.current
     val statusLabel =
         when (serviceState) {
             ServiceState.STOPPED -> "stopped"
@@ -407,6 +414,20 @@ private fun TerminalHeader(
             ServiceState.ERROR,
             -> MaterialTheme.colorScheme.error
         }
+
+    // Pulse the status dot when active and power-save is off
+    val shouldPulse = !isPowerSave &&
+        (serviceState == ServiceState.RUNNING || serviceState == ServiceState.STARTING)
+    val infiniteTransition = rememberInfiniteTransition(label = "status-dot-pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (shouldPulse) 0.35f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "status-dot-alpha",
+    )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -429,6 +450,7 @@ private fun TerminalHeader(
             modifier =
                 Modifier
                     .size(STATUS_DOT_SIZE_DP.dp)
+                    .graphicsLayer { alpha = if (shouldPulse) pulseAlpha else 1f }
                     .background(dotColor, CircleShape),
         )
     }

@@ -811,10 +811,16 @@ async fn main() -> Result<()> {
         // No auth material is placed in URLs to prevent leakage via browser history,
         // Referer headers, clipboard, or proxy logs.
         if config.gateway.require_pairing {
+            let api_key_tokens: Vec<String> = config
+                .gateway
+                .api_keys
+                .iter()
+                .map(|k| k.token.clone())
+                .collect();
             let pairing = security::PairingGuard::new(
                 true,
                 &config.gateway.paired_tokens,
-                &config.gateway.api_keys,
+                &api_key_tokens,
             );
             if let Some(code) = pairing.pairing_code() {
                 println!();

@@ -9,6 +9,8 @@ package com.zeroclaw.android.ui.screen.setup
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -341,8 +343,8 @@ private fun SetupBottomBar(
     onComplete: () -> Unit,
     powerSave: Boolean,
 ) {
-    val enter = if (powerSave) EnterTransition.None else fadeIn()
-    val exit = if (powerSave) ExitTransition.None else fadeOut()
+    val enter = if (powerSave) EnterTransition.None else fadeIn(tween(durationMillis = 250, easing = EaseInOut))
+    val exit = if (powerSave) ExitTransition.None else fadeOut(tween(durationMillis = 200, easing = EaseInOut))
 
     Row(
         modifier =
