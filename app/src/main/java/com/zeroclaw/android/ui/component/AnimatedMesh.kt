@@ -49,16 +49,6 @@ fun AnimatedMeshBackground() {
         label = "Phase"
     )
 
-    val color1 by infiniteTransition.animateColor(
-        initialValue = DeepIndigo,
-        targetValue = Obsidian,
-        animationSpec = infiniteRepeatable(
-            animation = tween(5000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "Color1"
-    )
-
     Canvas(modifier = Modifier.fillMaxSize()) {
         val width = size.width
         val height = size.height
@@ -72,9 +62,11 @@ fun AnimatedMeshBackground() {
             y = height * (0.5f + 0.3f * sin(phase))
         )
         
+        val glob2PhaseMultiplierX = 0.7f
+        val glob2PhaseMultiplierY = 1.2f
         val glob2Pos = Offset(
-            x = width * (0.5f + 0.3f * sin(phase * 0.7f)),
-            y = height * (0.5f + 0.2f * cos(phase * 1.2f))
+            x = width * (0.5f + 0.3f * sin(phase * glob2PhaseMultiplierX)),
+            y = height * (0.5f + 0.2f * cos(phase * glob2PhaseMultiplierY))
         )
 
         drawCircle(

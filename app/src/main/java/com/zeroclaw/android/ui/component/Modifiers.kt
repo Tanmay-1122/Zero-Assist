@@ -28,8 +28,7 @@ import androidx.compose.ui.unit.dp
  */
 fun Modifier.glassmorphic(
     blur: Dp = 16.dp,
-    color: Color = Color.White.copy(alpha = 0.1f),
-    edgeAlpha: Float = 0.2f
+    color: Color = Color.White.copy(alpha = 0.1f)
 ): Modifier = this.then(
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         Modifier
