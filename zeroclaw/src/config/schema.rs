@@ -1239,6 +1239,7 @@ impl Default for GatewayConfig {
             rate_limit_max_keys: default_gateway_rate_limit_max_keys(),
             idempotency_ttl_secs: default_idempotency_ttl_secs(),
             idempotency_max_keys: default_gateway_idempotency_max_keys(),
+            static_dir: None,
         }
     }
 }

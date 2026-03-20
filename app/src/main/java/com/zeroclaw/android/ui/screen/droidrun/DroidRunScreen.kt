@@ -23,6 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * Screen shown when DroidRun integration is enabled.
+ *
+ * @param edgeMargin horizontal padding applied to the screen content.
+ * @param modifier optional modifier for the root layout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DroidRunScreen(

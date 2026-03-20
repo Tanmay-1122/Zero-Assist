@@ -253,7 +253,7 @@ pub fn all_tools_with_runtime(
     root_config: &crate::config::Config,
 ) -> (Vec<Box<dyn Tool>>, Option<DelegateParentToolsHandle>) {
     let mut tool_arcs: Vec<Arc<dyn Tool>> = vec![
-        Arc::new(ShellTool::new(security.clone(), runtime)),
+        Arc::new(ShellTool::new(security.clone(), runtime.clone())),
         Arc::new(FileReadTool::new(security.clone())),
         Arc::new(FileWriteTool::new(security.clone())),
         Arc::new(FileEditTool::new(security.clone())),

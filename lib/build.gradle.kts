@@ -15,9 +15,9 @@ android {
     ndkVersion = "27.2.12479018"
 
     // Fix for Gobley plugin NPE: Gobley 0.3.7 directly accesses the deprecated ndkDirectory
-    // which can be null in AGP 8.x. We explicitly set it here.
-    @Suppress("DEPRECATION")
-    ndkDirectory = sdkDirectory.resolve("ndk/$ndkVersion")
+    // which can be null in AGP 8.x. We explicitly set the NDK path here.
+    // In AGP 8.x, we use ndkPath (String) instead of the read-only ndkDirectory.
+    ndkPath = sdkDirectory.resolve("ndk/$ndkVersion").absolutePath
 
     defaultConfig {
         minSdk = 26
