@@ -344,31 +344,37 @@ class ZeroClawApplication :
                     allKeys.filter { it.provider == STALE_OAUTH_PROVIDER && it.refreshToken.isNotEmpty() }
                 if (staleOAuthKeys.isEmpty()) return@launch
 
-                for (staleKey in staleOAuthKeys) {
-                    val migrated = staleKey.copy(provider = CODEX_PROVIDER, key = "")
-                    apiKeyRepository.save(migrated)
-
-                    if (staleKey.expiresAt > 0L) {
-                        AuthProfileWriter.writeCodexProfile(
-                            context = this@ZeroClawApplication,
-                            accessToken = staleKey.key,
-                            refreshToken = staleKey.refreshToken,
-                            expiresAtMs = staleKey.expiresAt,
-                        )
-                    }
-                }
-
-                val currentSettings = settingsRepository.settings.first()
-                if (currentSettings.defaultProvider == STALE_OAUTH_PROVIDER) {
-                    settingsRepository.setDefaultProvider(CODEX_PROVIDER)
-                }
-
+                migrateSingleOAuthKeys(staleOAuthKeys)
+                updateDefaultProviderIfNeeded()
                 Log.i(TAG, "Migrated ${staleOAuthKeys.size} stale OAuth keys")
             } catch (e: InterruptedException) {
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "OAuth migration failed: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun migrateSingleOAuthKeys(staleOAuthKeys: List<ApiKey>) {
+        for (staleKey in staleOAuthKeys) {
+            val migrated = staleKey.copy(provider = CODEX_PROVIDER, key = "")
+            apiKeyRepository.save(migrated)
+
+            if (staleKey.expiresAt > 0L) {
+                AuthProfileWriter.writeCodexProfile(
+                    context = this,
+                    accessToken = staleKey.key,
+                    refreshToken = staleKey.refreshToken,
+                    expiresAtMs = staleKey.expiresAt,
+                )
+            }
+        }
+    }
+
+    private suspend fun updateDefaultProviderIfNeeded() {
+        val currentSettings = settingsRepository.settings.first()
+        if (currentSettings.defaultProvider == STALE_OAUTH_PROVIDER) {
+            settingsRepository.setDefaultProvider(CODEX_PROVIDER)
         }
     }
 

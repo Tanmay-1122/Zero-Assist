@@ -934,39 +934,40 @@ object ConfigTomlBuilder {
      * @param config Configuration to read DroidRun values from.
      */
     private fun StringBuilder.appendDroidRunSection(config: GlobalTomlConfig) {
-        val hasAnyValue =
-            config.droidRunUseApi ||
-                config.droidRunUrl.isNotBlank() ||
-                config.droidRunApiKey.isNotBlank() ||
-                config.droidRunLlmProvider.isNotBlank() ||
-                config.droidRunLlmModel.isNotBlank() ||
-                config.droidRunLlmApiKey.isNotBlank() ||
-                config.droidRunLlmBaseUrl.isNotBlank()
-        if (!hasAnyValue) return
+        val droidRunEntries = buildDroidRunEntries(config)
+        if (droidRunEntries.isEmpty()) return
 
         appendLine()
         appendLine("[droidrun]")
+        droidRunEntries.forEach { (key, value) ->
+            appendLine("$key = $value")
+        }
+    }
+
+    private fun buildDroidRunEntries(config: GlobalTomlConfig): List<Pair<String, String>> {
+        val entries = mutableListOf<Pair<String, String>>()
         if (config.droidRunUseApi) {
-            appendLine("use_api = true")
+            entries.add("use_api" to "true")
         }
         if (config.droidRunUrl.isNotBlank()) {
-            appendLine("url = ${tomlString(config.droidRunUrl)}")
+            entries.add("url" to tomlString(config.droidRunUrl))
         }
         if (config.droidRunApiKey.isNotBlank()) {
-            appendLine("api_key = ${tomlString(config.droidRunApiKey)}")
+            entries.add("api_key" to tomlString(config.droidRunApiKey))
         }
         if (config.droidRunLlmProvider.isNotBlank()) {
-            appendLine("llm_provider = ${tomlString(config.droidRunLlmProvider)}")
+            entries.add("llm_provider" to tomlString(config.droidRunLlmProvider))
         }
         if (config.droidRunLlmModel.isNotBlank()) {
-            appendLine("llm_model = ${tomlString(config.droidRunLlmModel)}")
+            entries.add("llm_model" to tomlString(config.droidRunLlmModel))
         }
         if (config.droidRunLlmApiKey.isNotBlank()) {
-            appendLine("llm_api_key = ${tomlString(config.droidRunLlmApiKey)}")
+            entries.add("llm_api_key" to tomlString(config.droidRunLlmApiKey))
         }
         if (config.droidRunLlmBaseUrl.isNotBlank()) {
-            appendLine("llm_base_url = ${tomlString(config.droidRunLlmBaseUrl)}")
+            entries.add("llm_base_url" to tomlString(config.droidRunLlmBaseUrl))
         }
+        return entries
     }
 
     /**

@@ -112,7 +112,9 @@ object SecurePrefsProvider {
             prefs to StorageHealth.Recovered
         } catch (e: InterruptedException) {
             throw e
-        } catch (e: Exception) {
+        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+            // Catch all exceptions during recovery (could be SecurityException, KeyStore issues, etc.)
+            // to ensure we can always fall back to in-memory storage
             Log.e(TAG, "Recovery failed, falling back to in-memory: ${e.message}", e)
             MapSharedPreferences() to StorageHealth.Degraded
         }

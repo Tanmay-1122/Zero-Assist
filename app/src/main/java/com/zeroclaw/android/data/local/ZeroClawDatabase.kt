@@ -76,6 +76,8 @@ abstract class ZeroClawDatabase : RoomDatabase() {
     companion object {
         /** Database file name. */
         private const val DATABASE_NAME = "zeroclaw.db"
+        /** Delay in milliseconds for waiting instance initialization. */
+        private const val INSTANCE_INIT_POLL_DELAY_MS = 10L
 
         /** Migration from schema version 1 to 2: adds the connected_channels table. */
         private val MIGRATION_1_2 =
@@ -352,7 +354,7 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                                     super.onCreate(db)
                                     scope.launch {
                                         // Wait for instance to be set by the build() method
-                                        while (instance == null) delay(10)
+                                        while (instance == null) delay(INSTANCE_INIT_POLL_DELAY_MS)
                                         instance?.pluginDao()?.insertAllIgnoreConflicts(
                                             SeedData.seedPlugins(),
                                         )

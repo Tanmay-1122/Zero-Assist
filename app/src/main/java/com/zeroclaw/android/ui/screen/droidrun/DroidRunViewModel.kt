@@ -115,7 +115,10 @@ class DroidRunViewModel(application: Application) : AndroidViewModel(application
                 _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
-            } catch (e: Exception) {
+            } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+                // SharedPreferences operations can throw various exceptions (SecurityException, 
+                // IllegalArgumentException, etc.). We catch broadly to gracefully handle any 
+                // unexpected errors and report them to the user.
                 _uiState.value =
                     _uiState.value.copy(
                         isSaving = false,

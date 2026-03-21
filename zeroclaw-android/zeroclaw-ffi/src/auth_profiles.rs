@@ -331,6 +331,7 @@ mod tests {
             Ok(d) => d,
             Err(e) => panic!("JSON parse failed: {e}"),
         };
+        let one = &data.profiles["provider_a:one"];
         let is_active_one = data
             .active_profiles
             .get(&one.provider)
