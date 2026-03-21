@@ -46,6 +46,7 @@ import com.zeroclaw.android.data.repository.RoomPluginRepository
 import com.zeroclaw.android.data.repository.RoomTerminalEntryRepository
 import com.zeroclaw.android.data.repository.SettingsRepository
 import com.zeroclaw.android.data.repository.TerminalEntryRepository
+import com.zeroclaw.android.model.ApiKey
 import com.zeroclaw.android.model.RefreshCommand
 import com.zeroclaw.android.service.CostBridge
 import com.zeroclaw.android.service.CronBridge
