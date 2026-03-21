@@ -40,7 +40,7 @@ fun Modifier.shimmer(
         initialValue = -2 * size.width.toFloat(),
         targetValue = 2 * size.width.toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
+            animation = tween(TWEEN_DURATION_MS, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmer_offset"
@@ -60,3 +60,5 @@ fun Modifier.shimmer(
         size = it.size
     }
 }
+
+private const val TWEEN_DURATION_MS = 1200

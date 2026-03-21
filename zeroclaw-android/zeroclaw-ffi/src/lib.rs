@@ -1320,14 +1320,15 @@ pub fn session_destroy() -> Result<(), FfiError> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_get_version() {
-        let version = get_version().unwrap();
-        assert_eq!(version, "0.0.37");
+        match get_version() {
+            Ok(version) => assert_eq!(version, "0.0.37"),
+            Err(e) => panic!("get_version failed: {e}"),
+        }
     }
 
     #[test]
@@ -1339,11 +1340,12 @@ mod tests {
             8080,
         );
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::ConfigError { detail } => {
+        match result {
+            Err(FfiError::ConfigError { detail }) => {
                 assert!(detail.contains("failed to parse config TOML"));
             }
-            other => panic!("expected ConfigError, got {other:?}"),
+            Err(other) => panic!("expected ConfigError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1351,11 +1353,12 @@ mod tests {
     fn test_stop_daemon_not_running() {
         let result = stop_daemon();
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => {
+        match result {
+            Err(FfiError::StateError { detail }) => {
                 assert!(detail.contains("not running"));
             }
-            other => panic!("expected StateError, got {other:?}"),
+            Err(other) => panic!("expected StateError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1363,25 +1366,35 @@ mod tests {
     fn test_send_message_not_running() {
         let result = send_message("hello".to_string());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => {
+        match result {
+            Err(FfiError::StateError { detail }) => {
                 assert!(detail.contains("not running"));
             }
-            other => panic!("expected StateError, got {other:?}"),
+            Err(other) => panic!("expected StateError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
     #[test]
     fn test_get_status_returns_json() {
-        let status = get_status().unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&status).unwrap();
+        let status = match get_status() {
+            Ok(s) => s,
+            Err(e) => panic!("get_status failed: {e}"),
+        };
+        let parsed: serde_json::Value = match serde_json::from_str(&status) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(parsed.get("daemon_running").is_some());
     }
 
     #[test]
     fn test_validate_config_valid() {
         let toml = "default_temperature = 0.7\n";
-        let result = validate_config(toml.to_string()).unwrap();
+        let result = match validate_config(toml.to_string()) {
+            Ok(r) => r,
+            Err(e) => panic!("validate_config failed: {e}"),
+        };
         assert!(
             result.is_empty(),
             "expected empty string for valid config, got: {result}"
@@ -1391,7 +1404,10 @@ mod tests {
     #[test]
     fn test_validate_config_invalid() {
         let toml = "this is not valid {{{{";
-        let result = validate_config(toml.to_string()).unwrap();
+        let result = match validate_config(toml.to_string()) {
+            Ok(r) => r,
+            Err(e) => panic!("validate_config failed: {e}"),
+        };
         assert!(
             !result.is_empty(),
             "expected non-empty error message for invalid config"
@@ -1402,11 +1418,12 @@ mod tests {
     fn test_doctor_channels_invalid_toml() {
         let result = doctor_channels("not valid {{".to_string(), "/tmp/test".to_string());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::ConfigError { detail } => {
+        match result {
+            Err(FfiError::ConfigError { detail }) => {
                 assert!(detail.contains("failed to parse config TOML"));
             }
-            other => panic!("expected ConfigError, got {other:?}"),
+            Err(other) => panic!("expected ConfigError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1414,11 +1431,12 @@ mod tests {
     fn test_get_configured_channel_names_no_daemon() {
         let result = get_configured_channel_names();
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => {
+        match result {
+            Err(FfiError::StateError { detail }) => {
                 assert!(detail.contains("daemon not running"));
             }
-            other => panic!("expected StateError, got {other:?}"),
+            Err(other) => panic!("expected StateError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1454,10 +1472,16 @@ mod tests {
             assert!(dir.join(filename).is_file(), "missing file: {filename}");
         }
 
-        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        let identity = match std::fs::read_to_string(dir.join("IDENTITY.md")) {
+            Ok(content) => content,
+            Err(e) => panic!("Failed to read IDENTITY.md: {e}"),
+        };
         assert!(identity.contains("TestAgent"));
 
-        let user_md = std::fs::read_to_string(dir.join("USER.md")).unwrap();
+        let user_md = match std::fs::read_to_string(dir.join("USER.md")) {
+            Ok(content) => content,
+            Err(e) => panic!("Failed to read USER.md: {e}"),
+        };
         assert!(user_md.contains("TestUser"));
         assert!(user_md.contains("America/New_York"));
 
@@ -1469,25 +1493,32 @@ mod tests {
         let dir = std::env::temp_dir().join("zeroclaw_test_idem");
         let _ = std::fs::remove_dir_all(&dir);
 
-        scaffold_workspace(
+        match scaffold_workspace(
             dir.to_string_lossy().to_string(),
             "Agent1".to_string(),
             String::new(),
             String::new(),
             String::new(),
-        )
-        .unwrap();
+        ) {
+            Ok(_) => {},
+            Err(e) => panic!("First scaffold_workspace failed: {e}"),
+        }
 
-        scaffold_workspace(
+        match scaffold_workspace(
             dir.to_string_lossy().to_string(),
             "Agent2".to_string(),
             String::new(),
             String::new(),
             String::new(),
-        )
-        .unwrap();
+        ) {
+            Ok(_) => {},
+            Err(e) => panic!("Second scaffold_workspace failed: {e}"),
+        }
 
-        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        let identity = match std::fs::read_to_string(dir.join("IDENTITY.md")) {
+            Ok(content) => content,
+            Err(e) => panic!("Failed to read IDENTITY.md: {e}"),
+        };
         assert!(
             identity.contains("Agent1"),
             "existing file should not be overwritten"
@@ -1502,19 +1533,27 @@ mod tests {
         let dir = std::env::temp_dir().join("zeroclaw_test_defaults");
         let _ = std::fs::remove_dir_all(&dir);
 
-        scaffold_workspace(
+        match scaffold_workspace(
             dir.to_string_lossy().to_string(),
             String::new(),
             String::new(),
             String::new(),
             String::new(),
-        )
-        .unwrap();
+        ) {
+            Ok(_) => {},
+            Err(e) => panic!("scaffold_workspace failed: {e}"),
+        }
 
-        let identity = std::fs::read_to_string(dir.join("IDENTITY.md")).unwrap();
+        let identity = match std::fs::read_to_string(dir.join("IDENTITY.md")) {
+            Ok(content) => content,
+            Err(e) => panic!("Failed to read IDENTITY.md: {e}"),
+        };
         assert!(identity.contains("ZeroClaw"), "default agent name");
 
-        let user_md = std::fs::read_to_string(dir.join("USER.md")).unwrap();
+        let user_md = match std::fs::read_to_string(dir.join("USER.md")) {
+            Ok(content) => content,
+            Err(e) => panic!("Failed to read USER.md: {e}"),
+        };
         assert!(user_md.contains("**Name:** User"), "default user name");
         assert!(user_md.contains("**Timezone:** UTC"), "default timezone");
 
@@ -1525,9 +1564,10 @@ mod tests {
     fn test_bind_channel_identity_no_daemon() {
         let result = bind_channel_identity("telegram".into(), "alice".into());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => assert!(detail.contains("not running")),
-            other => panic!("unexpected: {other:?}"),
+        match result {
+            Err(FfiError::StateError { detail }) => assert!(detail.contains("not running")),
+            Err(other) => panic!("unexpected: {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1535,9 +1575,10 @@ mod tests {
     fn test_get_channel_allowlist_no_daemon() {
         let result = get_channel_allowlist("telegram".into());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => assert!(detail.contains("not running")),
-            other => panic!("unexpected: {other:?}"),
+        match result {
+            Err(FfiError::StateError { detail }) => assert!(detail.contains("not running")),
+            Err(other) => panic!("unexpected: {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1545,9 +1586,10 @@ mod tests {
     fn test_list_auth_profiles_no_daemon() {
         let result = list_auth_profiles();
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => assert!(detail.contains("not running")),
-            other => panic!("unexpected: {other:?}"),
+        match result {
+            Err(FfiError::StateError { detail }) => assert!(detail.contains("not running")),
+            Err(other) => panic!("unexpected: {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -1555,16 +1597,23 @@ mod tests {
     fn test_remove_auth_profile_no_daemon() {
         let result = remove_auth_profile("openai".into(), "default".into());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => assert!(detail.contains("not running")),
-            other => panic!("unexpected: {other:?}"),
+        match result {
+            Err(FfiError::StateError { detail }) => assert!(detail.contains("not running")),
+            Err(other) => panic!("unexpected: {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
     #[test]
     fn test_discover_models_anthropic() {
-        let result = discover_models("anthropic".into(), String::new(), None).unwrap();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let result = match discover_models("anthropic".into(), String::new(), None) {
+            Ok(r) => r,
+            Err(e) => panic!("discover_models failed: {e}"),
+        };
+        let parsed: Vec<serde_json::Value> = match serde_json::from_str(&result) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(!parsed.is_empty());
         assert!(parsed[0].get("id").is_some());
         assert!(parsed[0].get("name").is_some());

@@ -162,14 +162,16 @@ fn default_base_url(provider: &str) -> String {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_anthropic_models_returns_json() {
         let result = anthropic_models();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let parsed: Vec<serde_json::Value> = match serde_json::from_str(&result) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(!parsed.is_empty());
         assert!(parsed[0].get("id").is_some());
         assert!(parsed[0].get("name").is_some());
@@ -178,7 +180,10 @@ mod tests {
     #[test]
     fn test_anthropic_models_has_known_ids() {
         let result = anthropic_models();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let parsed: Vec<serde_json::Value> = match serde_json::from_str(&result) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         let ids: Vec<&str> = parsed
             .iter()
             .filter_map(|m| m.get("id").and_then(|v| v.as_str()))
@@ -239,8 +244,14 @@ mod tests {
 
     #[test]
     fn test_discover_anthropic_returns_json() {
-        let result = discover_models_inner("anthropic".into(), String::new(), None).unwrap();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let result = match discover_models_inner("anthropic".into(), String::new(), None) {
+            Ok(r) => r,
+            Err(e) => panic!("discover_models_inner failed: {e}"),
+        };
+        let parsed: Vec<serde_json::Value> = match serde_json::from_str(&result) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(!parsed.is_empty());
     }
 }

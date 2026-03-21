@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
  * @property channels Communication channels configured for this agent.
  * @property temperature Per-agent temperature override; null inherits the global default.
  * @property maxDepth Maximum reasoning depth for the agent.
+ * @property droidRunConfig Optional per-agent DroidRun LLM override for phone tasks.
  */
 data class Agent(
     val id: String,
@@ -31,6 +32,7 @@ data class Agent(
     val channels: List<ChannelConfig> = emptyList(),
     val temperature: Float? = null,
     val maxDepth: Int = DEFAULT_MAX_DEPTH,
+    val droidRunConfig: DroidRunAgentConfig? = null,
 ) {
     /** Constants for [Agent]. */
     companion object {

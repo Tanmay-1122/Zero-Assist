@@ -121,7 +121,7 @@ fun ModelSuggestionField(
                 } else {
                     null
                 },
-            keyboardOptions = KeyboardOptions(autoCorrect = false),
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
             singleLine = true,
             modifier =
                 Modifier

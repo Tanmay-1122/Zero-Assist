@@ -28,6 +28,8 @@ pub mod cron_runs;
 pub mod cron_update;
 pub mod delegate;
 pub mod droidrun;
+pub mod droidrun_config;
+pub mod droidrun_config_get;
 pub mod file_edit;
 pub mod file_read;
 pub mod file_write;
@@ -75,6 +77,8 @@ pub use cron_runs::CronRunsTool;
 pub use cron_update::CronUpdateTool;
 pub use delegate::DelegateTool;
 pub use droidrun::DroidRunTool;
+pub use droidrun_config::DroidRunConfigSetTool;
+pub use droidrun_config_get::DroidRunConfigGetTool;
 pub use file_edit::FileEditTool;
 pub use file_read::FileReadTool;
 pub use file_write::FileWriteTool;
@@ -182,12 +186,13 @@ fn boxed_registry_from_arcs(tools: Vec<Arc<dyn Tool>>) -> Vec<Box<dyn Tool>> {
 }
 
 /// Create the default tool registry
-pub fn default_tools(security: Arc<SecurityPolicy>) -> Vec<Box<dyn Tool>> {
-    default_tools_with_runtime(security, Arc::new(NativeRuntime::new()))
+pub fn default_tools(config: Arc<Config>, security: Arc<SecurityPolicy>) -> Vec<Box<dyn Tool>> {
+    default_tools_with_runtime(config, security, Arc::new(NativeRuntime::new()))
 }
 
 /// Create the default tool registry with explicit runtime adapter.
 pub fn default_tools_with_runtime(
+    config: Arc<Config>,
     security: Arc<SecurityPolicy>,
     runtime: Arc<dyn RuntimeAdapter>,
 ) -> Vec<Box<dyn Tool>> {
@@ -198,7 +203,9 @@ pub fn default_tools_with_runtime(
         Box::new(FileEditTool::new(security.clone())),
         Box::new(GlobSearchTool::new(security.clone())),
         Box::new(ContentSearchTool::new(security.clone())),
-        Box::new(DroidRunTool::new(security, runtime)),
+        Box::new(DroidRunTool::new(config, security.clone(), runtime)),
+        Box::new(DroidRunConfigSetTool::new(security.clone())),
+        Box::new(DroidRunConfigGetTool::new(security)),
     ]
 }
 
@@ -265,7 +272,9 @@ pub fn all_tools_with_runtime(
         Arc::new(CronUpdateTool::new(config.clone(), security.clone())),
         Arc::new(CronRunTool::new(config.clone(), security.clone())),
         Arc::new(CronRunsTool::new(config.clone())),
-        Arc::new(DroidRunTool::new(security.clone(), runtime.clone())),
+        Arc::new(DroidRunTool::new(config.clone(), security.clone(), runtime.clone())),
+        Arc::new(DroidRunConfigSetTool::new(security.clone())),
+        Arc::new(DroidRunConfigGetTool::new(security.clone())),
         Arc::new(MemoryStoreTool::new(memory.clone(), security.clone())),
         Arc::new(MemoryRecallTool::new(memory.clone())),
         Arc::new(MemoryForgetTool::new(memory, security.clone())),
@@ -417,7 +426,7 @@ mod tests {
     #[test]
     fn default_tools_has_expected_count() {
         let security = Arc::new(SecurityPolicy::default());
-        let tools = default_tools(security);
+        let tools = default_tools(Arc::new(Config::default()), security);
         assert_eq!(tools.len(), 6);
     }
 
@@ -508,7 +517,7 @@ mod tests {
     #[test]
     fn default_tools_names() {
         let security = Arc::new(SecurityPolicy::default());
-        let tools = default_tools(security);
+        let tools = default_tools(Arc::new(Config::default()), security);
         let names: Vec<&str> = tools.iter().map(|t| t.name()).collect();
         assert!(names.contains(&"shell"));
         assert!(names.contains(&"file_read"));
@@ -521,7 +530,7 @@ mod tests {
     #[test]
     fn default_tools_all_have_descriptions() {
         let security = Arc::new(SecurityPolicy::default());
-        let tools = default_tools(security);
+        let tools = default_tools(Arc::new(Config::default()), security);
         for tool in &tools {
             assert!(
                 !tool.description().is_empty(),
@@ -534,7 +543,7 @@ mod tests {
     #[test]
     fn default_tools_all_have_schemas() {
         let security = Arc::new(SecurityPolicy::default());
-        let tools = default_tools(security);
+        let tools = default_tools(Arc::new(Config::default()), security);
         for tool in &tools {
             let schema = tool.parameters_schema();
             assert!(
@@ -553,7 +562,7 @@ mod tests {
     #[test]
     fn tool_spec_generation() {
         let security = Arc::new(SecurityPolicy::default());
-        let tools = default_tools(security);
+        let tools = default_tools(Arc::new(Config::default()), security);
         for tool in &tools {
             let spec = tool.spec();
             assert_eq!(spec.name, tool.name());
@@ -630,6 +639,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
 

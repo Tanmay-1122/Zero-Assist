@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.assertThrows
  * run without loading the native library.
  */
 @DisplayName("CronBridge")
+@OptIn(ExperimentalCoroutinesApi::class)
 class CronBridgeTest {
     private lateinit var bridge: CronBridge
 

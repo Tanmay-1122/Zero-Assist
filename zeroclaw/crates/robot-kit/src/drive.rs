@@ -406,7 +406,7 @@ mod tests {
         let result = tool
             .execute(json!({"action": "forward", "distance": 1.0}))
             .await
-            .unwrap();
+            .expect("drive forward execution failed");
         assert!(result.success);
         assert!(result.output.contains("forward"));
     }
@@ -414,7 +414,7 @@ mod tests {
     #[tokio::test]
     async fn drive_stop() {
         let tool = DriveTool::new(RobotConfig::default());
-        let result = tool.execute(json!({"action": "stop"})).await.unwrap();
+        let result = tool.execute(json!({"action": "stop"})).await.expect("drive stop execution failed");
         assert!(result.success);
         assert!(result.output.contains("stopped"));
     }
@@ -422,7 +422,7 @@ mod tests {
     #[tokio::test]
     async fn drive_unknown_action() {
         let tool = DriveTool::new(RobotConfig::default());
-        let result = tool.execute(json!({"action": "fly"})).await.unwrap();
+        let result = tool.execute(json!({"action": "fly"})).await.expect("drive unknown action execution failed");
         assert!(!result.success);
     }
 }

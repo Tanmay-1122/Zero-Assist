@@ -45,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeroclaw.android.data.ProviderRegistry
 import com.zeroclaw.android.data.remote.ModelFetcher
 import com.zeroclaw.android.model.Agent
+import com.zeroclaw.android.model.DroidRunAgentConfig
 import com.zeroclaw.android.model.ModelListFormat
 import com.zeroclaw.android.model.ProviderAuthType
 import com.zeroclaw.android.ui.component.CollapsibleSection
@@ -128,6 +129,18 @@ fun AgentDetailScreen(
     var maxDepth by remember(loadedAgent) {
         mutableStateOf(loadedAgent.maxDepth.toString())
     }
+    var droidRunEnabled by remember(loadedAgent) {
+        mutableStateOf(loadedAgent.droidRunConfig != null)
+    }
+    var droidRunConnectionId by remember(loadedAgent) {
+        mutableStateOf(loadedAgent.droidRunConfig?.connectionId)
+    }
+    var droidRunProviderId by remember(loadedAgent) {
+        mutableStateOf(loadedAgent.droidRunConfig?.provider.orEmpty())
+    }
+    var droidRunModelName by remember(loadedAgent) {
+        mutableStateOf(loadedAgent.droidRunConfig?.modelName.orEmpty())
+    }
 
     val initialConnectionId by remember(loadedAgent, apiKeys) {
         derivedStateOf {
@@ -151,6 +164,15 @@ fun AgentDetailScreen(
     var liveModels by remember { mutableStateOf(emptyList<String>()) }
     var isLoadingLive by remember { mutableStateOf(false) }
     var isLiveData by remember { mutableStateOf(false) }
+    val maxDepthValue = maxDepth.toIntOrNull()
+    val maxDepthError = maxDepth.isNotEmpty() && (maxDepthValue == null || maxDepthValue < 1)
+    val droidRunValid =
+        !droidRunEnabled ||
+            (
+                !droidRunConnectionId.isNullOrBlank() &&
+                    droidRunProviderId.isNotBlank() &&
+                    droidRunModelName.isNotBlank()
+            )
 
     val selectedKey = apiKeys.firstOrNull { it.id == selectedConnectionId }
 
@@ -185,7 +207,7 @@ fun AgentDetailScreen(
         Spacer(modifier = Modifier.height(HEADING_SPACING_DP.dp))
 
         Text(
-            text = "Connection Details",
+            text = "Agent Details",
             style = MaterialTheme.typography.headlineSmall,
         )
         Spacer(modifier = Modifier.height(HEADING_SPACING_DP.dp))
@@ -278,10 +300,39 @@ fun AgentDetailScreen(
                 onValueChange = { maxDepth = it },
                 label = { Text("Max depth") },
                 singleLine = true,
+                isError = maxDepthError,
+                supportingText =
+                    if (maxDepthError) {
+                        { Text("Must be a positive integer") }
+                    } else {
+                        null
+                    },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        Spacer(modifier = Modifier.height(SECTION_SPACING_DP.dp))
+
+        AgentDroidRunSection(
+            enabled = droidRunEnabled,
+            onEnabledChange = { droidRunEnabled = it },
+            keys = apiKeys,
+            selectedConnectionId = droidRunConnectionId,
+            onConnectionSelected = { key ->
+                droidRunConnectionId = key.id
+                val resolved = ProviderRegistry.findById(key.provider)
+                val nextProviderId = resolved?.id ?: key.provider
+                val providerChanged = nextProviderId != droidRunProviderId
+                droidRunProviderId = nextProviderId
+                if (providerChanged || droidRunModelName.isBlank()) {
+                    droidRunModelName = resolved?.suggestedModels?.firstOrNull().orEmpty()
+                }
+            },
+            onAddNewConnection = onNavigateToAddConnection,
+            providerId = droidRunProviderId,
+            modelName = droidRunModelName,
+            onModelChanged = { droidRunModelName = it },
+        )
         Spacer(modifier = Modifier.height(SECTION_SPACING_DP.dp))
 
         CollapsibleSection(title = "Channels") {
@@ -313,10 +364,21 @@ fun AgentDetailScreen(
                         systemPrompt = systemPrompt,
                         temperature = if (useGlobalTemperature) null else temperature,
                         maxDepth = maxDepth.toIntOrNull() ?: Agent.DEFAULT_MAX_DEPTH,
+                        droidRunConfig =
+                            if (droidRunEnabled && droidRunValid) {
+                                DroidRunAgentConfig(
+                                    connectionId = droidRunConnectionId.orEmpty(),
+                                    provider = droidRunProviderId,
+                                    modelName = droidRunModelName,
+                                )
+                            } else {
+                                null
+                            },
                     ),
                 )
                 onSaved()
             },
+            enabled = !maxDepthError && droidRunValid,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Save Changes")
@@ -327,7 +389,7 @@ fun AgentDetailScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "Delete Connection",
+                text = "Delete Agent",
                 color = MaterialTheme.colorScheme.error,
             )
         }
@@ -337,7 +399,7 @@ fun AgentDetailScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Delete Connection") },
+            title = { Text("Delete Agent") },
             text = { Text("Are you sure you want to delete \"$name\"? This cannot be undone.") },
             confirmButton = {
                 TextButton(

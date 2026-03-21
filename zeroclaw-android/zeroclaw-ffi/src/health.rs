@@ -73,13 +73,15 @@ pub(crate) fn get_component_health_inner(name: String) -> Option<FfiComponentHea
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_get_health_detail_returns_struct() {
-        let detail = get_health_detail_inner().unwrap();
+        let detail = match get_health_detail_inner() {
+            Ok(d) => d,
+            Err(e) => panic!("get_health_detail_inner failed: {e}"),
+        };
         // Daemon is not running in tests
         assert!(!detail.daemon_running);
         assert_eq!(detail.pid, std::process::id());

@@ -465,7 +465,7 @@ mod tests {
     fn test_install_skill_http_url_rejected() {
         let skills_dir = std::env::temp_dir().join("zeroclaw_test_http_reject");
         let _ = std::fs::remove_dir_all(&skills_dir);
-        std::fs::create_dir_all(&skills_dir).unwrap();
+        std::fs::create_dir_all(&skills_dir).expect("failed to create test directory");
 
         let result = install_skill_from_url("http://example.com/skill.git", &skills_dir);
         assert!(result.is_err());
@@ -490,7 +490,7 @@ mod tests {
     fn test_install_skill_https_url_accepted_format() {
         let skills_dir = std::env::temp_dir().join("zeroclaw_test_https_accept");
         let _ = std::fs::remove_dir_all(&skills_dir);
-        std::fs::create_dir_all(&skills_dir).unwrap();
+        std::fs::create_dir_all(&skills_dir).expect("failed to create test directory");
 
         // HTTPS URL passes the scheme check but will fail at git clone
         // (no network in unit tests). We just verify it gets past the
@@ -527,15 +527,15 @@ mod tests {
         let temp = std::env::temp_dir().join("zeroclaw_test_install_skill");
         let source_dir = temp.join("source-skill");
         let _ = std::fs::remove_dir_all(&temp);
-        std::fs::create_dir_all(&source_dir).unwrap();
+        std::fs::create_dir_all(&source_dir).expect("failed to create source directory");
         std::fs::write(
             source_dir.join("skill.toml"),
             "name = \"installed-skill\"\ndescription = \"test\"\nversion = \"1.0.0\"\n",
         )
-        .unwrap();
+        .expect("failed to write skill.toml");
 
         let skills_dir = temp.join("skills");
-        std::fs::create_dir_all(&skills_dir).unwrap();
+        std::fs::create_dir_all(&skills_dir).expect("failed to create skills directory");
 
         let result = install_skill_from_path(&source_dir.to_string_lossy(), &skills_dir);
         assert!(result.is_ok());

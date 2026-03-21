@@ -457,6 +457,10 @@ fn install_linux_systemd(config: &Config) -> Result<()> {
 /// Check if the current process is running as root (Unix only)
 #[cfg(unix)]
 fn is_root() -> bool {
+    // SAFETY: libc::getuid() is a simple read-only system call that queries the current
+    // process's effective user ID. It has no side effects and cannot panic or dereference
+    // invalid memory. The comparison with 0 is a safe arithmetic operation. This function
+    // is only compiled on Unix platforms where getuid is available.
     unsafe { libc::getuid() == 0 }
 }
 

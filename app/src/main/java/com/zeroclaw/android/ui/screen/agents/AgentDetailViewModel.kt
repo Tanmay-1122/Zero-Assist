@@ -102,6 +102,7 @@ class AgentDetailViewModel(
             old.channels == new.channels &&
             old.temperature == new.temperature &&
             old.maxDepth == new.maxDepth &&
+            old.droidRunConfig == new.droidRunConfig &&
             old.name == new.name &&
             (old.provider != new.provider || old.modelName != new.modelName)
 

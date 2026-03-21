@@ -282,8 +282,11 @@ async def resolve_app_name(tools, app_name: str) -> str:
         # Return as-is (might already be a package name)
         return app_name
 
-    except Exception as e:
+    except (TimeoutError, OSError, ValueError, KeyError) as e:
         logger.warning(f"Failed to resolve app name '{app_name}': {e}")
+        return app_name
+    except Exception as e:  # Unexpected app resolution errors
+        logger.warning(f"Failed to resolve app name '{app_name}' (unexpected): {e}", exc_info=True)
         return app_name
 
 
@@ -298,7 +301,12 @@ async def get_available_apps(tools) -> str:
         apps = await tools.get_apps(include_system=False)
         app_names = [app.get("label", app.get("package", "")) for app in apps[:30]]
         return json.dumps(app_names)
-    except Exception:
+    except (TimeoutError, OSError, KeyError) as e:
+        # Tools error - use fallback
+        logger.debug(f"Failed to get apps list: {e}")
+        return '["Settings", "Chrome", "Camera", "Files", "Contacts", "Messages", "Phone", "Calendar", "Clock", "Calculator"]'
+    except Exception as e:  # Unexpected app list errors
+        logger.debug(f"Failed to get apps list (unexpected): {e}", exc_info=True)
         # Fallback to generic list
         return '["Settings", "Chrome", "Camera", "Files", "Contacts", "Messages", "Phone", "Calendar", "Clock", "Calculator"]'
 
@@ -607,8 +615,11 @@ async def execute_action(
         else:
             return False, f"unknown action: {action_type}"
 
-    except Exception as e:
+    except (TimeoutError, OSError, ValueError, KeyError, AttributeError) as e:
         logger.error(f"Action execution failed: {e}")
+        return False, f"error: {e}"
+    except Exception as e:  # Unexpected action execution errors
+        logger.error(f"Action execution failed (unexpected): {e}", exc_info=True)
         return False, f"error: {e}"
 
 
@@ -687,15 +698,21 @@ async def run(
         try:
             await tools.get_state()
             w, h = tools.screen_width, tools.screen_height
-        except Exception as e:
+        except (TimeoutError, OSError, AttributeError) as e:
             logger.error(f"Failed to get state: {e}")
+            w, h = 1080, 2400  # Fallback dimensions
+        except Exception as e:  # Unexpected state retrieval errors
+            logger.error(f"Failed to get state (unexpected): {e}", exc_info=True)
             w, h = 1080, 2400  # Fallback dimensions
 
         # Take screenshot (MAI-UI is vision-based, always requires screenshots)
         try:
             _, screenshot_bytes = await tools.take_screenshot()
-        except Exception as e:
+        except (TimeoutError, OSError) as e:
             logger.error(f"Failed to take screenshot: {e}")
+            continue
+        except Exception as e:  # Unexpected screenshot errors
+            logger.error(f"Failed to take screenshot (unexpected): {e}", exc_info=True)
             continue
 
         if not screenshot_bytes:
@@ -715,8 +732,11 @@ async def run(
         try:
             response = await acall_with_retries(llm, to_chat_messages(messages))
             response_text = str(response)
-        except Exception as e:
+        except (RuntimeError, TimeoutError, ValueError) as e:
             logger.error(f"LLM call failed: {e}")
+            continue
+        except Exception as e:  # Unexpected LLM errors
+            logger.error(f"LLM call failed (unexpected): {e}", exc_info=True)
             continue
 
         # Parse response

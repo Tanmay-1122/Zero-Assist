@@ -43,7 +43,7 @@ fun AnimatedMeshBackground() {
         initialValue = 0f,
         targetValue = 2f * Math.PI.toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing),
+            animation = tween(TRANSITION_DURATION_MS, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "Phase"
@@ -58,44 +58,54 @@ fun AnimatedMeshBackground() {
 
         // Moving Globs
         val glob1Pos = Offset(
-            x = width * (0.5f + 0.3f * cos(phase)),
-            y = height * (0.5f + 0.3f * sin(phase))
+            x = width * (CENTER_OFFSET + GLOB_MOVE_RADIUS * cos(phase)),
+            y = height * (CENTER_OFFSET + GLOB_MOVE_RADIUS * sin(phase))
         )
         
-        val glob2PhaseMultiplierX = 0.7f
-        val glob2PhaseMultiplierY = 1.2f
         val glob2Pos = Offset(
-            x = width * (0.5f + 0.3f * sin(phase * glob2PhaseMultiplierX)),
-            y = height * (0.5f + 0.2f * cos(phase * glob2PhaseMultiplierY))
+            x = width * (CENTER_OFFSET + GLOB_MOVE_RADIUS * sin(phase * GLOB2_PHASE_X)),
+            y = height * (CENTER_OFFSET + GLOB2_MOVE_RADIUS_Y * cos(phase * GLOB2_PHASE_Y))
         )
 
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(GlowGreen.copy(alpha = 0.15f), Color.Transparent),
+                colors = listOf(GlowGreen.copy(alpha = GLOB1_ALPHA), Color.Transparent),
                 center = glob1Pos,
-                radius = width * 0.8f
+                radius = width * GLOB_RADIUS_LARGE
             ),
             center = glob1Pos,
-            radius = width * 0.8f
+            radius = width * GLOB_RADIUS_LARGE
         )
 
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(NeonBlue.copy(alpha = 0.12f), Color.Transparent),
+                colors = listOf(NeonBlue.copy(alpha = GLOB2_ALPHA), Color.Transparent),
                 center = glob2Pos,
-                radius = width * 0.7f
+                radius = width * GLOB_RADIUS_MEDIUM
             ),
             center = glob2Pos,
-            radius = width * 0.7f
+            radius = width * GLOB_RADIUS_MEDIUM
         )
         
         // Subtle Vignette
         drawRect(
             brush = Brush.radialGradient(
-                colors = listOf(Color.Transparent, Obsidian.copy(alpha = 0.6f)),
+                colors = listOf(Color.Transparent, Obsidian.copy(alpha = VIGNETTE_ALPHA)),
                 center = center,
                 radius = width
             )
         )
     }
 }
+
+private const val TRANSITION_DURATION_MS = 10000
+private const val CENTER_OFFSET = 0.5f
+private const val GLOB_MOVE_RADIUS = 0.3f
+private const val GLOB2_MOVE_RADIUS_Y = 0.2f
+private const val GLOB2_PHASE_X = 0.7f
+private const val GLOB2_PHASE_Y = 1.2f
+private const val GLOB1_ALPHA = 0.15f
+private const val GLOB2_ALPHA = 0.12f
+private const val GLOB_RADIUS_LARGE = 0.8f
+private const val GLOB_RADIUS_MEDIUM = 0.7f
+private const val VIGNETTE_ALPHA = 0.6f

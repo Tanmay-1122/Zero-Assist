@@ -12,6 +12,7 @@ import com.zeroclaw.android.model.Agent
 import com.zeroclaw.android.model.ChannelConfig
 import com.zeroclaw.android.model.ChannelType
 import com.zeroclaw.android.model.ConnectedChannel
+import com.zeroclaw.android.model.DroidRunAgentConfig
 import com.zeroclaw.android.model.LogEntry
 import com.zeroclaw.android.model.LogSeverity
 import com.zeroclaw.android.model.Plugin
@@ -44,6 +45,7 @@ fun AgentEntity.toModel(): Agent =
         channels = deserializeChannels(channelsJson),
         temperature = temperature,
         maxDepth = maxDepth,
+        droidRunConfig = deserializeDroidRunConfig(droidRunConfigJson),
     )
 
 /**
@@ -63,6 +65,7 @@ fun Agent.toEntity(): AgentEntity =
         channelsJson = mapperJson.encodeToString(channels),
         temperature = temperature,
         maxDepth = maxDepth,
+        droidRunConfigJson = serializeDroidRunConfig(droidRunConfig),
     )
 
 /**
@@ -175,6 +178,29 @@ private fun deserializeChannels(json: String): List<ChannelConfig> =
     } else {
         runCatching { mapperJson.decodeFromString<List<ChannelConfig>>(json) }
             .getOrDefault(emptyList())
+    }
+
+/**
+ * Serializes an optional [DroidRunAgentConfig] to JSON for Room storage.
+ *
+ * @param config Optional DroidRun override.
+ * @return JSON string, or blank when [config] is null.
+ */
+private fun serializeDroidRunConfig(config: DroidRunAgentConfig?): String =
+    config?.let(mapperJson::encodeToString).orEmpty()
+
+/**
+ * Deserializes a JSON string to an optional [DroidRunAgentConfig].
+ *
+ * @param json JSON-encoded DroidRun override.
+ * @return Deserialized config, or null if JSON is blank or invalid.
+ */
+private fun deserializeDroidRunConfig(json: String): DroidRunAgentConfig? =
+    if (json.isBlank()) {
+        null
+    } else {
+        runCatching { mapperJson.decodeFromString<DroidRunAgentConfig>(json) }
+            .getOrNull()
     }
 
 /**

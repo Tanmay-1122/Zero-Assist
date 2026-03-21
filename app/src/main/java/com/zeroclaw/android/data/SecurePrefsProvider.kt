@@ -101,8 +101,6 @@ object SecurePrefsProvider {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
-
-    @Suppress("TooGenericExceptionCaught")
     private fun attemptRecovery(
         context: Context,
         prefsName: String,
@@ -113,6 +111,7 @@ object SecurePrefsProvider {
             val prefs = createEncryptedPrefs(context, prefsName, masterKey)
             prefs to StorageHealth.Recovered
         } catch (e: Exception) {
+            if (e is InterruptedException) throw e
             Log.e(TAG, "Recovery failed, falling back to in-memory: ${e.message}", e)
             MapSharedPreferences() to StorageHealth.Degraded
         }

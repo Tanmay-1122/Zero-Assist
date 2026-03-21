@@ -174,7 +174,6 @@ pub fn snapshot_json() -> serde_json::Value {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -183,7 +182,10 @@ mod tests {
         mark_component_ok("test_comp");
         let snap = snapshot();
         assert_eq!(snap.pid, std::process::id());
-        let comp = snap.components.get("test_comp").unwrap();
+        let comp = match snap.components.get("test_comp") {
+            Some(c) => c,
+            None => panic!("expected 'test_comp' in components"),
+        };
         assert_eq!(comp.status, "ok");
         assert!(comp.last_error.is_none());
     }
@@ -192,7 +194,10 @@ mod tests {
     fn test_mark_error() {
         mark_component_error("err_comp", "something broke");
         let snap = snapshot();
-        let comp = snap.components.get("err_comp").unwrap();
+        let comp = match snap.components.get("err_comp") {
+            Some(c) => c,
+            None => panic!("expected 'err_comp' in components"),
+        };
         assert_eq!(comp.status, "error");
         assert_eq!(comp.last_error.as_deref(), Some("something broke"));
     }
@@ -203,7 +208,10 @@ mod tests {
         bump_component_restart("restart_comp");
         bump_component_restart("restart_comp");
         let snap = snapshot();
-        let comp = snap.components.get("restart_comp").unwrap();
+        let comp = match snap.components.get("restart_comp") {
+            Some(c) => c,
+            None => panic!("expected 'restart_comp' in components"),
+        };
         assert_eq!(comp.restart_count, 2);
     }
 

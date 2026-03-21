@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.nio.file.Path
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.io.TempDir
  * run without loading the native library.
  */
 @DisplayName("DaemonServiceBridge")
+@OptIn(ExperimentalCoroutinesApi::class)
 class DaemonServiceBridgeTest {
     private lateinit var bridge: DaemonServiceBridge
 

@@ -31,12 +31,16 @@ impl ListenTool {
 
     /// Record audio using arecord (ALSA)
     async fn record_audio(&self, duration_secs: u64) -> Result<PathBuf> {
-        let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
+        let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
         let filename = self
             .recordings_dir
             .join(format!("recording_{}.wav", timestamp));
 
         let device = &self.config.audio.mic_device;
+
+        // Convert filename to string, handling invalid UTF-8 gracefully
+        let filename_str = filename.to_str()
+            .ok_or_else(|| anyhow::anyhow!("Recording filename contains invalid UTF-8 characters"))?;
 
         // Record using arecord (standard on Linux/Pi)
         let output = tokio::process::Command::new("arecord")
@@ -51,7 +55,7 @@ impl ListenTool {
                 "1", // Mono
                 "-d",
                 &duration_secs.to_string(),
-                filename.to_str().unwrap(),
+                filename_str,
             ])
             .output()
             .await?;
@@ -81,13 +85,20 @@ impl ListenTool {
                 PathBuf::from(format!("/usr/local/share/whisper/ggml-{}.bin", model))
             });
 
+        // Convert paths to strings, handling invalid UTF-8 gracefully
+        let model_path_str = model_path.to_str()
+            .ok_or_else(|| anyhow::anyhow!("Whisper model path contains invalid UTF-8 characters"))?;
+        
+        let audio_path_str = audio_path.to_str()
+            .ok_or_else(|| anyhow::anyhow!("Audio path contains invalid UTF-8 characters"))?;
+
         // Run whisper.cpp
         let output = tokio::process::Command::new(whisper_path)
             .args([
                 "-m",
-                model_path.to_str().unwrap(),
+                model_path_str,
                 "-f",
-                audio_path.to_str().unwrap(),
+                audio_path_str,
                 "--no-timestamps",
                 "-otxt", // Output as text
             ])

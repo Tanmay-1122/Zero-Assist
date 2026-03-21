@@ -2257,70 +2257,70 @@ mod tests {
 
         /// Returns a snapshot of all recorded events.
         fn events(&self) -> Vec<String> {
-            self.events.lock().unwrap().clone()
+            self.events.lock().expect("events lock poisoned").clone()
         }
     }
 
     impl FfiSessionListener for RecordingListener {
         fn on_thinking(&self, text: String) {
-            self.events.lock().unwrap().push(format!("thinking:{text}"));
+            self.events.lock().expect("events lock poisoned").push(format!("thinking:{text}"));
         }
 
         fn on_response_chunk(&self, text: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("response_chunk:{text}"));
         }
 
         fn on_tool_start(&self, name: String, arguments_hint: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("tool_start:{name}:{arguments_hint}"));
         }
 
         fn on_tool_result(&self, name: String, success: bool, duration_secs: u64) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("tool_result:{name}:{success}:{duration_secs}"));
         }
 
         fn on_tool_output(&self, name: String, output: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("tool_output:{name}:{output}"));
         }
 
         fn on_progress(&self, message: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("progress:{message}"));
         }
 
         fn on_compaction(&self, summary: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("compaction:{summary}"));
         }
 
         fn on_complete(&self, full_response: String) {
             self.events
                 .lock()
-                .unwrap()
+                .expect("events lock poisoned")
                 .push(format!("complete:{full_response}"));
         }
 
         fn on_error(&self, error: String) {
-            self.events.lock().unwrap().push(format!("error:{error}"));
+            self.events.lock().expect("events lock poisoned").push(format!("error:{error}"));
         }
 
         fn on_cancelled(&self) {
-            self.events.lock().unwrap().push("cancelled".to_string());
+            self.events.lock().expect("events lock poisoned").push("cancelled".to_string());
         }
     }
 
@@ -2544,7 +2544,7 @@ mod tests {
         }];
 
         let result = build_native_assistant_history("Let me check", &calls, None);
-        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&result).expect("failed to parse JSON result");
 
         assert_eq!(parsed["content"], "Let me check");
         assert_eq!(parsed["tool_calls"][0]["id"], "call_123");
@@ -2562,7 +2562,7 @@ mod tests {
 
         let result =
             build_native_assistant_history("Reading file", &calls, Some("thinking about it"));
-        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&result).expect("failed to parse JSON result");
 
         assert_eq!(parsed["reasoning_content"], "thinking about it");
     }

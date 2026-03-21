@@ -8,12 +8,10 @@ package com.zeroclaw.android.ui.component
 
 import android.graphics.BlurMaskFilter
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
@@ -33,7 +31,7 @@ fun Modifier.glassmorphic(
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         Modifier
             .graphicsLayer {
-                renderEffect = RenderEffect.createBlurEffect(
+                renderEffect = android.graphics.RenderEffect.createBlurEffect(
                     blur.toPx(),
                     blur.toPx(),
                     android.graphics.Shader.TileMode.CLAMP

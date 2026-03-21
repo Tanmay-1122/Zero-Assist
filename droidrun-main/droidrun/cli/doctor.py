@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 import re
 import shutil
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ from droidrun.portal import (
 )
 
 console = Console()
+
+logger = logging.getLogger("droidrun")
 
 PORTAL_REMOTE_PORT = 8080
 
@@ -91,7 +94,11 @@ async def check_sdk_version(debug: bool) -> CheckResult:
                     tag = data.get("tag_name", "")
                 latest = tag.lstrip("v")
                 break
-        except Exception:
+        except (requests.RequestException, ValueError) as e:
+            # Network error or invalid JSON response
+            continue
+        except Exception as e:  # Unexpected GitHub API errors
+            logger.debug(f"Unexpected error fetching from {host}: {e}")
             continue
 
     if latest is None:
@@ -135,7 +142,8 @@ async def check_config(debug: bool) -> tuple[CheckResult, Any]:
                 ),
                 config,
             )
-        except Exception as e:
+        except (ImportError, IOError, ValueError, OSError) as e:
+            # Config loading error - expected for missing files or bad format
             return (
                 CheckResult(
                     "Config",
@@ -159,7 +167,18 @@ async def check_config(debug: bool) -> tuple[CheckResult, Any]:
             ),
             None,
         )
-    except Exception as e:
+    except (ImportError, IOError, ValueError, OSError) as e:
+        return (
+            CheckResult(
+                "Config",
+                Status.FAIL,
+                f"failed to load: {e}",
+                detail=str(config_path),
+            ),
+            None,
+        )
+    except Exception as e:  # Unexpected config errors
+        logger.debug(f"Unexpected error loading config: {e}")
         return (
             CheckResult(
                 "Config",
@@ -191,7 +210,16 @@ async def check_adb(debug: bool) -> CheckResult:
             f"found, {count} device(s)",
             detail=adb_path,
         )
-    except Exception as e:
+    except (TimeoutError, RuntimeError) as e:
+        # ADB server timeout or connection failure
+        return CheckResult(
+            "ADB",
+            Status.FAIL,
+            f"adb found but server error: {e}",
+            detail=adb_path,
+        )
+    except Exception as e:  # Unexpected ADB errors
+        logger.debug(f"Unexpected ADB error: {e}")
         return CheckResult(
             "ADB",
             Status.FAIL,

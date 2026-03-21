@@ -351,7 +351,6 @@ pub fn is_public_bind(host: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::test;
 
     // ── PairingGuard ─────────────────────────────────────────
 

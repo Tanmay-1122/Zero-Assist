@@ -35,6 +35,25 @@ data class AgentTomlEntry(
     val systemPrompt: String = "",
     val temperature: Float? = null,
     val maxDepth: Int = Agent.DEFAULT_MAX_DEPTH,
+    val droidRun: DroidRunTomlEntry? = null,
+)
+
+/**
+ * Per-agent DroidRun LLM override ready for TOML serialization.
+ *
+ * The provider/model remain in Android canonical form because the Python
+ * DroidRun bridge resolves them itself.
+ *
+ * @property provider DroidRun provider ID.
+ * @property model DroidRun model identifier.
+ * @property apiKey Credential for the selected DroidRun provider.
+ * @property baseUrl Optional custom endpoint for OpenAI-compatible providers.
+ */
+data class DroidRunTomlEntry(
+    val provider: String,
+    val model: String,
+    val apiKey: String = "",
+    val baseUrl: String = "",
 )
 
 /**
@@ -186,6 +205,13 @@ data class GlobalTomlConfig(
     val model: String,
     val apiKey: String,
     val baseUrl: String,
+    val droidRunUseApi: Boolean = false,
+    val droidRunUrl: String = "",
+    val droidRunApiKey: String = "",
+    val droidRunLlmProvider: String = "",
+    val droidRunLlmModel: String = "",
+    val droidRunLlmApiKey: String = "",
+    val droidRunLlmBaseUrl: String = "",
     val temperature: Float = DEFAULT_GLOBAL_TEMPERATURE,
     val compactContext: Boolean = false,
     val costEnabled: Boolean = false,
@@ -559,6 +585,7 @@ object ConfigTomlBuilder {
             appendModelRoutesSection(config)
             appendComposioSection(config)
             appendBrowserSection(config)
+            appendDroidRunSection(config)
             appendHttpRequestSection(config)
             appendTranscriptionSection(config)
             appendMultimodalSection(config)
@@ -888,6 +915,49 @@ object ConfigTomlBuilder {
         if (config.browserAllowedDomains.isNotEmpty()) {
             val list = config.browserAllowedDomains.joinToString(", ") { tomlString(it) }
             appendLine("allowed_domains = [$list]")
+        }
+    }
+
+    /**
+     * Appends the `[droidrun]` TOML section when DroidRun server or LLM overrides exist.
+     *
+     * Upstream fields emitted here are used by the Android bridge integration.
+     *
+     * @param config Configuration to read DroidRun values from.
+     */
+    private fun StringBuilder.appendDroidRunSection(config: GlobalTomlConfig) {
+        val hasAnyValue =
+            config.droidRunUseApi ||
+                config.droidRunUrl.isNotBlank() ||
+                config.droidRunApiKey.isNotBlank() ||
+                config.droidRunLlmProvider.isNotBlank() ||
+                config.droidRunLlmModel.isNotBlank() ||
+                config.droidRunLlmApiKey.isNotBlank() ||
+                config.droidRunLlmBaseUrl.isNotBlank()
+        if (!hasAnyValue) return
+
+        appendLine()
+        appendLine("[droidrun]")
+        if (config.droidRunUseApi) {
+            appendLine("use_api = true")
+        }
+        if (config.droidRunUrl.isNotBlank()) {
+            appendLine("url = ${tomlString(config.droidRunUrl)}")
+        }
+        if (config.droidRunApiKey.isNotBlank()) {
+            appendLine("api_key = ${tomlString(config.droidRunApiKey)}")
+        }
+        if (config.droidRunLlmProvider.isNotBlank()) {
+            appendLine("llm_provider = ${tomlString(config.droidRunLlmProvider)}")
+        }
+        if (config.droidRunLlmModel.isNotBlank()) {
+            appendLine("llm_model = ${tomlString(config.droidRunLlmModel)}")
+        }
+        if (config.droidRunLlmApiKey.isNotBlank()) {
+            appendLine("llm_api_key = ${tomlString(config.droidRunLlmApiKey)}")
+        }
+        if (config.droidRunLlmBaseUrl.isNotBlank()) {
+            appendLine("llm_base_url = ${tomlString(config.droidRunLlmBaseUrl)}")
         }
     }
 
@@ -1332,6 +1402,19 @@ object ConfigTomlBuilder {
                 }
                 if (entry.maxDepth != Agent.DEFAULT_MAX_DEPTH) {
                     appendLine("max_depth = ${entry.maxDepth.coerceAtLeast(0)}")
+                }
+                val droidRun = entry.droidRun
+                if (droidRun != null && droidRun.provider.isNotBlank() && droidRun.model.isNotBlank()) {
+                    appendLine()
+                    appendLine("[agents.${tomlKey(entry.name)}.droidrun]")
+                    appendLine("provider = ${tomlString(droidRun.provider)}")
+                    appendLine("model = ${tomlString(droidRun.model)}")
+                    if (droidRun.apiKey.isNotBlank()) {
+                        appendLine("api_key = ${tomlString(droidRun.apiKey)}")
+                    }
+                    if (droidRun.baseUrl.isNotBlank()) {
+                        appendLine("base_url = ${tomlString(droidRun.baseUrl)}")
+                    }
                 }
             }
         }

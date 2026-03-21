@@ -163,8 +163,11 @@ impl SafetyMonitor {
         // Update last command time
         let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or_else(|_| {
+                tracing::error!("SystemTime::now() is before UNIX_EPOCH - using current stored time");
+                self.state.last_command_ms.load(Ordering::SeqCst)
+            });
         self.state.last_command_ms.store(now_ms, Ordering::SeqCst);
 
         // Calculate speed limit based on proximity
@@ -314,8 +317,11 @@ impl SafetyMonitor {
                     if last_cmd_ms > 0 {
                         let now_ms = std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
-                            .unwrap()
-                            .as_millis() as u64;
+                            .map(|d| d.as_millis() as u64)
+                            .unwrap_or_else(|_| {
+                                tracing::error!("SystemTime::now() is before UNIX_EPOCH in watchdog check");
+                                last_cmd_ms
+                            });
 
                         let elapsed = Duration::from_millis(now_ms - last_cmd_ms);
                         if elapsed > watchdog_timeout {
@@ -475,7 +481,7 @@ mod tests {
         assert!(monitor.state.estop_active.load(Ordering::SeqCst));
 
         // Check event was sent
-        let event = rx.try_recv().unwrap();
+        let event = rx.try_recv().expect("no safety event received");
         matches!(event, SafetyEvent::EmergencyStop { .. });
     }
 

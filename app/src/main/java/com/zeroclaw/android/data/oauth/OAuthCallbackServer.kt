@@ -123,8 +123,9 @@ class OAuthCallbackServer(
                 )
             }
 
-            val code = session.parms["code"]
-            val state = session.parms["state"]
+            val parameters = session.parameters
+            val code = parameters["code"]?.firstOrNull()
+            val state = parameters["state"]?.firstOrNull()
 
             if (code.isNullOrEmpty() || state.isNullOrEmpty()) {
                 return newFixedLengthResponse(

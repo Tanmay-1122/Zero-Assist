@@ -1,6 +1,6 @@
 use super::traits::{Tool, ToolResult};
 use crate::agent::loop_::run_tool_call_loop;
-use crate::config::DelegateAgentConfig;
+use crate::config::{DelegateAgentConfig, DroidRunLlmConfig};
 use crate::observability::traits::{Observer, ObserverEvent, ObserverMetric};
 use crate::providers::{self, ChatMessage, Provider};
 use crate::security::policy::ToolOperation;
@@ -378,7 +378,18 @@ impl DelegateTool {
                 .iter()
                 .filter(|tool| allowed.contains(tool.name()))
                 .filter(|tool| tool.name() != "delegate")
-                .map(|tool| Box::new(ToolArcRef::new(tool.clone())) as Box<dyn Tool>)
+                .map(|tool| {
+                    if tool.name() == "droidrun" {
+                        if let Some(droidrun) = agent_config.droidrun.clone() {
+                            Box::new(DroidRunOverrideTool::new(tool.clone(), droidrun))
+                                as Box<dyn Tool>
+                        } else {
+                            Box::new(ToolArcRef::new(tool.clone())) as Box<dyn Tool>
+                        }
+                    } else {
+                        Box::new(ToolArcRef::new(tool.clone())) as Box<dyn Tool>
+                    }
+                })
                 .collect()
         };
 
@@ -488,6 +499,61 @@ impl Tool for ToolArcRef {
     }
 }
 
+struct DroidRunOverrideTool {
+    inner: Arc<dyn Tool>,
+    droidrun: DroidRunLlmConfig,
+}
+
+impl DroidRunOverrideTool {
+    fn new(inner: Arc<dyn Tool>, droidrun: DroidRunLlmConfig) -> Self {
+        Self { inner, droidrun }
+    }
+}
+
+#[async_trait]
+impl Tool for DroidRunOverrideTool {
+    fn name(&self) -> &str {
+        self.inner.name()
+    }
+
+    fn description(&self) -> &str {
+        self.inner.description()
+    }
+
+    fn parameters_schema(&self) -> serde_json::Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, args: serde_json::Value) -> anyhow::Result<ToolResult> {
+        let mut args = match args {
+            serde_json::Value::Object(map) => map,
+            _ => serde_json::Map::new(),
+        };
+
+        let mut droidrun = serde_json::Map::new();
+        if let Some(provider) = self.droidrun.provider.as_deref() {
+            droidrun.insert("provider".to_string(), json!(provider));
+        }
+        if let Some(model) = self.droidrun.model.as_deref() {
+            droidrun.insert("model".to_string(), json!(model));
+        }
+        if let Some(api_key) = self.droidrun.api_key.as_deref() {
+            droidrun.insert("api_key".to_string(), json!(api_key));
+        }
+        if let Some(base_url) = self.droidrun.base_url.as_deref() {
+            droidrun.insert("base_url".to_string(), json!(base_url));
+        }
+        if !droidrun.is_empty() {
+            args.insert(
+                "droidrun_override".to_string(),
+                serde_json::Value::Object(droidrun),
+            );
+        }
+
+        self.inner.execute(serde_json::Value::Object(args)).await
+    }
+}
+
 struct NoopObserver;
 
 impl Observer for NoopObserver {
@@ -529,6 +595,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
         agents.insert(
@@ -543,6 +610,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
         agents
@@ -696,6 +764,7 @@ mod tests {
             agentic: true,
             allowed_tools,
             max_iterations,
+            droidrun: None,
         }
     }
 
@@ -804,6 +873,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
         let tool = DelegateTool::new(agents, None, test_security());
@@ -910,6 +980,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
         let tool = DelegateTool::new(agents, None, test_security());
@@ -945,6 +1016,7 @@ mod tests {
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
         let tool = DelegateTool::new(agents, None, test_security());

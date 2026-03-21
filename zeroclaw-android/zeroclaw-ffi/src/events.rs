@@ -305,7 +305,6 @@ fn escape_json_string(s: &str) -> String {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
     use std::sync::Arc;
@@ -339,7 +338,10 @@ mod tests {
         let listener: Arc<dyn FfiEventListener> = Arc::new(CountingListener {
             count: count.clone(),
         });
-        register_event_listener_inner(listener).unwrap();
+        match register_event_listener_inner(listener) {
+            Ok(_) => {},
+            Err(e) => panic!("register_event_listener_inner failed: {e}"),
+        }
 
         // Fire an event — listener should receive it.
         let observer = AndroidObserver;
@@ -353,7 +355,10 @@ mod tests {
         // does not increase. We wait briefly to let any in-flight
         // `record_event` calls from parallel tests that may have cloned
         // the Arc before our unregister to finish their callbacks.
-        unregister_event_listener_inner().unwrap();
+        match unregister_event_listener_inner() {
+            Ok(_) => {},
+            Err(e) => panic!("unregister_event_listener_inner failed: {e}"),
+        }
         std::thread::sleep(std::time::Duration::from_millis(10));
         let snapshot = count.load(Ordering::SeqCst);
         observer.record_event(&ObserverEvent::HeartbeatTick);
@@ -377,9 +382,18 @@ mod tests {
         observer.record_event(&ObserverEvent::HeartbeatTick);
         observer.record_event(&ObserverEvent::TurnComplete);
 
-        let json_str = get_recent_events_inner(10).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-        let arr = parsed.as_array().unwrap();
+        let json_str = match get_recent_events_inner(10) {
+            Ok(s) => s,
+            Err(e) => panic!("get_recent_events_inner failed: {e}"),
+        };
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
+        let arr = match parsed.as_array() {
+            Some(a) => a,
+            None => panic!("expected array in JSON"),
+        };
         // At least our 2 events; may be more if another test's events
         // landed between drain_buffer() and our record_event() calls.
         assert!(arr.len() >= 2, "expected >= 2 events, got {}", arr.len());
@@ -402,9 +416,19 @@ mod tests {
             observer.record_event(&ObserverEvent::HeartbeatTick);
         }
 
-        let json_str = get_recent_events_inner(3).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-        assert_eq!(parsed.as_array().unwrap().len(), 3);
+        let json_str = match get_recent_events_inner(3) {
+            Ok(s) => s,
+            Err(e) => panic!("get_recent_events_inner failed: {e}"),
+        };
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
+        let arr = match parsed.as_array() {
+            Some(a) => a,
+            None => panic!("expected array in JSON"),
+        };
+        assert_eq!(arr.len(), 3);
     }
 
     #[test]
@@ -419,7 +443,10 @@ mod tests {
             output_tokens: Some(50),
         };
         let json_str = format_event_json(42, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["id"], 42);
         assert_eq!(parsed["kind"], "llm_response");
         assert_eq!(parsed["data"]["provider"], "openai");
@@ -441,7 +468,10 @@ mod tests {
             output_tokens: None,
         };
         let json_str = format_event_json(99, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "llm_response");
         assert_eq!(parsed["data"]["error"], "rate limited");
         assert_eq!(parsed["data"]["success"], false);
@@ -457,7 +487,10 @@ mod tests {
             success: true,
         };
         let json_str = format_event_json(7, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "tool_call");
         assert_eq!(parsed["data"]["tool"], "shell");
         assert_eq!(parsed["data"]["duration_ms"], 250);
@@ -466,7 +499,10 @@ mod tests {
     #[test]
     fn test_format_event_json_heartbeat_tick() {
         let json_str = format_event_json(0, &ObserverEvent::HeartbeatTick);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "heartbeat_tick");
         assert_eq!(parsed["data"], serde_json::json!({}));
     }
@@ -478,14 +514,15 @@ mod tests {
             message: r#"failed to parse "config""#.into(),
         };
         let json_str = format_event_json(1, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "error");
-        assert!(
-            parsed["data"]["message"]
-                .as_str()
-                .unwrap()
-                .contains("config")
-        );
+        match parsed["data"]["message"].as_str() {
+            Some(msg) => assert!(msg.contains("config")),
+            None => panic!("expected string but got None"),
+        }
     }
 
     #[test]
@@ -498,7 +535,10 @@ mod tests {
             cost_usd: Some(0.042),
         };
         let json_str = format_event_json(3, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "agent_end");
         assert_eq!(parsed["data"]["provider"], "anthropic");
         assert_eq!(parsed["data"]["model"], "claude-sonnet-4");
@@ -517,7 +557,10 @@ mod tests {
             cost_usd: None,
         };
         let json_str = format_event_json(4, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(parsed["data"]["tokens"].is_null());
         assert!(parsed["data"]["cost_usd"].is_null());
     }
@@ -531,7 +574,10 @@ mod tests {
             observer.record_event(&ObserverEvent::HeartbeatTick);
         }
 
-        let buf = event_buffer().lock().unwrap();
+        let buf = match event_buffer().lock() {
+            Ok(b) => b,
+            Err(e) => panic!("event_buffer lock failed: {e}"),
+        };
         assert!(
             buf.len() <= EVENT_BUFFER_CAPACITY,
             "buffer exceeded capacity: {} > {}",
@@ -576,7 +622,10 @@ mod tests {
             messages_count: 5,
         };
         let json_str = format_event_json(10, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "llm_request");
         assert_eq!(parsed["data"]["provider"], "openai");
         assert_eq!(parsed["data"]["model"], "gpt-4o");
@@ -590,7 +639,10 @@ mod tests {
             arguments: Some("{\"query\":\"rust\"}".into()),
         };
         let json_str = format_event_json(11, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "tool_call_start");
         assert_eq!(parsed["data"]["tool"], "web_search");
         assert_eq!(parsed["data"]["arguments"], "{\"query\":\"rust\"}");
@@ -603,7 +655,10 @@ mod tests {
             direction: "inbound".into(),
         };
         let json_str = format_event_json(12, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "channel_message");
         assert_eq!(parsed["data"]["channel"], "discord");
         assert_eq!(parsed["data"]["direction"], "inbound");
@@ -616,7 +671,10 @@ mod tests {
             model: "claude-sonnet-4".into(),
         };
         let json_str = format_event_json(13, &event);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "agent_start");
         assert_eq!(parsed["data"]["provider"], "anthropic");
         assert_eq!(parsed["data"]["model"], "claude-sonnet-4");
@@ -625,7 +683,10 @@ mod tests {
     #[test]
     fn test_format_event_json_turn_complete() {
         let json_str = format_event_json(14, &ObserverEvent::TurnComplete);
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert_eq!(parsed["kind"], "turn_complete");
         assert_eq!(parsed["data"], serde_json::json!({}));
     }
@@ -633,7 +694,10 @@ mod tests {
     #[test]
     fn test_get_recent_events_empty() {
         drain_buffer();
-        let json_str = get_recent_events_inner(10).unwrap();
+        let json_str = match get_recent_events_inner(10) {
+            Ok(s) => s,
+            Err(e) => panic!("get_recent_events_inner failed: {e}"),
+        };
         assert_eq!(json_str, "[]");
     }
 }

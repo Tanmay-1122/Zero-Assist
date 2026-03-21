@@ -25,6 +25,7 @@ import com.zeroclaw.android.data.local.entity.LogEntryEntity
 import com.zeroclaw.android.data.local.entity.PluginEntity
 import com.zeroclaw.android.data.local.entity.TerminalEntryEntity
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
@@ -49,7 +50,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
         ConnectedChannelEntity::class,
         TerminalEntryEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 abstract class ZeroClawDatabase : RoomDatabase() {
@@ -288,6 +289,16 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 }
             }
 
+        /** Migration from schema version 10 to 11: adds per-agent DroidRun overrides. */
+        private val MIGRATION_10_11 =
+            object : Migration(10, 11) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "ALTER TABLE agents ADD COLUMN droidrun_config_json TEXT NOT NULL DEFAULT ''",
+                    )
+                }
+            }
+
         /**
          * Ordered array of schema migrations.
          *
@@ -305,6 +316,7 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 MIGRATION_7_8,
                 MIGRATION_8_9,
                 MIGRATION_9_10,
+                MIGRATION_10_11,
             )
 
         /**
@@ -336,20 +348,29 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                     .fallbackToDestructiveMigration()
                     .addCallback(
                         object : Callback() {
-                            override fun onCreate(db: SupportSQLiteDatabase) {
-                                super.onCreate(db)
-                                scope.launch {
-                                    instance?.let { database ->
-                                        database.pluginDao().insertAllIgnoreConflicts(
+                                override fun onCreate(db: SupportSQLiteDatabase) {
+                                    super.onCreate(db)
+                                    scope.launch {
+                                        // Wait for instance to be set by the build() method
+                                        while (instance == null) delay(10)
+                                        instance?.pluginDao()?.insertAllIgnoreConflicts(
                                             SeedData.seedPlugins(),
                                         )
                                     }
                                 }
-                            }
                         },
                     ).build()
             instance = db
             return db
+        }
+
+        /** Closes the database instance if it is open. */
+        fun close(instance: ZeroClawDatabase?) {
+            instance?.let {
+                if (it.isOpen) {
+                    it.close()
+                }
+            }
         }
     }
 }

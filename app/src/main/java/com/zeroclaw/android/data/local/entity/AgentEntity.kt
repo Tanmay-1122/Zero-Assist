@@ -25,6 +25,7 @@ import androidx.room.PrimaryKey
  * @property channelsJson JSON-serialized list of [com.zeroclaw.android.model.ChannelConfig].
  * @property temperature Per-agent temperature override; null inherits the global default.
  * @property maxDepth Maximum reasoning depth for the agent.
+ * @property droidRunConfigJson JSON-serialized per-agent DroidRun override.
  */
 @Entity(tableName = "agents")
 data class AgentEntity(
@@ -44,4 +45,6 @@ data class AgentEntity(
     val temperature: Float? = null,
     @ColumnInfo(name = "max_depth", defaultValue = "3")
     val maxDepth: Int = 3,
+    @ColumnInfo(name = "droidrun_config_json", defaultValue = "''")
+    val droidRunConfigJson: String = "",
 )

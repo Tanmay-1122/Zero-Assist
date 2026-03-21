@@ -540,31 +540,31 @@ mod tests {
 
     #[test]
     fn test_eval_arithmetic() {
-        let result = eval_repl_inner("2 + 3".into()).unwrap();
+        let result = eval_repl_inner("2 + 3".into()).expect("arithmetic evaluation failed");
         assert_eq!(result, "5");
     }
 
     #[test]
     fn test_eval_string_literal() {
-        let result = eval_repl_inner(r#""hello""#.into()).unwrap();
+        let result = eval_repl_inner(r#""hello""#.into()).expect("string literal evaluation failed");
         assert_eq!(result, "hello");
     }
 
     #[test]
     fn test_eval_boolean() {
-        let result = eval_repl_inner("true".into()).unwrap();
+        let result = eval_repl_inner("true".into()).expect("boolean evaluation failed");
         assert_eq!(result, "true");
     }
 
     #[test]
     fn test_eval_unit() {
-        let result = eval_repl_inner("let x = 1;".into()).unwrap();
+        let result = eval_repl_inner("let x = 1;".into()).expect("unit evaluation failed");
         assert_eq!(result, "ok");
     }
 
     #[test]
     fn test_eval_float() {
-        let result = eval_repl_inner("1.5 + 2.5".into()).unwrap();
+        let result = eval_repl_inner("1.5 + 2.5".into()).expect("float evaluation failed");
         assert_eq!(result, "4.0");
     }
 
@@ -582,21 +582,21 @@ mod tests {
 
     #[test]
     fn test_version_returns_string() {
-        let result = eval_repl_inner("version()".into()).unwrap();
+        let result = eval_repl_inner("version()".into()).expect("version() evaluation failed");
         assert_eq!(result, "0.0.37");
     }
 
     #[test]
     fn test_status_returns_json() {
-        let result = eval_repl_inner("status()".into()).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        let result = eval_repl_inner("status()".into()).expect("status() evaluation failed");
+        let parsed: serde_json::Value = serde_json::from_str(&result).expect("status JSON parse failed");
         assert!(parsed.get("daemon_running").is_some());
     }
 
     #[test]
     fn test_validate_config_valid() {
         let result =
-            eval_repl_inner(r#"validate_config("default_temperature = 0.7\n")"#.into()).unwrap();
+            eval_repl_inner(r#"validate_config("default_temperature = 0.7\n")"#.into()).expect("validate_config evaluation failed");
         assert!(
             result.is_empty(),
             "expected empty for valid config, got: {result}"
@@ -605,7 +605,7 @@ mod tests {
 
     #[test]
     fn test_validate_config_invalid() {
-        let result = eval_repl_inner(r#"validate_config("not valid {{{{")"#.into()).unwrap();
+        let result = eval_repl_inner(r#"validate_config("not valid {{{{")"#.into()).expect("validate_config evaluation failed");
         assert!(
             !result.is_empty(),
             "expected error message for invalid config"
@@ -719,8 +719,8 @@ mod tests {
 
     #[test]
     fn test_repl_models_anthropic() {
-        let result = eval_repl_inner(r#"models("anthropic")"#.into()).unwrap();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let result = eval_repl_inner(r#"models("anthropic")"#.into()).expect("models evaluation failed");
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).expect("models JSON parse failed");
         assert!(!parsed.is_empty());
     }
 
@@ -732,8 +732,8 @@ mod tests {
 
     #[test]
     fn test_repl_models_with_key_anthropic() {
-        let result = eval_repl_inner(r#"models_with_key("anthropic", "")"#.into()).unwrap();
-        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+        let result = eval_repl_inner(r#"models_with_key("anthropic", "")"#.into()).expect("models_with_key evaluation failed");
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&result).expect("models_with_key JSON parse failed");
         assert!(!parsed.is_empty());
     }
 }

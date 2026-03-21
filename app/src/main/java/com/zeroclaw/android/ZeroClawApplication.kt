@@ -10,12 +10,14 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import coil3.ImageLoader
+import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
@@ -33,7 +35,6 @@ import com.zeroclaw.android.data.repository.DataStoreOnboardingRepository
 import com.zeroclaw.android.data.repository.DataStoreSettingsRepository
 import com.zeroclaw.android.data.repository.EncryptedApiKeyRepository
 import com.zeroclaw.android.data.repository.EstopRepository
-import com.zeroclaw.android.data.repository.InMemoryApiKeyRepository
 import com.zeroclaw.android.data.repository.LogRepository
 import com.zeroclaw.android.data.repository.OnboardingRepository
 import com.zeroclaw.android.data.repository.PluginRepository
@@ -57,7 +58,7 @@ import com.zeroclaw.android.service.SkillsBridge
 import com.zeroclaw.android.service.ToolsBridge
 import com.zeroclaw.android.service.VisionBridge
 import com.zeroclaw.android.util.SessionLockManager
-import com.zeroclaw.android.data.local.PersistentEpochBuffer
+import com.zeroclaw.android.service.PersistentEpochBuffer
 import com.zeroclaw.ffi.getVersion
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
@@ -70,6 +71,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Application subclass that initialises the native ZeroClaw library and
@@ -85,7 +87,8 @@ import okhttp3.OkHttpClient
  */
 class ZeroClawApplication :
     Application(),
-    SingletonImageLoader.Factory {
+    SingletonImageLoader.Factory,
+    Configuration.Provider {
     /**
      * Shared bridge between the Android service layer and the Rust FFI.
      *
@@ -213,8 +216,21 @@ class ZeroClawApplication :
             .build()
     }
 
+    override val workManagerConfiguration: Configuration
+        get() =
+            Configuration
+                .Builder()
+                .setMinimumLoggingLevel(
+                    if (BuildConfig.DEBUG) {
+                        Log.DEBUG
+                    } else {
+                        Log.ERROR
+                    },
+                ).build()
+
     override fun onCreate() {
         super.onCreate()
+        WorkManager.initialize(this, workManagerConfiguration)
         System.loadLibrary("sqlcipher")
         System.loadLibrary("zeroclaw")
         verifyCrateVersion()
@@ -275,6 +291,7 @@ class ZeroClawApplication :
                 )
             }
         } catch (e: Exception) {
+            if (e is InterruptedException) throw e
             Log.e(TAG, "Failed to verify crate version: ${e.message}")
         }
     }
@@ -317,17 +334,17 @@ class ZeroClawApplication :
     private fun migrateStaleOAuthEntries(scope: CoroutineScope) {
         scope.launch {
             try {
-                val allKeys = apiKeyRepository.keys.first()
+                // Use a timeout to prevent blocking indefinitely if the DB/Keystore is slow
+                val allKeys = withTimeoutOrNull(5000L) {
+                    apiKeyRepository.keys.first()
+                } ?: return@launch
+
                 val staleOAuthKeys =
                     allKeys.filter { it.provider == STALE_OAUTH_PROVIDER && it.refreshToken.isNotEmpty() }
                 if (staleOAuthKeys.isEmpty()) return@launch
 
                 for (staleKey in staleOAuthKeys) {
-                    val migrated =
-                        staleKey.copy(
-                            provider = CODEX_PROVIDER,
-                            key = "",
-                        )
+                    val migrated = staleKey.copy(provider = CODEX_PROVIDER, key = "")
                     apiKeyRepository.save(migrated)
 
                     if (staleKey.expiresAt > 0L) {
@@ -345,143 +362,69 @@ class ZeroClawApplication :
                     settingsRepository.setDefaultProvider(CODEX_PROVIDER)
                 }
 
-                Log.i(
-                    TAG,
-                    "Migrated ${staleOAuthKeys.size} stale OAuth key(s) from" +
-                        " $STALE_OAUTH_PROVIDER to $CODEX_PROVIDER",
-                )
+                Log.i(TAG, "Migrated ${staleOAuthKeys.size} stale OAuth keys")
             } catch (e: Exception) {
+                if (e is InterruptedException) throw e
                 Log.e(TAG, "OAuth migration failed: ${e.message}")
             }
         }
     }
 
-    /**
-     * Observes the plugin sync setting and schedules/cancels the
-     * periodic sync worker accordingly.
-     *
-     * @param scope Background scope for observing settings.
-     */
     private fun schedulePluginSyncIfEnabled(scope: CoroutineScope) {
         scope.launch {
             settingsRepository.settings.collect { settings ->
                 val workManager = WorkManager.getInstance(this@ZeroClawApplication)
                 if (settings.pluginSyncEnabled) {
-                    val constraints =
-                        Constraints
-                            .Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .build()
-                    val request =
-                        PeriodicWorkRequestBuilder<PluginSyncWorker>(
-                            settings.pluginSyncIntervalHours.toLong(),
-                            TimeUnit.HOURS,
-                        ).setConstraints(constraints)
-                            .build()
+                    val constraints = Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+                    val request = PeriodicWorkRequestBuilder<PluginSyncWorker>(1, TimeUnit.HOURS)
+                        .setConstraints(constraints)
+                        .build()
                     workManager.enqueueUniquePeriodicWork(
-                        PluginSyncWorker.WORK_NAME,
-                        ExistingPeriodicWorkPolicy.UPDATE,
-                        request,
+                        "PluginSync",
+                        ExistingPeriodicWorkPolicy.KEEP,
+                        request
                     )
                 } else {
-                    workManager.cancelUniqueWork(PluginSyncWorker.WORK_NAME)
+                    workManager.cancelUniqueWork("PluginSync")
                 }
             }
         }
     }
 
-    /**
-     * Creates the API key repository with a safety net around keystore access.
-     *
-     * If [EncryptedApiKeyRepository] construction itself throws (e.g. due to
-     * a completely broken keystore), falls back to an [InMemoryApiKeyRepository]
-     * so the app can still launch. The initial key load is deferred to
-     * [ioScope] to avoid blocking Application.onCreate on slow keystore
-     * operations.
-     *
-     * @param ioScope Background scope for deferred key loading.
-     * @return An [ApiKeyRepository] instance.
-     */
-    @Suppress("TooGenericExceptionCaught")
-    private fun createApiKeyRepository(ioScope: CoroutineScope): ApiKeyRepository =
-        try {
-            val repo = EncryptedApiKeyRepository(context = this, ioScope = ioScope)
-            when (repo.storageHealth) {
-                is StorageHealth.Healthy ->
-                    Log.i(TAG, "API key storage: healthy")
-                is StorageHealth.Recovered ->
-                    Log.w(TAG, "API key storage: recovered from corruption (keys lost)")
-                is StorageHealth.Degraded ->
-                    Log.w(TAG, "API key storage: degraded (in-memory only)")
-            }
-            repo
-        } catch (e: Exception) {
-            Log.e(TAG, "API key storage init failed, using in-memory fallback", e)
-            InMemoryApiKeyRepository()
-        }
+    private fun createApiKeyRepository(scope: CoroutineScope): ApiKeyRepository {
+        return EncryptedApiKeyRepository(this, scope)
+    }
 
-    /**
-     * Creates the channel configuration repository with encrypted secret storage.
-     *
-     * Uses a separate EncryptedSharedPreferences file (`zeroclaw_channel_secrets`)
-     * from the API key storage to isolate channel secrets.
-     *
-     * @return A [ChannelConfigRepository] instance.
-     */
-    @Suppress("TooGenericExceptionCaught")
     private fun createChannelConfigRepository(): ChannelConfigRepository {
-        val (prefs, health) = SecurePrefsProvider.create(this, CHANNEL_SECRETS_PREFS)
-        when (health) {
-            is StorageHealth.Healthy ->
-                Log.i(TAG, "Channel secret storage: healthy")
-            is StorageHealth.Recovered ->
-                Log.w(TAG, "Channel secret storage: recovered from corruption")
-            is StorageHealth.Degraded ->
-                Log.w(TAG, "Channel secret storage: degraded (in-memory only)")
-        }
-        return RoomChannelConfigRepository(database.connectedChannelDao(), prefs)
+        return RoomChannelConfigRepository(
+            database.connectedChannelDao(),
+            SecurePrefsProvider.create(this, CHANNEL_CONFIG_PREFS).first,
+        )
     }
 
-    override fun newImageLoader(context: Context): ImageLoader =
-        ImageLoader
-            .Builder(context)
-            .crossfade(true)
-            .memoryCache {
-                MemoryCache
-                    .Builder()
-                    .maxSizePercent(context, MEMORY_CACHE_PERCENT)
-                    .build()
-            }.diskCache {
-                DiskCache
-                    .Builder()
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.25).build() }
+            .diskCache {
+                DiskCache.Builder()
                     .directory(context.cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(DISK_CACHE_MAX_BYTES)
+                    .maxSizeBytes(512L * 1024 * 1024)
                     .build()
-            }.build()
-
-    /**
-     * Shuts down the shared [OkHttpClient] connection pool and dispatcher.
-     *
-     * Called when the application process is terminating. Releases thread
-     * pools and idle connections to prevent resource leaks.
-     */
-    override fun onTerminate() {
-        sharedHttpClient.connectionPool.evictAll()
-        sharedHttpClient.dispatcher.executorService.shutdown()
-        super.onTerminate()
+            }
+            .crossfade(true)
+            .build()
     }
 
-    /** Constants for [ZeroClawApplication]. */
     companion object {
         private const val TAG = "ZeroClawApp"
-        private const val CHANNEL_SECRETS_PREFS = "zeroclaw_channel_secrets"
+        private const val MAX_IDLE_CONNECTIONS = 5
+        private const val KEEP_ALIVE_DURATION_SECONDS = 30L
+        private const val HTTP_CONNECT_TIMEOUT_SECONDS = 15L
+        private const val HTTP_READ_TIMEOUT_SECONDS = 15L
         private const val STALE_OAUTH_PROVIDER = "openai"
         private const val CODEX_PROVIDER = "openai-codex"
-        private const val MEMORY_CACHE_PERCENT = 0.15
-        private const val DISK_CACHE_MAX_BYTES = 64L * 1024 * 1024
-        private const val MAX_IDLE_CONNECTIONS = 5
-        private const val KEEP_ALIVE_DURATION_SECONDS = 30
-        private const val HTTP_CONNECT_TIMEOUT_SECONDS = 10
-        private const val HTTP_READ_TIMEOUT_SECONDS = 15
+        private const val CHANNEL_CONFIG_PREFS = "connected_channel_secrets"
     }
 }

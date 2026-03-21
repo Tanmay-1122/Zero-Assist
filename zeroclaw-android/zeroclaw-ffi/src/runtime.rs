@@ -1511,7 +1511,7 @@ mod tests {
 
     #[test]
     fn test_collect_channels_empty_config() {
-        let config: Config = toml::from_str("default_temperature = 0.7").unwrap();
+        let config: Config = toml::from_str("default_temperature = 0.7").expect("valid TOML config");
         let channels = collect_channels(&config);
         assert!(
             channels.is_empty(),
@@ -1533,7 +1533,7 @@ bot_token = "fake:token"
 allowed_users = ["123"]
 mention_only = false
 "#;
-        let config: Config = toml::from_str(toml_str).unwrap();
+        let config: Config = toml::from_str(toml_str).expect("valid TOML config");
         let channels = collect_channels(&config);
         assert_eq!(channels.len(), 1);
         assert_eq!(channels[0].0, "Telegram");
@@ -1562,7 +1562,7 @@ mention_only = false
 bot_token = "xoxb-fake"
 allowed_users = []
 "#;
-        let config: Config = toml::from_str(toml_str).unwrap();
+        let config: Config = toml::from_str(toml_str).expect("valid TOML config");
         let channels = collect_channels(&config);
         assert_eq!(channels.len(), 3);
         let names: Vec<&str> = channels.iter().map(|(n, _)| *n).collect();
@@ -1587,8 +1587,8 @@ allowed_users = []
     fn test_doctor_channels_no_channels_configured() {
         let toml_str = "default_temperature = 0.7\n";
         let result = doctor_channels_inner(toml_str.to_string(), "/tmp/test".into());
-        let json_str = result.unwrap();
-        let arr: Vec<serde_json::Value> = serde_json::from_str(&json_str).unwrap();
+        let json_str = result.expect("doctor_channels should succeed");
+        let arr: Vec<serde_json::Value> = serde_json::from_str(&json_str).expect("doctor_channels JSON parse failed");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["name"], "channels");
         assert_eq!(arr[0]["status"], "healthy");

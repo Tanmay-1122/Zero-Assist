@@ -35,7 +35,7 @@ import java.io.File
  */
 class PersistentEpochBuffer(
     context: Context,
-    private val maxCapacity: Int = 512,
+    private val maxCapacity: Int = DEFAULT_MAX_CAPACITY,
 ) {
     private val currentFile = File(context.filesDir, "zmd_epoch_current.json")
     private val backupFile = File(context.filesDir, "zmd_epoch_backup.json")
@@ -45,7 +45,10 @@ class PersistentEpochBuffer(
     private val messages = mutableListOf<BufferedMessage>()
     private val lock = Any()
 
+    /** Flow indicating if there are pending messages in the buffer. */
     private val _hasPending = MutableStateFlow(false)
+
+    /** Public state flow of [hasPending] status. */
     val hasPending: StateFlow<Boolean> = _hasPending.asStateFlow()
 
     init {
@@ -105,6 +108,9 @@ class PersistentEpochBuffer(
     }
 
 
+    /**
+     * Clears all messages from the buffer and persists the empty state.
+     */
     fun clear() {
         synchronized(lock) {
             messages.clear()
@@ -129,8 +135,13 @@ class PersistentEpochBuffer(
             }
             currentFile.writeText(content)
         } catch (e: Exception) {
-            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
-            Log.e(TAG, "Failed to save message buffer: $safeMsg")
+            when (e) {
+                is java.io.IOException, is kotlinx.serialization.SerializationException -> {
+                    val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+                    Log.e(TAG, "Failed to save message buffer: $safeMsg")
+                }
+                else -> throw e
+            }
         }
     }
 
@@ -148,8 +159,13 @@ class PersistentEpochBuffer(
                 }
             }
         } catch (e: Exception) {
-            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
-            Log.e(TAG, "Failed to load message buffer: $safeMsg")
+            when (e) {
+                is java.io.IOException, is kotlinx.serialization.SerializationException -> {
+                    val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+                    Log.e(TAG, "Failed to load message buffer: $safeMsg")
+                }
+                else -> throw e
+            }
             // If current is corrupt, try backup
             if (backupFile.exists()) {
                 try {
@@ -160,8 +176,14 @@ class PersistentEpochBuffer(
                         messages.addAll(loaded)
                     }
                 } catch (e2: Exception) {
-                    val safeMsg2 = LogSanitizer.sanitizeLogMessage(e2.message ?: "Unknown I/O error")
-                    Log.e(TAG, "Failed to load backup message buffer: $safeMsg2")
+                    when (e2) {
+                        is java.io.IOException, is kotlinx.serialization.SerializationException -> {
+                            val safeMsg2 =
+                                LogSanitizer.sanitizeLogMessage(e2.message ?: "Unknown I/O error")
+                            Log.e(TAG, "Failed to load backup message buffer: $safeMsg2")
+                        }
+                        else -> throw e2
+                    }
                 }
             }
         }
@@ -171,7 +193,9 @@ class PersistentEpochBuffer(
         _hasPending.value = synchronized(lock) { messages.isNotEmpty() }
     }
 
+    /** Companion object for [PersistentEpochBuffer] constants. */
     companion object {
         private const val TAG = "PersistentEpochBuffer"
+        private const val DEFAULT_MAX_CAPACITY = 512
     }
 }

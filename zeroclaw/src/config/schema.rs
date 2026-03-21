@@ -196,6 +196,10 @@ pub struct Config {
     #[serde(default)]
     pub browser: BrowserConfig,
 
+    /// DroidRun configuration (`[droidrun]` section).
+    #[serde(default)]
+    pub droidrun: DroidRunConfig,
+
     /// HTTP request tool configuration (`[http_request]`).
     #[serde(default)]
     pub http_request: HttpRequestConfig,
@@ -289,6 +293,23 @@ pub struct ModelProviderConfig {
 
 // ── Delegate Agents ──────────────────────────────────────────────
 
+/// LLM override forwarded to the DroidRun bridge.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct DroidRunLlmConfig {
+    /// Provider ID understood by the DroidRun bridge (e.g. "groq", "openrouter", "google-gemini")
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    /// Model name for DroidRun execution
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    /// Optional API key override for the DroidRun LLM provider
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_key: Option<String>,
+    /// Optional base URL for OpenAI-compatible providers
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_url: Option<String>,
+}
+
 /// Configuration for a delegate sub-agent used by the `delegate` tool.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DelegateAgentConfig {
@@ -317,6 +338,9 @@ pub struct DelegateAgentConfig {
     /// Maximum tool-call iterations in agentic mode.
     #[serde(default = "default_max_tool_iterations")]
     pub max_iterations: usize,
+    /// Optional DroidRun-specific LLM override used when this agent invokes mobile tasks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub droidrun: Option<DroidRunLlmConfig>,
 }
 
 /// Valid temperature range for all paths (config, CLI, env override).
@@ -1294,6 +1318,38 @@ fn default_entity_id() -> String {
     "default".into()
 }
 
+fn default_droidrun_url() -> String {
+    "https://api.droidrun.ai".to_string()
+}
+
+/// DroidRun configuration (`[droidrun]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct DroidRunConfig {
+    /// Server URL for DroidRun (e.g. "https://api.droidrun.ai")
+    #[serde(default = "default_droidrun_url")]
+    pub url: String,
+    /// Optional API key for authentication
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_key: Option<String>,
+    /// Whether to use the HTTP DroidRun bridge instead of the local CLI.
+    #[serde(default)]
+    pub use_api: bool,
+    /// Optional LLM override forwarded to the DroidRun bridge.
+    #[serde(flatten)]
+    pub llm: DroidRunLlmConfig,
+}
+
+impl Default for DroidRunConfig {
+    fn default() -> Self {
+        Self {
+            url: default_droidrun_url(),
+            api_key: None,
+            use_api: false,
+            llm: DroidRunLlmConfig::default(),
+        }
+    }
+}
+
 impl Default for ComposioConfig {
     fn default() -> Self {
         Self {
@@ -1425,6 +1481,8 @@ impl Default for BrowserConfig {
         }
     }
 }
+
+// ── DroidRun (Android automation) ───────────────────────────────
 
 // ── HTTP request tool ───────────────────────────────────────────
 
@@ -4282,6 +4340,7 @@ impl Default for Config {
             transcription: TranscriptionConfig::default(),
             tts: TtsConfig::default(),
             mcp: McpConfig::default(),
+            droidrun: DroidRunConfig::default(),
             nodes: NodesConfig::default(),
         }
     }
@@ -4767,6 +4826,17 @@ impl Config {
 
             decrypt_optional_secret(
                 &store,
+                &mut config.droidrun.api_key,
+                "config.droidrun.api_key",
+            )?;
+            decrypt_optional_secret(
+                &store,
+                &mut config.droidrun.llm.api_key,
+                "config.droidrun.llm.api_key",
+            )?;
+
+            decrypt_optional_secret(
+                &store,
                 &mut config.web_search.brave_api_key,
                 "config.web_search.brave_api_key",
             )?;
@@ -4779,6 +4849,13 @@ impl Config {
 
             for agent in config.agents.values_mut() {
                 decrypt_optional_secret(&store, &mut agent.api_key, "config.agents.*.api_key")?;
+                if let Some(droidrun) = agent.droidrun.as_mut() {
+                    decrypt_optional_secret(
+                        &store,
+                        &mut droidrun.api_key,
+                        "config.agents.*.droidrun.api_key",
+                    )?;
+                }
             }
 
             // Decrypt TTS provider API keys
@@ -5527,6 +5604,63 @@ impl Config {
             }
         }
 
+        // DroidRun API key: ZEROCLAW_DROIDRUN_API_KEY or DROIDRUN_API_KEY
+        if let Ok(api_key) =
+            std::env::var("ZEROCLAW_DROIDRUN_API_KEY").or_else(|_| std::env::var("DROIDRUN_API_KEY"))
+        {
+            let api_key = api_key.trim();
+            if !api_key.is_empty() {
+                self.droidrun.api_key = Some(api_key.to_string());
+            }
+        }
+
+        // DroidRun URL: ZEROCLAW_DROIDRUN_URL or DROIDRUN_URL
+        if let Ok(url) =
+            std::env::var("ZEROCLAW_DROIDRUN_URL").or_else(|_| std::env::var("DROIDRUN_URL"))
+        {
+            let url = url.trim();
+            if !url.is_empty() {
+                self.droidrun.url = url.to_string();
+                self.droidrun.use_api = true;
+            }
+        }
+
+        if let Ok(provider) = std::env::var("ZEROCLAW_DROIDRUN_LLM_PROVIDER")
+            .or_else(|_| std::env::var("DROIDRUN_LLM_PROVIDER"))
+        {
+            let provider = provider.trim();
+            if !provider.is_empty() {
+                self.droidrun.llm.provider = Some(provider.to_string());
+            }
+        }
+
+        if let Ok(model) = std::env::var("ZEROCLAW_DROIDRUN_LLM_MODEL")
+            .or_else(|_| std::env::var("DROIDRUN_LLM_MODEL"))
+        {
+            let model = model.trim();
+            if !model.is_empty() {
+                self.droidrun.llm.model = Some(model.to_string());
+            }
+        }
+
+        if let Ok(api_key) = std::env::var("ZEROCLAW_DROIDRUN_LLM_API_KEY")
+            .or_else(|_| std::env::var("DROIDRUN_LLM_API_KEY"))
+        {
+            let api_key = api_key.trim();
+            if !api_key.is_empty() {
+                self.droidrun.llm.api_key = Some(api_key.to_string());
+            }
+        }
+
+        if let Ok(base_url) = std::env::var("ZEROCLAW_DROIDRUN_LLM_BASE_URL")
+            .or_else(|_| std::env::var("DROIDRUN_LLM_BASE_URL"))
+        {
+            let base_url = base_url.trim();
+            if !base_url.is_empty() {
+                self.droidrun.llm.base_url = Some(base_url.to_string());
+            }
+        }
+
         // Web search max results: ZEROCLAW_WEB_SEARCH_MAX_RESULTS or WEB_SEARCH_MAX_RESULTS
         if let Ok(max_results) = std::env::var("ZEROCLAW_WEB_SEARCH_MAX_RESULTS")
             .or_else(|_| std::env::var("WEB_SEARCH_MAX_RESULTS"))
@@ -6054,6 +6188,7 @@ mod tests {
     #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
+    #[cfg(unix)]
     use tempfile::TempDir;
     use tokio::sync::{Mutex, MutexGuard};
     use tokio::test;
@@ -6361,6 +6496,8 @@ default_temperature = 0.7
                 #[cfg(feature = "channel-nostr")]
                 nostr: None,
                 clawdtalk: None,
+                twilio: None,
+                push: None,
                 message_timeout_secs: 300,
                 ack_reactions: true,
                 show_tool_calls: true,
@@ -6372,6 +6509,7 @@ default_temperature = 0.7
             composio: ComposioConfig::default(),
             secrets: SecretsConfig::default(),
             browser: BrowserConfig::default(),
+            droidrun: DroidRunConfig::default(),
             http_request: HttpRequestConfig::default(),
             multimodal: MultimodalConfig::default(),
             web_fetch: WebFetchConfig::default(),
@@ -6663,6 +6801,7 @@ tool_dispatcher = "xml"
             composio: ComposioConfig::default(),
             secrets: SecretsConfig::default(),
             browser: BrowserConfig::default(),
+            droidrun: DroidRunConfig::default(),
             http_request: HttpRequestConfig::default(),
             multimodal: MultimodalConfig::default(),
             web_fetch: WebFetchConfig::default(),
@@ -6737,6 +6876,7 @@ tool_dispatcher = "xml"
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                droidrun: None,
             },
         );
 
@@ -7075,6 +7215,8 @@ allowed_users = ["@ops:matrix.org"]
             qq: None,
             nostr: None,
             clawdtalk: None,
+            twilio: None,
+            push: None,
             message_timeout_secs: 300,
             ack_reactions: true,
             show_tool_calls: true,
@@ -7302,6 +7444,8 @@ channel_id = "C123"
             qq: None,
             nostr: None,
             clawdtalk: None,
+            twilio: None,
+            push: None,
             message_timeout_secs: 300,
             ack_reactions: true,
             show_tool_calls: true,
@@ -7380,9 +7524,11 @@ channel_id = "C123"
         let g = GatewayConfig {
             port: 42617,
             host: "127.0.0.1".into(),
+            static_dir: None,
             require_pairing: true,
             allow_public_bind: false,
             paired_tokens: vec!["zc_test_token".into()],
+            api_keys: Vec::new(),
             pair_rate_limit_per_minute: 12,
             webhook_rate_limit_per_minute: 80,
             trust_forwarded_headers: true,
@@ -9424,3 +9570,4 @@ require_otp_to_resume = true
         }
     }
 }
+

@@ -241,10 +241,11 @@ class TerminalViewModelTest {
         fun `matches valid bind result for telegram`() {
             val input = "Bound alice to telegram (allowed_users). Restart daemon to apply."
             val match = TerminalViewModel.BIND_RESULT_PATTERN.find(input)
-            assertNotNull(match)
-            assertEquals("alice", match!!.destructured.component1())
-            assertEquals("telegram", match.destructured.component2())
-            assertEquals("allowed_users", match.destructured.component3())
+            assertNotNull(match) { "Failed to match bind result pattern for: $input" }
+            val result = match!!
+            assertEquals("alice", result.destructured.component1())
+            assertEquals("telegram", result.destructured.component2())
+            assertEquals("allowed_users", result.destructured.component3())
         }
 
         @Test
@@ -253,10 +254,11 @@ class TerminalViewModelTest {
             val input =
                 "Bound +1234567890 to whatsapp (allowed_numbers). Restart daemon to apply."
             val match = TerminalViewModel.BIND_RESULT_PATTERN.find(input)
-            assertNotNull(match)
-            assertEquals("+1234567890", match!!.destructured.component1())
-            assertEquals("whatsapp", match.destructured.component2())
-            assertEquals("allowed_numbers", match.destructured.component3())
+            assertNotNull(match) { "Failed to match bind result pattern for: $input" }
+            val result = match!!
+            assertEquals("+1234567890", result.destructured.component1())
+            assertEquals("whatsapp", result.destructured.component2())
+            assertEquals("allowed_numbers", result.destructured.component3())
         }
 
         @Test

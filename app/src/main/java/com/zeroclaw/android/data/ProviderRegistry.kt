@@ -295,6 +295,26 @@ object ProviderRegistry {
                 helpText = "Budget-friendly reasoning models",
             ),
             ProviderInfo(
+                id = "huggingface",
+                displayName = "Hugging Face",
+                authType = ProviderAuthType.API_KEY_ONLY,
+                aliases = listOf("hf"),
+                suggestedModels =
+                    listOf(
+                        "meta-llama/Llama-3.2-3B-Instruct",
+                        "microsoft/Phi-3.5-mini-instruct",
+                        "mistralai/Mistral-7B-Instruct-v0.3",
+                    ),
+                category = ProviderCategory.ECOSYSTEM,
+                iconUrl = faviconUrl("huggingface.co"),
+                modelListUrl = "https://router.huggingface.co/v1/models",
+                modelListFormat = ModelListFormat.OPENAI_COMPATIBLE,
+                keyCreationUrl = "https://huggingface.co/settings/tokens",
+                keyPrefix = "hf_",
+                keyPrefixHint = "Tokens usually start with hf_",
+                helpText = "Router API gives access to many open models",
+            ),
+            ProviderInfo(
                 id = "together",
                 displayName = "Together AI",
                 authType = ProviderAuthType.API_KEY_ONLY,

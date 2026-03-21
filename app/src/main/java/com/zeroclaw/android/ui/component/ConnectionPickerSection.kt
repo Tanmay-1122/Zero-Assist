@@ -79,15 +79,18 @@ fun ConnectionPickerSection(
     selectedKeyId: String?,
     onKeySelected: (ApiKey) -> Unit,
     onAddNewConnection: () -> Unit,
+    title: String = "Connection",
+    emptyMessage: String = "No API keys configured yet.",
+    addButtonLabel: String = "New Connection",
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        SectionHeader(title = "Connection")
+        SectionHeader(title = title)
         Spacer(modifier = Modifier.height(CARD_SPACING_DP.dp))
 
         if (keys.isEmpty()) {
             Text(
-                text = "No API keys configured yet.",
+                text = emptyMessage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -119,7 +122,7 @@ fun ConnectionPickerSection(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(CARD_SPACING_DP.dp))
-            Text("New Connection")
+            Text(addButtonLabel)
         }
     }
 }

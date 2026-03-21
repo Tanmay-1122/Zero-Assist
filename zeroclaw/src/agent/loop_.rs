@@ -5206,7 +5206,7 @@ Tail"#;
             &crate::config::AutonomyConfig::default(),
             std::path::Path::new("/tmp"),
         ));
-        let tools = tools::default_tools(security);
+        let tools = tools::default_tools(Arc::new(crate::config::Config::default()), security);
         let instructions = build_tool_instructions(&tools);
 
         assert!(instructions.contains("## Tool Use Protocol"));
@@ -5223,7 +5223,7 @@ Tail"#;
             &crate::config::AutonomyConfig::default(),
             std::path::Path::new("/tmp"),
         ));
-        let tools = tools::default_tools(security);
+        let tools = tools::default_tools(Arc::new(crate::config::Config::default()), security);
         let formatted = tools_to_openai_format(&tools);
 
         assert!(!formatted.is_empty());

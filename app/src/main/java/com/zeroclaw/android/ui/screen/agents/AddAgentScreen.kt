@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeroclaw.android.data.ProviderRegistry
 import com.zeroclaw.android.data.remote.ModelFetcher
 import com.zeroclaw.android.model.Agent
+import com.zeroclaw.android.model.DroidRunAgentConfig
 import com.zeroclaw.android.model.ModelListFormat
 import com.zeroclaw.android.model.ProviderAuthType
 import com.zeroclaw.android.ui.component.CollapsibleSection
@@ -95,6 +96,10 @@ fun AddAgentScreen(
     var temperature by remember { mutableStateOf(DEFAULT_AGENT_TEMPERATURE) }
     var maxDepth by remember { mutableStateOf(Agent.DEFAULT_MAX_DEPTH.toString()) }
     var selectedConnectionId by remember { mutableStateOf<String?>(null) }
+    var droidRunEnabled by remember { mutableStateOf(false) }
+    var droidRunConnectionId by remember { mutableStateOf<String?>(null) }
+    var droidRunProviderId by remember { mutableStateOf("") }
+    var droidRunModelName by remember { mutableStateOf("") }
 
     val apiKeys by detailViewModel.apiKeys.collectAsStateWithLifecycle()
 
@@ -143,7 +148,7 @@ fun AddAgentScreen(
         Spacer(modifier = Modifier.height(FIELD_SPACING_DP.dp))
 
         Text(
-            text = "Add Connection",
+            text = "Add Agent",
             style = MaterialTheme.typography.headlineSmall,
         )
         Spacer(modifier = Modifier.height(FIELD_SPACING_DP.dp))
@@ -200,6 +205,13 @@ fun AddAgentScreen(
 
         val maxDepthValue = maxDepth.toIntOrNull()
         val maxDepthError = maxDepth.isNotEmpty() && (maxDepthValue == null || maxDepthValue < 1)
+        val droidRunValid =
+            !droidRunEnabled ||
+                (
+                    !droidRunConnectionId.isNullOrBlank() &&
+                        droidRunProviderId.isNotBlank() &&
+                        droidRunModelName.isNotBlank()
+                )
 
         CollapsibleSection(title = "Advanced") {
             Row(
@@ -251,6 +263,28 @@ fun AddAgentScreen(
         }
         Spacer(modifier = Modifier.height(SECTION_SPACING_DP.dp))
 
+        AgentDroidRunSection(
+            enabled = droidRunEnabled,
+            onEnabledChange = { droidRunEnabled = it },
+            keys = apiKeys,
+            selectedConnectionId = droidRunConnectionId,
+            onConnectionSelected = { key ->
+                droidRunConnectionId = key.id
+                val resolved = ProviderRegistry.findById(key.provider)
+                val nextProviderId = resolved?.id ?: key.provider
+                val providerChanged = nextProviderId != droidRunProviderId
+                droidRunProviderId = nextProviderId
+                if (providerChanged || droidRunModelName.isBlank()) {
+                    droidRunModelName = resolved?.suggestedModels?.firstOrNull().orEmpty()
+                }
+            },
+            onAddNewConnection = onNavigateToAddConnection,
+            providerId = droidRunProviderId,
+            modelName = droidRunModelName,
+            onModelChanged = { droidRunModelName = it },
+        )
+        Spacer(modifier = Modifier.height(SECTION_SPACING_DP.dp))
+
         FilledTonalButton(
             onClick = {
                 detailViewModel.saveAgent(
@@ -262,18 +296,33 @@ fun AddAgentScreen(
                         systemPrompt = systemPrompt,
                         temperature = if (useGlobalTemperature) null else temperature,
                         maxDepth = maxDepth.toIntOrNull() ?: Agent.DEFAULT_MAX_DEPTH,
+                        droidRunConfig =
+                            if (droidRunEnabled && droidRunValid) {
+                                DroidRunAgentConfig(
+                                    connectionId = droidRunConnectionId.orEmpty(),
+                                    provider = droidRunProviderId,
+                                    modelName = droidRunModelName,
+                                )
+                            } else {
+                                null
+                            },
                     ),
                 )
                 onSaved()
             },
-            enabled = name.isNotBlank() && providerId.isNotBlank() && modelName.isNotBlank() && !maxDepthError,
+            enabled =
+                name.isNotBlank() &&
+                    providerId.isNotBlank() &&
+                    modelName.isNotBlank() &&
+                    !maxDepthError &&
+                    droidRunValid,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 48.dp)
-                    .semantics { contentDescription = "Create connection" },
+                    .semantics { contentDescription = "Create agent" },
         ) {
-            Text("Create Connection")
+            Text("Create Agent")
         }
         Spacer(modifier = Modifier.height(SECTION_SPACING_DP.dp))
     }

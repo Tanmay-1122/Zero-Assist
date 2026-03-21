@@ -13,7 +13,7 @@ import com.zeroclaw.android.model.KeyRejectionEvent
 import com.zeroclaw.android.model.MemoryConflict
 import com.zeroclaw.android.model.MemoryHealthResult
 import com.zeroclaw.android.model.ServiceState
-import com.zeroclaw.android.data.local.PersistentEpochBuffer
+import com.zeroclaw.android.service.PersistentEpochBuffer
 import com.zeroclaw.ffi.FfiException
 import com.zeroclaw.ffi.getConfiguredChannelNames
 import com.zeroclaw.ffi.getStatus
@@ -391,7 +391,7 @@ class DaemonServiceBridge(
                 detail.contains("busy", ignoreCase = true) ||
                 detail.contains("connection", ignoreCase = true)
             ) {
-                persistentBuffer?.push(message)
+                persistentBuffer?.enqueue(message)
                 Log.i(TAG, "ZMD: Buffered message due to failure: $detail")
             }
 

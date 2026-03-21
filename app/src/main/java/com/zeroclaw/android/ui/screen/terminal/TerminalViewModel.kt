@@ -20,6 +20,7 @@ import com.zeroclaw.android.model.ProcessedImage
 import com.zeroclaw.android.model.ProviderAuthType
 import com.zeroclaw.android.model.RefreshCommand
 import com.zeroclaw.android.model.TerminalEntry
+import com.zeroclaw.android.service.PersistentEpochBuffer
 import com.zeroclaw.android.service.ZeroClawDaemonService
 import com.zeroclaw.android.util.ErrorSanitizer
 import com.zeroclaw.android.util.ImageProcessor
@@ -128,7 +129,7 @@ class TerminalViewModel(
                 pending.forEach { (id, text) ->
                     // For now, re-submit as a chat message. 
                     // In a more advanced implementation, we'd preserve the original command type.
-                    executeChatMessage(text, text, epochId = id)
+                    executeChatMessage(text, epochId = id)
                 }
             }
         }
@@ -194,12 +195,12 @@ class TerminalViewModel(
         when (result) {
             is CommandResult.RhaiExpression -> executeRhai(trimmed, result.expression)
             is CommandResult.LocalAction -> handleLocalAction(result.action)
-            is CommandResult.ChatMessage -> executeChatMessage(trimmed, result.text)
+            is CommandResult.ChatMessage -> executeChatMessage(trimmed)
         }
     }
 
     /** Overload for [executeChatMessage] that supports an existing epoch ID for recovery. */
-    private fun executeChatMessage(displayText: String, escapedText: String, epochId: Long? = null) {
+    private fun executeChatMessage(displayText: String, epochId: Long? = null) {
         val images = pendingImagesState.value
         if (epochId == null) {
             pendingImagesState.value = emptyList()
@@ -320,7 +321,7 @@ class TerminalViewModel(
             repository.append(content = displayText, entryType = ENTRY_TYPE_INPUT)
             // Store in buffer
             val epochId = withContext(Dispatchers.IO) {
-                app.epochBuffer.push(expression).also { updatePendingStatus() }
+                app.epochBuffer.enqueue(expression)
             }
 
             try {
@@ -342,7 +343,7 @@ class TerminalViewModel(
                 
                 // Clear on success
                 withContext(Dispatchers.IO) {
-                    app.epochBuffer.remove(epochId)
+                    app.epochBuffer.dequeue(epochId)
                 }
 
                 handleBindResult(displayResult)
@@ -386,7 +387,8 @@ class TerminalViewModel(
             // Store in buffer if it's a new message
             val currentEpochId =
                 epochId ?: withContext(Dispatchers.IO) {
-                    app.epochBuffer.push(message).also { updatePendingStatus() }
+                    val escapedText = message
+                    app.epochBuffer.enqueue(escapedText)
                 }
 
             try {
@@ -737,7 +739,7 @@ class TerminalViewModel(
                 repository.append(content = display, entryType = ENTRY_TYPE_RESPONSE)
                 // Clear from buffer on success
                 withContext(Dispatchers.IO) {
-                    app.epochBuffer.remove(epochId)
+                    app.epochBuffer.dequeue(epochId)
                 }
             }
 
@@ -767,7 +769,7 @@ class TerminalViewModel(
                 )
                 // Clear from buffer on cancel (intentional action)
                 withContext(Dispatchers.IO) {
-                    app.epochBuffer.remove(epochId)
+                    app.epochBuffer.dequeue(epochId)
                 }
             }
 

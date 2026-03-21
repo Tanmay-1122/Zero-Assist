@@ -24,6 +24,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.Test
  * tests run without a device or emulator.
  */
 @DisplayName("DoctorValidator")
+@OptIn(ExperimentalCoroutinesApi::class)
 class DoctorValidatorTest {
     private val context: Context = mockk(relaxed = true)
     private val agentRepository: AgentRepository = mockk()

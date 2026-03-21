@@ -214,7 +214,6 @@ pub(crate) fn remove_auth_profile_inner(
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -234,11 +233,12 @@ mod tests {
     fn test_remove_profile_not_running() {
         let result = remove_auth_profile_inner("openai".into(), "default".into());
         assert!(result.is_err());
-        match result.unwrap_err() {
-            FfiError::StateError { detail } => {
+        match result {
+            Err(FfiError::StateError { detail }) => {
                 assert!(detail.contains("not running"));
             }
-            other => panic!("expected StateError, got {other:?}"),
+            Err(other) => panic!("expected StateError, got {other:?}"),
+            Ok(_) => panic!("expected error but got success"),
         }
     }
 
@@ -270,7 +270,7 @@ mod tests {
             }
         }"#;
 
-        let data: ProfilesFile = serde_json::from_str(json).unwrap();
+        let data: ProfilesFile = serde_json::from_str(json).expect("valid auth profiles JSON");
         assert_eq!(data.profiles.len(), 2);
         assert_eq!(data.active_profiles.len(), 1);
 
@@ -279,7 +279,7 @@ mod tests {
         assert_eq!(codex.kind, "oauth");
         assert!(codex.token_set.is_some());
         assert_eq!(
-            codex.token_set.as_ref().unwrap().expires_at.as_deref(),
+            codex.token_set.as_ref().and_then(|ts| ts.expires_at.as_deref()),
             Some("2026-03-01T12:00:00Z")
         );
 
@@ -292,7 +292,10 @@ mod tests {
     #[test]
     fn test_parse_empty_profiles_file() {
         let json = r#"{"schema_version": 1}"#;
-        let data: ProfilesFile = serde_json::from_str(json).unwrap();
+        let data: ProfilesFile = match serde_json::from_str(json) {
+            Ok(d) => d,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         assert!(data.profiles.is_empty());
         assert!(data.active_profiles.is_empty());
     }
@@ -321,9 +324,10 @@ mod tests {
             }
         }"#;
 
-        let data: ProfilesFile = serde_json::from_str(json).unwrap();
-
-        let one = &data.profiles["provider_a:one"];
+        let data: ProfilesFile = match serde_json::from_str(json) {
+            Ok(d) => d,
+            Err(e) => panic!("JSON parse failed: {e}"),
+        };
         let is_active_one = data
             .active_profiles
             .get(&one.provider)

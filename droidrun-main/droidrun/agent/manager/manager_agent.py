@@ -194,11 +194,22 @@ class ManagerAgent(Workflow):
                 exclude=_standard
             )
 
+        # Compile important notes from recent error descriptions if available
+        important_notes = ""
+        if self.shared_state.error_descriptions:
+            # Extract the most recent and significant error notes
+            recent_errors = self.shared_state.error_descriptions[-3:] if len(
+                self.shared_state.error_descriptions) > 3 else self.shared_state.error_descriptions
+            if recent_errors:
+                important_notes = "\n".join(
+                    [str(err) for err in recent_errors if err and str(err).strip()]
+                ).strip()
+
         variables = {
             "instruction": self.shared_state.instruction,
             "device_date": self.shared_state.device_date,
             "app_card": self.shared_state.app_card,
-            "important_notes": "",  # TODO: implement
+            "important_notes": important_notes,
             "error_history": error_history,
             "text_manipulation_enabled": has_text_to_modify
             and self.agent_config.fast_agent.codeact,
@@ -370,8 +381,11 @@ class ManagerAgent(Workflow):
                     )
                     output = response.message.content
                     parsed = parse_manager_response(output)
-                except Exception as e:
+                except (RuntimeError, ValueError) as e:
                     logger.error(f"LLM retry failed: {e}")
+                    break
+                except Exception as e:  # Unexpected LLM/parsing errors
+                    logger.error(f"LLM retry failed unexpectedly: {e}", exc_info=True)
                     break
 
         return output
@@ -408,8 +422,10 @@ class ManagerAgent(Workflow):
                     logger.debug("📸 Screenshot captured for Manager")
             except DeviceDisconnectedError:
                 raise
-            except Exception as e:
+            except (TimeoutError, OSError, ValueError) as e:
                 logger.warning(f"Failed to capture screenshot: {e}")
+            except Exception as e:  # Unexpected device/driver errors
+                logger.warning(f"Failed to capture screenshot (unexpected): {e}", exc_info=True)
 
         # Get and format device state
         ui_state = await self.state_provider.get_state()
@@ -440,8 +456,11 @@ class ManagerAgent(Workflow):
                     package_name=self.shared_state.current_package_name,
                     instruction=self.shared_state.instruction,
                 )
-            except Exception as e:
+            except (IOError, ValueError, TimeoutError) as e:
                 logger.warning(f"Error loading app card: {e}")
+                self.shared_state.app_card = ""
+            except Exception as e:  # Unexpected app card provider errors
+                logger.warning(f"Error loading app card (unexpected): {e}", exc_info=True)
                 self.shared_state.app_card = ""
         else:
             self.shared_state.app_card = ""
@@ -508,16 +527,21 @@ class ManagerAgent(Workflow):
                 self.llm, messages, stream=self.agent_config.streaming
             )
             output = response.message.content
-        except Exception as e:
+        except (RuntimeError, ValueError, TimeoutError) as e:
             logger.error(f"LLM call failed: {e}")
             raise RuntimeError(f"Error calling LLM in manager: {e}") from e
+        except Exception as e:  # Unexpected LLM errors
+            logger.error(f"LLM call failed unexpectedly: {e}", exc_info=True)
+            raise RuntimeError(f"Unexpected error calling LLM in manager: {e}") from e
 
         # Extract usage
         usage = None
         try:
             usage = get_usage_from_response(self.llm.class_name(), response)
-        except Exception as e:
+        except (KeyError, ValueError, AttributeError, TypeError) as e:
             logger.warning(f"Could not get usage: {e}")
+        except Exception as e:  # Unexpected usage extraction errors
+            logger.warning(f"Could not get usage (unexpected): {e}", exc_info=True)
 
         output = await self._validate_and_retry(messages, output)
 

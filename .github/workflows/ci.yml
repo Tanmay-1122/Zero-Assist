@@ -19,6 +19,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  ANDROID_NDK_VERSION: "27.2.12479018"
 
 jobs:
   lint-rust:
@@ -71,7 +72,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -131,7 +132,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -178,7 +179,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -253,7 +254,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -301,7 +302,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -374,7 +375,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.2.12479018"
+        run: sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}"
 
       - uses: dtolnay/rust-toolchain@stable
         with:

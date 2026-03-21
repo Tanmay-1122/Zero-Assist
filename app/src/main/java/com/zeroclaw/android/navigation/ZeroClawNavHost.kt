@@ -194,7 +194,10 @@ fun ZeroClawNavHost(
         }
 
         composable<DroidRunRoute> {
-            DroidRunScreen(edgeMargin = edgeMargin)
+            DroidRunScreen(
+                edgeMargin = edgeMargin,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable<SettingsRoute> {

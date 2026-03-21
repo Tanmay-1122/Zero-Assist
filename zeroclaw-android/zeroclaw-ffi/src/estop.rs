@@ -172,7 +172,6 @@ fn persist_state(data_dir: &Path, state: &EstopStateFile) {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -190,7 +189,10 @@ mod tests {
         assert!(!is_engaged());
 
         // 2. Status when disengaged (daemon not running -> no timestamp)
-        let status = get_estop_status_inner().unwrap();
+        let status = match get_estop_status_inner() {
+            Ok(s) => s,
+            Err(e) => panic!("get_estop_status_inner failed: {e}"),
+        };
         assert!(!status.engaged);
         assert!(status.engaged_at_ms.is_none());
 
@@ -211,9 +213,18 @@ mod tests {
             kill_all: true,
             engaged_at: Some("2026-03-01T12:00:00Z".to_string()),
         };
-        let json = serde_json::to_string(&state).unwrap();
-        let parsed: EstopStateFile = serde_json::from_str(&json).unwrap();
+        let json = match serde_json::to_string(&state) {
+            Ok(j) => j,
+            Err(e) => panic!("serde_json::to_string failed: {e}"),
+        };
+        let parsed: EstopStateFile = match serde_json::from_str(&json) {
+            Ok(p) => p,
+            Err(e) => panic!("serde_json::from_str failed: {e}"),
+        };
         assert!(parsed.kill_all);
-        assert_eq!(parsed.engaged_at.unwrap(), "2026-03-01T12:00:00Z");
+        match parsed.engaged_at {
+            Some(ref ts) => assert_eq!(ts, "2026-03-01T12:00:00Z"),
+            None => panic!("expected Some(timestamp) but got None"),
+        }
     }
 }

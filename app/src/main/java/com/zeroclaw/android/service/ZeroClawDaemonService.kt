@@ -20,6 +20,8 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import com.zeroclaw.android.ZeroClawApplication
+import com.zeroclaw.android.data.DroidRunSettings
+import com.zeroclaw.android.data.SecurePrefsProvider
 import com.zeroclaw.android.data.repository.ActivityRepository
 import com.zeroclaw.android.data.repository.AgentRepository
 import com.zeroclaw.android.data.repository.ApiKeyRepository
@@ -27,6 +29,7 @@ import com.zeroclaw.android.data.repository.ChannelConfigRepository
 import com.zeroclaw.android.data.repository.LogRepository
 import com.zeroclaw.android.data.repository.SettingsRepository
 import com.zeroclaw.android.model.ActivityType
+import com.zeroclaw.android.model.Agent
 import com.zeroclaw.android.model.ApiKey
 import com.zeroclaw.android.model.AppSettings
 import com.zeroclaw.android.model.LogSeverity
@@ -220,17 +223,26 @@ class ZeroClawDaemonService : Service() {
 
         serviceScope.launch(ioDispatcher) {
             val settings = settingsRepository.settings.first()
-            val effectiveSettings = resolveEffectiveDefaults(settings)
+            val allAgents = agentRepository.agents.first()
+            val primaryAgent = allAgents.firstOrNull(::isPrimaryAgentCandidate)
+            val effectiveSettings = resolveEffectiveDefaults(settings, primaryAgent)
             val apiKey = apiKeyRepository.getByProviderFresh(effectiveSettings.defaultProvider)
+            val droidRunServerConfig = readDroidRunServerConfig()
+            val primaryDroidRunOverride = resolveDroidRunTomlEntry(primaryAgent)
 
             val globalConfig =
-                buildGlobalTomlConfig(effectiveSettings, apiKey)
+                buildGlobalTomlConfig(
+                    settings = effectiveSettings,
+                    apiKey = apiKey,
+                    droidRunServerConfig = droidRunServerConfig,
+                    primaryDroidRunOverride = primaryDroidRunOverride,
+                )
             val baseToml = ConfigTomlBuilder.build(globalConfig)
             val channelsToml =
                 ConfigTomlBuilder.buildChannelsToml(
                     channelConfigRepository.getEnabledWithSecrets(),
                 )
-            val agentsToml = buildAgentsToml()
+            val agentsToml = buildAgentsToml(allAgents)
             val configToml = baseToml + channelsToml + agentsToml
 
             if (!validateConfigOrStop(configToml)) return@launch
@@ -317,12 +329,11 @@ class ZeroClawDaemonService : Service() {
      * @return A copy of [settings] with provider and model overridden by the
      *   primary agent, or unchanged if no qualifying agent exists.
      */
-    private suspend fun resolveEffectiveDefaults(settings: AppSettings): AppSettings {
-        val agents = agentRepository.agents.first()
-        val primary =
-            agents.firstOrNull {
-                it.isEnabled && it.provider.isNotBlank() && it.modelName.isNotBlank()
-            } ?: return settings
+    private fun resolveEffectiveDefaults(
+        settings: AppSettings,
+        primary: Agent?,
+    ): AppSettings {
+        primary ?: return settings
         return settings.copy(
             defaultProvider = primary.provider,
             defaultModel = primary.modelName,
@@ -343,12 +354,21 @@ class ZeroClawDaemonService : Service() {
     private fun buildGlobalTomlConfig(
         settings: AppSettings,
         apiKey: ApiKey?,
+        droidRunServerConfig: DroidRunServerConfig,
+        primaryDroidRunOverride: DroidRunTomlEntry?,
     ): GlobalTomlConfig =
         GlobalTomlConfig(
             provider = settings.defaultProvider,
             model = settings.defaultModel,
             apiKey = apiKey?.key.orEmpty(),
             baseUrl = apiKey?.baseUrl.orEmpty(),
+            droidRunUseApi = droidRunServerConfig.url.isNotBlank(),
+            droidRunUrl = droidRunServerConfig.url,
+            droidRunApiKey = droidRunServerConfig.apiKey,
+            droidRunLlmProvider = primaryDroidRunOverride?.provider.orEmpty(),
+            droidRunLlmModel = primaryDroidRunOverride?.model.orEmpty(),
+            droidRunLlmApiKey = primaryDroidRunOverride?.apiKey.orEmpty(),
+            droidRunLlmBaseUrl = primaryDroidRunOverride?.baseUrl.orEmpty(),
             temperature = settings.defaultTemperature,
             compactContext = settings.compactContext,
             costEnabled = settings.costEnabled,
@@ -474,13 +494,13 @@ class ZeroClawDaemonService : Service() {
      *
      * @return TOML string with per-agent sections, or empty if no agents qualify.
      */
-    private suspend fun buildAgentsToml(): String {
-        val allAgents = agentRepository.agents.first()
+    private suspend fun buildAgentsToml(allAgents: List<Agent>): String {
         val entries =
             allAgents
                 .filter { it.isEnabled && it.provider.isNotBlank() && it.modelName.isNotBlank() }
                 .map { agent ->
                     val agentKey = apiKeyRepository.getByProviderFresh(agent.provider)
+                    val droidRunEntry = resolveDroidRunTomlEntry(agent)
                     AgentTomlEntry(
                         name = agent.name,
                         provider =
@@ -493,10 +513,41 @@ class ZeroClawDaemonService : Service() {
                         systemPrompt = agent.systemPrompt,
                         temperature = agent.temperature,
                         maxDepth = agent.maxDepth,
+                        droidRun = droidRunEntry,
                     )
                 }
         return ConfigTomlBuilder.buildAgentsToml(entries)
     }
+
+    private suspend fun resolveDroidRunTomlEntry(agent: Agent?): DroidRunTomlEntry? {
+        val config = agent?.droidRunConfig ?: return null
+        if (config.provider.isBlank() || config.modelName.isBlank() || config.connectionId.isBlank()) {
+            return null
+        }
+
+        val key = apiKeyRepository.getById(config.connectionId) ?: return null
+        return DroidRunTomlEntry(
+            provider = config.provider,
+            model = config.modelName,
+            apiKey = key.key,
+            baseUrl = key.baseUrl,
+        )
+    }
+
+    private fun readDroidRunServerConfig(): DroidRunServerConfig {
+        val prefs =
+            SecurePrefsProvider.create(
+                applicationContext,
+                DroidRunSettings.PREFS_NAME,
+            ).first
+        return DroidRunServerConfig(
+            url = prefs.getString(DroidRunSettings.KEY_SERVER_URL, "").orEmpty().trim(),
+            apiKey = prefs.getString(DroidRunSettings.KEY_API_KEY, "").orEmpty().trim(),
+        )
+    }
+
+    private fun isPrimaryAgentCandidate(agent: Agent): Boolean =
+        agent.isEnabled && agent.provider.isNotBlank() && agent.modelName.isNotBlank()
 
     private fun handleStop() {
         startJob?.cancel()
@@ -937,6 +988,11 @@ class ZeroClawDaemonService : Service() {
         private val VALID_PORT_RANGE = 1..65535
     }
 }
+
+private data class DroidRunServerConfig(
+    val url: String,
+    val apiKey: String,
+)
 
 /**
  * Splits a comma-separated string into a trimmed, non-blank list.
