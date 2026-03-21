@@ -113,8 +113,9 @@ class DroidRunViewModel(application: Application) : AndroidViewModel(application
 
                 daemonBridge.markRestartRequired()
                 _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 _uiState.value =
                     _uiState.value.copy(
                         isSaving = false,

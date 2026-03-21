@@ -182,6 +182,7 @@ fun TerminalScreen(
  * @param edgeMargin Horizontal padding based on window width size class.
  * @param modifier Modifier applied to the root layout.
  */
+@Suppress("OutdatedDocumentation")
 @Composable
 internal fun TerminalContent(
     state: TerminalState,
@@ -394,6 +395,7 @@ internal fun TerminalContent(
  * @param serviceState Current daemon service lifecycle state.
  * @param modifier Modifier applied to the header row.
  */
+@Suppress("OutdatedDocumentation")
 @Composable
 private fun TerminalHeader(
     serviceState: ServiceState,

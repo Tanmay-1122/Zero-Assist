@@ -8,6 +8,10 @@ package com.zeroclaw.android.data
 
 /**
  * Recommended free or easy-to-start DroidRun LLM options shown in the UI.
+ * @property providerId Provider identifier (e.g., "google-gemini", "groq").
+ * @property models Comma-separated list of available models for this provider.
+ * @property limits Rate and usage limits for this provider.
+ * @property reason Human-readable reason why this provider is recommended.
  */
 data class DroidRunRecommendation(
     val providerId: String,
@@ -37,6 +41,7 @@ object DroidRunProviderCatalog {
             "localai",
         )
 
+    /** Curated list of recommended DroidRun LLM providers to suggest in the UI. */
     val recommendations: List<DroidRunRecommendation> =
         listOf(
             DroidRunRecommendation(

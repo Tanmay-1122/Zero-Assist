@@ -1,0 +1,16 @@
+Starting a Gradle Daemon, 1 busy and 1 incompatible Daemons could not be reused, use --status for details
+
+> Configure project :app
+WARNING: BuildType 'debug' is both debuggable and has 'isMinifyEnabled' set to true.
+All code optimizations and obfuscation are disabled for debuggable builds.
+
+> Task :app:detekt
+C:\Users\tanma\Downloads\Zero-Assist\app\src\main\java\com\zeroclaw\android\service\ConfigTomlBuilder.kt:936:31: The function appendDroidRunSection appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to '15' [CyclomaticComplexMethod]
+C:\Users\tanma\Downloads\Zero-Assist\app\src\main\java\com\zeroclaw\android\ZeroClawApplication.kt:335:17: The function migrateStaleOAuthEntries appears to be too complex based on Cognitive Complexity (complexity: 16). Defined complexity threshold for methods is set to '15' [CognitiveComplexMethod]
+C:\Users\tanma\Downloads\Zero-Assist\app\src\main\java\com\zeroclaw\android\data\SecurePrefsProvider.kt:115:18: The caught exception is too generic. Prefer catching specific exceptions to the case that is currently handled. [TooGenericExceptionCaught]
+C:\Users\tanma\Downloads\Zero-Assist\app\src\main\java\com\zeroclaw\android\ui\screen\droidrun\DroidRunViewModel.kt:118:22: The caught exception is too generic. Prefer catching specific exceptions to the case that is currently handled. [TooGenericExceptionCaught]
+C:\Users\tanma\Downloads\Zero-Assist\app\src\main\java\com\zeroclaw\android\data\local\ZeroClawDatabase.kt:355:72: This expression contains a magic number. Consider defining it to a well named constant. [MagicNumber]
+
+
+> Task :app:detekt FAILED
+1 actionable task: 1 executed

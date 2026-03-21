@@ -26,6 +26,7 @@ import com.zeroclaw.android.model.FieldInputType
  * @property systemPrompt Agent system prompt; blank if not configured.
  * @property temperature Per-agent temperature override; null omits the field.
  * @property maxDepth Maximum reasoning depth; default omits the field.
+ * @property droidRun Per-agent DroidRun LLM override configuration; null means disabled.
  */
 data class AgentTomlEntry(
     val name: String,
@@ -84,6 +85,13 @@ data class DroidRunTomlEntry(
  * @property model Model name (e.g. "gpt-4o").
  * @property apiKey Secret API key value.
  * @property baseUrl Provider endpoint URL.
+ * @property droidRunUseApi Whether the DroidRun API integration is enabled.
+ * @property droidRunUrl Base URL for the DroidRun server.
+ * @property droidRunApiKey API key for authenticating with the DroidRun server.
+ * @property droidRunLlmProvider LLM provider ID for DroidRun operations.
+ * @property droidRunLlmModel LLM model name for DroidRun operations.
+ * @property droidRunLlmApiKey API key for the DroidRun LLM provider.
+ * @property droidRunLlmBaseUrl Custom endpoint URL for the DroidRun LLM provider.
  * @property temperature Default inference temperature (0.0–2.0).
  * @property compactContext Whether compact context mode is enabled.
  * @property costEnabled Whether cost limits are enforced.

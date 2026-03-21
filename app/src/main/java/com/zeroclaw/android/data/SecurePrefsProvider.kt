@@ -110,8 +110,9 @@ object SecurePrefsProvider {
             context.deleteSharedPreferences(prefsName)
             val prefs = createEncryptedPrefs(context, prefsName, masterKey)
             prefs to StorageHealth.Recovered
+        } catch (e: InterruptedException) {
+            throw e
         } catch (e: Exception) {
-            if (e is InterruptedException) throw e
             Log.e(TAG, "Recovery failed, falling back to in-memory: ${e.message}", e)
             MapSharedPreferences() to StorageHealth.Degraded
         }

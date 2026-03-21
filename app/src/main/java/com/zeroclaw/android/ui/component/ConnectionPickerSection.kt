@@ -73,6 +73,7 @@ private const val SELECTED_BORDER_WIDTH_DP = 2
  * @param onAddNewConnection Callback when the user taps the add button.
  * @param modifier Modifier applied to the root layout.
  */
+@Suppress("OutdatedDocumentation")
 @Composable
 fun ConnectionPickerSection(
     keys: List<ApiKey>,

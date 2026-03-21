@@ -290,8 +290,9 @@ class ZeroClawApplication :
                     "Crate/app version mismatch: native=$crateVersion, app=$appVersion",
                 )
             }
+        } catch (e: InterruptedException) {
+            throw e
         } catch (e: Exception) {
-            if (e is InterruptedException) throw e
             Log.e(TAG, "Failed to verify crate version: ${e.message}")
         }
     }
@@ -335,7 +336,7 @@ class ZeroClawApplication :
         scope.launch {
             try {
                 // Use a timeout to prevent blocking indefinitely if the DB/Keystore is slow
-                val allKeys = withTimeoutOrNull(5000L) {
+                val allKeys = withTimeoutOrNull(DB_QUERY_TIMEOUT_MS) {
                     apiKeyRepository.keys.first()
                 } ?: return@launch
 
@@ -363,8 +364,9 @@ class ZeroClawApplication :
                 }
 
                 Log.i(TAG, "Migrated ${staleOAuthKeys.size} stale OAuth keys")
+            } catch (e: InterruptedException) {
+                throw e
             } catch (e: Exception) {
-                if (e is InterruptedException) throw e
                 Log.e(TAG, "OAuth migration failed: ${e.message}")
             }
         }
@@ -406,23 +408,32 @@ class ZeroClawApplication :
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader.Builder(context)
-            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.25).build() }
+            .memoryCache { MemoryCache.Builder().maxSizePercent(context, MEMORY_CACHE_PERCENT).build() }
             .diskCache {
                 DiskCache.Builder()
                     .directory(context.cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(512L * 1024 * 1024)
+                    .maxSizeBytes(DISK_CACHE_SIZE_BYTES)
                     .build()
             }
             .crossfade(true)
             .build()
     }
 
+    /**
+     * Companion object holding application-wide constants.
+     *
+     * Contains shared logging tags, network configuration timeouts, OAuth migration settings,
+     * and storage preferences used throughout the application lifecycle.
+     */
     companion object {
         private const val TAG = "ZeroClawApp"
         private const val MAX_IDLE_CONNECTIONS = 5
         private const val KEEP_ALIVE_DURATION_SECONDS = 30L
         private const val HTTP_CONNECT_TIMEOUT_SECONDS = 15L
         private const val HTTP_READ_TIMEOUT_SECONDS = 15L
+        private const val DB_QUERY_TIMEOUT_MS = 5000L
+        private const val DISK_CACHE_SIZE_BYTES = 512L * 1024 * 1024
+        private const val MEMORY_CACHE_PERCENT = 0.25
         private const val STALE_OAUTH_PROVIDER = "openai"
         private const val CODEX_PROVIDER = "openai-codex"
         private const val CHANNEL_CONFIG_PREFS = "connected_channel_secrets"

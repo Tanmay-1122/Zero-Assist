@@ -62,6 +62,7 @@ import com.zeroclaw.android.data.DroidRunProviderCatalog
  * @param onBack Callback for navigation.
  * @param modifier Optional modifier for the root layout.
  */
+@Suppress("OutdatedDocumentation")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DroidRunScreen(

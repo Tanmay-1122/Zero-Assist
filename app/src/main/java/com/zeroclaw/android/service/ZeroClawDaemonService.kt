@@ -329,6 +329,7 @@ class ZeroClawDaemonService : Service() {
      * @return A copy of [settings] with provider and model overridden by the
      *   primary agent, or unchanged if no qualifying agent exists.
      */
+    @Suppress("OutdatedDocumentation")
     private fun resolveEffectiveDefaults(
         settings: AppSettings,
         primary: Agent?,
@@ -350,7 +351,7 @@ class ZeroClawDaemonService : Service() {
      * @param apiKey Resolved API key for the default provider, or null.
      * @return A fully populated [GlobalTomlConfig].
      */
-    @Suppress("LongMethod")
+    @Suppress("OutdatedDocumentation", "LongMethod")
     private fun buildGlobalTomlConfig(
         settings: AppSettings,
         apiKey: ApiKey?,

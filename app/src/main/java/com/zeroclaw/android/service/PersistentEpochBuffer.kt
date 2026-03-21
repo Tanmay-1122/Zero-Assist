@@ -134,58 +134,58 @@ class PersistentEpochBuffer(
                 currentFile.copyTo(backupFile, overwrite = true)
             }
             currentFile.writeText(content)
-        } catch (e: Exception) {
-            when (e) {
-                is java.io.IOException, is kotlinx.serialization.SerializationException -> {
-                    val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
-                    Log.e(TAG, "Failed to save message buffer: $safeMsg")
-                }
-                else -> throw e
-            }
+        } catch (e: java.io.IOException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to save message buffer: $safeMsg")
+        } catch (e: kotlinx.serialization.SerializationException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to save message buffer: $safeMsg")
         }
     }
 
     private fun load() {
         try {
-            if (!currentFile.exists() && backupFile.exists()) {
-                backupFile.copyTo(currentFile)
+            loadFromPrimaryFile()
+        } catch (e: java.io.IOException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to load message buffer: $safeMsg")
+            loadFromBackupFile()
+        } catch (e: kotlinx.serialization.SerializationException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to load message buffer: $safeMsg")
+            loadFromBackupFile()
+        }
+    }
+
+    private fun loadFromPrimaryFile() {
+        if (!currentFile.exists() && backupFile.exists()) {
+            backupFile.copyTo(currentFile)
+        }
+        if (currentFile.exists()) {
+            val content = currentFile.readText()
+            val loaded = json.decodeFromString<List<BufferedMessage>>(content)
+            synchronized(lock) {
+                messages.clear()
+                messages.addAll(loaded)
             }
-            if (currentFile.exists()) {
-                val content = currentFile.readText()
-                val loaded = json.decodeFromString<List<BufferedMessage>>(content)
-                synchronized(lock) {
-                    messages.clear()
-                    messages.addAll(loaded)
-                }
+        }
+    }
+
+    private fun loadFromBackupFile() {
+        if (!backupFile.exists()) return
+        try {
+            val content = backupFile.readText()
+            val loaded = json.decodeFromString<List<BufferedMessage>>(content)
+            synchronized(lock) {
+                messages.clear()
+                messages.addAll(loaded)
             }
-        } catch (e: Exception) {
-            when (e) {
-                is java.io.IOException, is kotlinx.serialization.SerializationException -> {
-                    val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
-                    Log.e(TAG, "Failed to load message buffer: $safeMsg")
-                }
-                else -> throw e
-            }
-            // If current is corrupt, try backup
-            if (backupFile.exists()) {
-                try {
-                    val content = backupFile.readText()
-                    val loaded = json.decodeFromString<List<BufferedMessage>>(content)
-                    synchronized(lock) {
-                        messages.clear()
-                        messages.addAll(loaded)
-                    }
-                } catch (e2: Exception) {
-                    when (e2) {
-                        is java.io.IOException, is kotlinx.serialization.SerializationException -> {
-                            val safeMsg2 =
-                                LogSanitizer.sanitizeLogMessage(e2.message ?: "Unknown I/O error")
-                            Log.e(TAG, "Failed to load backup message buffer: $safeMsg2")
-                        }
-                        else -> throw e2
-                    }
-                }
-            }
+        } catch (e: java.io.IOException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to load backup message buffer: $safeMsg")
+        } catch (e: kotlinx.serialization.SerializationException) {
+            val safeMsg = LogSanitizer.sanitizeLogMessage(e.message ?: "Unknown I/O error")
+            Log.e(TAG, "Failed to load backup message buffer: $safeMsg")
         }
     }
 
