@@ -39,8 +39,9 @@ impl ListenTool {
         let device = &self.config.audio.mic_device;
 
         // Convert filename to string, handling invalid UTF-8 gracefully
-        let filename_str = filename.to_str()
-            .ok_or_else(|| anyhow::anyhow!("Recording filename contains invalid UTF-8 characters"))?;
+        let filename_str = filename.to_str().ok_or_else(|| {
+            anyhow::anyhow!("Recording filename contains invalid UTF-8 characters")
+        })?;
 
         // Record using arecord (standard on Linux/Pi)
         let output = tokio::process::Command::new("arecord")
@@ -86,10 +87,12 @@ impl ListenTool {
             });
 
         // Convert paths to strings, handling invalid UTF-8 gracefully
-        let model_path_str = model_path.to_str()
-            .ok_or_else(|| anyhow::anyhow!("Whisper model path contains invalid UTF-8 characters"))?;
-        
-        let audio_path_str = audio_path.to_str()
+        let model_path_str = model_path.to_str().ok_or_else(|| {
+            anyhow::anyhow!("Whisper model path contains invalid UTF-8 characters")
+        })?;
+
+        let audio_path_str = audio_path
+            .to_str()
             .ok_or_else(|| anyhow::anyhow!("Audio path contains invalid UTF-8 characters"))?;
 
         // Run whisper.cpp

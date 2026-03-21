@@ -1500,7 +1500,7 @@ mod tests {
             String::new(),
             String::new(),
         ) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("First scaffold_workspace failed: {e}"),
         }
 
@@ -1511,7 +1511,7 @@ mod tests {
             String::new(),
             String::new(),
         ) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("Second scaffold_workspace failed: {e}"),
         }
 
@@ -1540,7 +1540,7 @@ mod tests {
             String::new(),
             String::new(),
         ) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("scaffold_workspace failed: {e}"),
         }
 

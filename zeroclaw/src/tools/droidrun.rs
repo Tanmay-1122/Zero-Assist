@@ -154,7 +154,9 @@ impl Tool for DroidRunTool {
                 return Ok(ToolResult {
                     success: false,
                     output: String::new(),
-                    error: Some("DroidRun API mode is enabled but no server URL is configured".into()),
+                    error: Some(
+                        "DroidRun API mode is enabled but no server URL is configured".into(),
+                    ),
                 });
             }
 
@@ -163,7 +165,10 @@ impl Tool for DroidRunTool {
                 .build()?;
 
             let mut request = client
-                .post(&format!("{}/execute", self.droidrun.url.trim_end_matches('/')))
+                .post(&format!(
+                    "{}/execute",
+                    self.droidrun.url.trim_end_matches('/')
+                ))
                 .json(&Self::build_api_payload(prompt, &llm_override));
             if let Some(api_key) = self.droidrun.api_key.as_deref() {
                 request = request.header("Authorization", format!("Bearer {}", api_key));
@@ -259,7 +264,10 @@ impl Tool for DroidRunTool {
             Err(_) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
-                error: Some(format!("DroidRun CLI timed out after {}s", DROIDRUN_TIMEOUT_SECS)),
+                error: Some(format!(
+                    "DroidRun CLI timed out after {}s",
+                    DROIDRUN_TIMEOUT_SECS
+                )),
             }),
         }
     }

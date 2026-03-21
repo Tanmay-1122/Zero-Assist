@@ -165,7 +165,9 @@ impl SafetyMonitor {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_millis() as u64)
             .unwrap_or_else(|_| {
-                tracing::error!("SystemTime::now() is before UNIX_EPOCH - using current stored time");
+                tracing::error!(
+                    "SystemTime::now() is before UNIX_EPOCH - using current stored time"
+                );
                 self.state.last_command_ms.load(Ordering::SeqCst)
             });
         self.state.last_command_ms.store(now_ms, Ordering::SeqCst);

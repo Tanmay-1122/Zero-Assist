@@ -817,11 +817,8 @@ async fn main() -> Result<()> {
                 .iter()
                 .map(|k| k.token.clone())
                 .collect();
-            let pairing = security::PairingGuard::new(
-                true,
-                &config.gateway.paired_tokens,
-                &api_key_tokens,
-            );
+            let pairing =
+                security::PairingGuard::new(true, &config.gateway.paired_tokens, &api_key_tokens);
             if let Some(code) = pairing.pairing_code() {
                 println!();
                 println!("  \x1b[1;34m🦀 Gateway Pairing Code\x1b[0m");

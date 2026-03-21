@@ -5605,8 +5605,8 @@ impl Config {
         }
 
         // DroidRun API key: ZEROCLAW_DROIDRUN_API_KEY or DROIDRUN_API_KEY
-        if let Ok(api_key) =
-            std::env::var("ZEROCLAW_DROIDRUN_API_KEY").or_else(|_| std::env::var("DROIDRUN_API_KEY"))
+        if let Ok(api_key) = std::env::var("ZEROCLAW_DROIDRUN_API_KEY")
+            .or_else(|_| std::env::var("DROIDRUN_API_KEY"))
         {
             let api_key = api_key.trim();
             if !api_key.is_empty() {
@@ -9570,4 +9570,3 @@ require_otp_to_resume = true
         }
     }
 }
-

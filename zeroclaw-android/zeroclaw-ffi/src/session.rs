@@ -2263,7 +2263,10 @@ mod tests {
 
     impl FfiSessionListener for RecordingListener {
         fn on_thinking(&self, text: String) {
-            self.events.lock().expect("events lock poisoned").push(format!("thinking:{text}"));
+            self.events
+                .lock()
+                .expect("events lock poisoned")
+                .push(format!("thinking:{text}"));
         }
 
         fn on_response_chunk(&self, text: String) {
@@ -2316,11 +2319,17 @@ mod tests {
         }
 
         fn on_error(&self, error: String) {
-            self.events.lock().expect("events lock poisoned").push(format!("error:{error}"));
+            self.events
+                .lock()
+                .expect("events lock poisoned")
+                .push(format!("error:{error}"));
         }
 
         fn on_cancelled(&self) {
-            self.events.lock().expect("events lock poisoned").push("cancelled".to_string());
+            self.events
+                .lock()
+                .expect("events lock poisoned")
+                .push("cancelled".to_string());
         }
     }
 
@@ -2544,7 +2553,8 @@ mod tests {
         }];
 
         let result = build_native_assistant_history("Let me check", &calls, None);
-        let parsed: serde_json::Value = serde_json::from_str(&result).expect("failed to parse JSON result");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&result).expect("failed to parse JSON result");
 
         assert_eq!(parsed["content"], "Let me check");
         assert_eq!(parsed["tool_calls"][0]["id"], "call_123");
@@ -2562,7 +2572,8 @@ mod tests {
 
         let result =
             build_native_assistant_history("Reading file", &calls, Some("thinking about it"));
-        let parsed: serde_json::Value = serde_json::from_str(&result).expect("failed to parse JSON result");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&result).expect("failed to parse JSON result");
 
         assert_eq!(parsed["reasoning_content"], "thinking about it");
     }

@@ -19,7 +19,9 @@ impl DroidRunConfigGetTool {
         if cfg!(windows) {
             let local_app_data = std::env::var("LOCALAPPDATA")
                 .map_err(|_| "Could not find LOCALAPPDATA environment variable".to_string())?;
-            Ok(PathBuf::from(local_app_data).join("droidrun").join("droidrun"))
+            Ok(PathBuf::from(local_app_data)
+                .join("droidrun")
+                .join("droidrun"))
         } else if cfg!(target_os = "macos") {
             let home = std::env::var("HOME")
                 .map_err(|_| "Could not find HOME environment variable".to_string())?;
@@ -72,7 +74,8 @@ impl Tool for DroidRunConfigGetTool {
                 "google_api_key": null,
                 "api_key": null,
                 "server_url": null
-                }).to_string(),
+                })
+                .to_string(),
                 error: None,
             });
         }
@@ -85,7 +88,8 @@ impl Tool for DroidRunConfigGetTool {
                     "google_api_key": null,
                     "api_key": null,
                     "server_url": null
-                }).to_string(),
+                })
+                .to_string(),
                 error: None,
             });
         }
@@ -111,7 +115,8 @@ impl Tool for DroidRunConfigGetTool {
                 "google_api_key": google_api_key,
                 "api_key": api_key,
                 "server_url": server_url
-            }).to_string(),
+            })
+            .to_string(),
             error: None,
         })
     }

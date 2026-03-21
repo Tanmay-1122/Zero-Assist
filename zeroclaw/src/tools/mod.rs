@@ -272,7 +272,11 @@ pub fn all_tools_with_runtime(
         Arc::new(CronUpdateTool::new(config.clone(), security.clone())),
         Arc::new(CronRunTool::new(config.clone(), security.clone())),
         Arc::new(CronRunsTool::new(config.clone())),
-        Arc::new(DroidRunTool::new(config.clone(), security.clone(), runtime.clone())),
+        Arc::new(DroidRunTool::new(
+            config.clone(),
+            security.clone(),
+            runtime.clone(),
+        )),
         Arc::new(DroidRunConfigSetTool::new(security.clone())),
         Arc::new(DroidRunConfigGetTool::new(security.clone())),
         Arc::new(MemoryStoreTool::new(memory.clone(), security.clone())),

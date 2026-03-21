@@ -8,10 +8,10 @@ use axum::{
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json},
 };
+use chrono::{Duration, Utc};
+use hex;
 use serde::Deserialize;
 use uuid;
-use hex;
-use chrono::{Utc, Duration};
 
 const MASKED_SECRET: &str = "***MASKED***";
 
@@ -663,16 +663,13 @@ pub async fn handle_api_keys_generate(
 
     let mut config = state.config.lock().clone();
     let id = uuid::Uuid::new_v4().to_string();
-    
-    let rand_bytes: [u8; 24] = rand::random();
-    let token = format!(
-        "zk_{}",
-        hex::encode(rand_bytes)
-    );
 
-    let expires_at = body.expiry_days.map(|days| {
-        Utc::now() + Duration::days(days as i64)
-    });
+    let rand_bytes: [u8; 24] = rand::random();
+    let token = format!("zk_{}", hex::encode(rand_bytes));
+
+    let expires_at = body
+        .expiry_days
+        .map(|days| Utc::now() + Duration::days(days as i64));
 
     let new_key = crate::config::schema::ApiKey {
         id: id.clone(),
@@ -717,7 +714,10 @@ pub async fn handle_api_keys_delete(
     config.gateway.api_keys.retain(|k| k.id != id);
 
     if config.gateway.api_keys.len() == initial_len {
-        return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error": "Key not found"})))
+        return (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "Key not found"})),
+        )
             .into_response();
     }
 
@@ -1649,10 +1649,12 @@ async fn create_api_key(
         return e.into_response();
     }
     let mut updated_cfg = { state.config.lock().clone() };
-    
+
     let token = format!("zc_{}", uuid::Uuid::new_v4().to_string().replace("-", ""));
-    let expires_at = payload.expires_in_days.map(|days| Utc::now() + Duration::days(days));
-    
+    let expires_at = payload
+        .expires_in_days
+        .map(|days| Utc::now() + Duration::days(days));
+
     let new_key = crate::config::schema::ApiKey {
         id: uuid::Uuid::new_v4().to_string(),
         name: payload.name,
@@ -1660,23 +1662,30 @@ async fn create_api_key(
         created_at: Utc::now(),
         expires_at,
     };
-    
+
     updated_cfg.gateway.api_keys.push(new_key);
-    
+
     let res = if state.auto_save {
-        updated_cfg.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}")).into_response())
+        updated_cfg.save().await.map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to save config: {e}"),
+            )
+                .into_response()
+        })
     } else {
         Ok(())
     };
-    
+
     match res {
         Ok(()) => {
             *state.config.lock() = updated_cfg;
             Json(serde_json::json!({
                 "status": "ok",
                 "token": token
-            })).into_response()
-        },
+            }))
+            .into_response()
+        }
         Err(e) => e,
     }
 }
@@ -1690,25 +1699,31 @@ async fn delete_api_key(
         return e.into_response();
     }
     let mut updated_cfg = { state.config.lock().clone() };
-    
+
     let original_len = updated_cfg.gateway.api_keys.len();
     updated_cfg.gateway.api_keys.retain(|k| k.id != id);
-    
+
     if updated_cfg.gateway.api_keys.len() == original_len {
         return (StatusCode::NOT_FOUND, "API key not found".to_string()).into_response();
     }
-    
+
     let res = if state.auto_save {
-        updated_cfg.save().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save config: {e}")).into_response())
+        updated_cfg.save().await.map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to save config: {e}"),
+            )
+                .into_response()
+        })
     } else {
         Ok(())
     };
-    
+
     match res {
         Ok(()) => {
             *state.config.lock() = updated_cfg;
             Json(serde_json::json!({ "status": "ok" })).into_response()
-        },
+        }
         Err(e) => e,
     }
 }

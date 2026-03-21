@@ -279,7 +279,10 @@ mod tests {
         assert_eq!(codex.kind, "oauth");
         assert!(codex.token_set.is_some());
         assert_eq!(
-            codex.token_set.as_ref().and_then(|ts| ts.expires_at.as_deref()),
+            codex
+                .token_set
+                .as_ref()
+                .and_then(|ts| ts.expires_at.as_deref()),
             Some("2026-03-01T12:00:00Z")
         );
 

@@ -1511,7 +1511,8 @@ mod tests {
 
     #[test]
     fn test_collect_channels_empty_config() {
-        let config: Config = toml::from_str("default_temperature = 0.7").expect("valid TOML config");
+        let config: Config =
+            toml::from_str("default_temperature = 0.7").expect("valid TOML config");
         let channels = collect_channels(&config);
         assert!(
             channels.is_empty(),
@@ -1588,7 +1589,8 @@ allowed_users = []
         let toml_str = "default_temperature = 0.7\n";
         let result = doctor_channels_inner(toml_str.to_string(), "/tmp/test".into());
         let json_str = result.expect("doctor_channels should succeed");
-        let arr: Vec<serde_json::Value> = serde_json::from_str(&json_str).expect("doctor_channels JSON parse failed");
+        let arr: Vec<serde_json::Value> =
+            serde_json::from_str(&json_str).expect("doctor_channels JSON parse failed");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["name"], "channels");
         assert_eq!(arr[0]["status"], "healthy");

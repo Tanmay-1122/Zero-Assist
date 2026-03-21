@@ -14,7 +14,8 @@ pub mod static_files;
 pub mod ws;
 
 use crate::channels::{
-    Channel, LinqChannel, NextcloudTalkChannel, SendMessage, TwilioChannel, WatiChannel, WhatsAppChannel,
+    Channel, LinqChannel, NextcloudTalkChannel, SendMessage, TwilioChannel, WatiChannel,
+    WhatsAppChannel,
 };
 use crate::config::Config;
 use crate::cost::CostTracker;
@@ -506,14 +507,15 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         });
 
     // Twilio channel (if configured)
-    let twilio_channel: Option<Arc<TwilioChannel>> = config.channels_config.twilio.as_ref().map(|tw| {
-        Arc::new(TwilioChannel::new(
-            tw.account_sid.clone(),
-            tw.auth_token.clone(),
-            tw.from_phone.clone(),
-            tw.allowed_numbers.clone(),
-        ))
-    });
+    let twilio_channel: Option<Arc<TwilioChannel>> =
+        config.channels_config.twilio.as_ref().map(|tw| {
+            Arc::new(TwilioChannel::new(
+                tw.account_sid.clone(),
+                tw.auth_token.clone(),
+                tw.from_phone.clone(),
+                tw.allowed_numbers.clone(),
+            ))
+        });
 
     // Nextcloud Talk channel (if configured)
     let nextcloud_talk_channel: Option<Arc<NextcloudTalkChannel>> =
@@ -550,8 +552,13 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
             .map(Arc::from);
 
     // Extract tokens from api_keys config
-    let api_keys_tokens: Vec<String> = config.gateway.api_keys.iter().map(|k| k.token.clone()).collect();
-    
+    let api_keys_tokens: Vec<String> = config
+        .gateway
+        .api_keys
+        .iter()
+        .map(|k| k.token.clone())
+        .collect();
+
     // ── Pairing guard ──────────────────────────────────────
     let pairing = Arc::new(PairingGuard::new(
         config.gateway.require_pairing,

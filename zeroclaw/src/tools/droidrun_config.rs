@@ -20,7 +20,9 @@ impl DroidRunConfigSetTool {
             // Match platformdirs behavior for "droidrun": AppData\Local\droidrun\droidrun
             let local_app_data = std::env::var("LOCALAPPDATA")
                 .map_err(|_| "Could not find LOCALAPPDATA environment variable".to_string())?;
-            Ok(PathBuf::from(local_app_data).join("droidrun").join("droidrun"))
+            Ok(PathBuf::from(local_app_data)
+                .join("droidrun")
+                .join("droidrun"))
         } else if cfg!(target_os = "macos") {
             // Match platformdirs: ~/Library/Application Support/droidrun
             let home = std::env::var("HOME")
@@ -141,7 +143,7 @@ impl Tool for DroidRunConfigSetTool {
         }
 
         let new_content = lines.join("\n") + "\n";
-        
+
         if let Err(e) = tokio::fs::write(&env_file, new_content).await {
             return Ok(ToolResult {
                 success: false,

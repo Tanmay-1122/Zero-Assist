@@ -27,11 +27,11 @@ impl PushChannel {
         if let Some(ref url) = self.config.ntfy_url {
             debug!("Sending ntfy notification to {}", url);
             let mut request = self.client.post(url).body(message.content.clone());
-            
+
             if let Some(ref subject) = message.subject {
                 request = request.header("Title", subject);
             }
-            
+
             let res = request.send().await?;
             if !res.status().is_success() {
                 let status = res.status();
@@ -44,28 +44,34 @@ impl PushChannel {
     }
 
     async fn send_pushover(&self, message: &SendMessage) -> anyhow::Result<()> {
-        if let (Some(ref token), Some(ref user)) = (&self.config.pushover_token, &self.config.pushover_user) {
+        if let (Some(ref token), Some(ref user)) =
+            (&self.config.pushover_token, &self.config.pushover_user)
+        {
             debug!("Sending Pushover notification");
             let mut params = vec![
                 ("token", token.as_str()),
                 ("user", user.as_str()),
                 ("message", message.content.as_str()),
             ];
-            
+
             if let Some(ref subject) = message.subject {
                 params.push(("title", subject.as_str()));
             }
 
-            let res = self.client
+            let res = self
+                .client
                 .post("https://api.pushover.net/1/messages.json")
                 .form(&params)
                 .send()
                 .await?;
-                
+
             if !res.status().is_success() {
                 let status = res.status();
                 let body = res.text().await.unwrap_or_default();
-                error!("Failed to send Pushover notification: {} - {}", status, body);
+                error!(
+                    "Failed to send Pushover notification: {} - {}",
+                    status, body
+                );
                 return Err(anyhow::anyhow!("Pushover failed: {} ({})", status, body));
             }
         }
@@ -73,25 +79,23 @@ impl PushChannel {
     }
 
     async fn send_gotify(&self, message: &SendMessage) -> anyhow::Result<()> {
-        if let (Some(ref url), Some(ref token)) = (&self.config.gotify_url, &self.config.gotify_token) {
+        if let (Some(ref url), Some(ref token)) =
+            (&self.config.gotify_url, &self.config.gotify_token)
+        {
             debug!("Sending Gotify notification to {}", url);
             let endpoint = format!("{}/message?token={}", url.trim_end_matches('/'), token);
-            
+
             let mut body = serde_json::json!({
                 "message": message.content,
                 "priority": 5,
             });
-            
+
             if let Some(ref subject) = message.subject {
                 body["title"] = serde_json::Value::String(subject.clone());
             }
 
-            let res = self.client
-                .post(&endpoint)
-                .json(&body)
-                .send()
-                .await?;
-                
+            let res = self.client.post(&endpoint).json(&body).send().await?;
+
             if !res.status().is_success() {
                 let status = res.status();
                 let body = res.text().await.unwrap_or_default();
@@ -129,7 +133,10 @@ impl Channel for PushChannel {
         }
 
         if !errors.is_empty() {
-            return Err(anyhow::anyhow!("Push notification error(s): {}", errors.join("; ")));
+            return Err(anyhow::anyhow!(
+                "Push notification error(s): {}",
+                errors.join("; ")
+            ));
         }
 
         Ok(())

@@ -28,10 +28,6 @@ confidence-threshold = 0.8
 name = "ar_archive_writer"
 allow = ["Apache-2.0 WITH LLVM-exception"]
 
-[[licenses.exceptions]]
-name = "aws-lc-sys"
-allow = ["OpenSSL"]
-
 [[licenses.clarify]]
 name = "ring"
 expression = "MIT AND ISC AND OpenSSL"

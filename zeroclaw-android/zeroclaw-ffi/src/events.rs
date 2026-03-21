@@ -339,7 +339,7 @@ mod tests {
             count: count.clone(),
         });
         match register_event_listener_inner(listener) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("register_event_listener_inner failed: {e}"),
         }
 
@@ -356,7 +356,7 @@ mod tests {
         // `record_event` calls from parallel tests that may have cloned
         // the Arc before our unregister to finish their callbacks.
         match unregister_event_listener_inner() {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("unregister_event_listener_inner failed: {e}"),
         }
         std::thread::sleep(std::time::Duration::from_millis(10));

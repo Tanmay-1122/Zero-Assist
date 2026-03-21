@@ -8,10 +8,10 @@
 // Already-paired tokens are persisted in config so restarts don't require
 // re-pairing.
 
+use parking_lot::Mutex;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use parking_lot::Mutex;
 use std::time::Instant;
 
 /// Maximum failed pairing attempts before lockout.
@@ -61,11 +61,7 @@ impl PairingGuard {
     /// Existing tokens are accepted in both forms:
     /// - Plaintext (`zc_...`): hashed on load for backward compatibility
     /// - Already hashed (64-char hex): stored as-is
-    pub fn new(
-        require_pairing: bool,
-        existing_tokens: &[String],
-        api_keys: &[String],
-    ) -> Self {
+    pub fn new(require_pairing: bool, existing_tokens: &[String], api_keys: &[String]) -> Self {
         let tokens: HashSet<String> = existing_tokens
             .iter()
             .map(|t| {

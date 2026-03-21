@@ -94,10 +94,12 @@ pub fn bump_component_restart(component: &str) {
 pub fn mark_channel_ok(channel: &str) {
     let mut map = registry().channels.lock();
     let now = now_rfc3339();
-    let entry = map.entry(channel.to_string()).or_insert_with(|| ChannelHealth {
-        status: "starting".into(),
-        last_message_at: None,
-    });
+    let entry = map
+        .entry(channel.to_string())
+        .or_insert_with(|| ChannelHealth {
+            status: "starting".into(),
+            last_message_at: None,
+        });
     entry.status = "ok".into();
     entry.last_message_at = Some(now);
 }
