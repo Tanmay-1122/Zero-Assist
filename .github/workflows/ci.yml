@@ -19,7 +19,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
-  ANDROID_NDK_VERSION: "27.2.12479018"
+  ANDROID_NDK_VERSION: "25.2.9519653"
 
 jobs:
   lint-rust:
