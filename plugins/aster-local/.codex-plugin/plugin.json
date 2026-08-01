@@ -1,0 +1,37 @@
+{
+  "name": "aster-local",
+  "version": "0.1.0",
+  "description": "Connects Codex to the Aster Local MCP server exposed by the Android app.",
+  "author": {
+    "name": "Zero Assist",
+    "email": "",
+    "url": ""
+  },
+  "homepage": "",
+  "repository": "",
+  "license": "UNLICENSED",
+  "keywords": [
+    "aster",
+    "zero-assist",
+    "android",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Aster Local",
+    "shortDescription": "Use the Android app's local MCP tools.",
+    "longDescription": "Adds the Streamable HTTP MCP server exposed by the Aster Android app so Codex can discover and call tools from the local device.",
+    "developerName": "Zero Assist",
+    "category": "Productivity",
+    "capabilities": [
+      "MCP",
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "List the Aster Local MCP tools.",
+      "Help me test the Android MCP server.",
+      "Use Aster Local for device actions."
+    ],
+    "brandColor": "#33D3C8"
+  }
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Simulator Frontend</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 { color: #00d4ff; margin-bottom: 1rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .gpio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 0.75rem;
+    }
+    .gpio-pin {
+      background: #0f3460;
+      border-radius: 8px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .gpio-pin:hover { border-color: #00d4ff; }
+    .gpio-pin.high { background: #1a5c3a; border-color: #00ff88; }
+    .gpio-pin.low  { background: #5c1a1a; border-color: #ff4444; }
+    .gpio-pin .pin-num { font-size: 0.75rem; color: #888; }
+    .gpio-pin .pin-state { font-size: 1.2rem; font-weight: bold; }
+    .sensor-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .sensor-card {
+      flex: 1;
+      background: #0f3460;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      min-width: 120px;
+    }
+    .sensor-value { font-size: 2rem; font-weight: bold; color: #00d4ff; }
+    .sensor-label { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
+    .log {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      background: #0a0a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      height: 200px;
+      overflow-y: auto;
+      color: #00ff88;
+    }
+    .log .entry { margin-bottom: 0.25rem; }
+    .log .entry.error { color: #ff4444; }
+    .log .entry.info  { color: #888; }
+    .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    input, select, button {
+      background: #0f3460;
+      border: 1px solid #00d4ff44;
+      border-radius: 6px;
+      color: #e0e0e0;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+    button {
+      background: #00d4ff22;
+      border-color: #00d4ff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #00d4ff44; }
+    .status { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; }
+    .dot.connected { background: #00ff88; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+  <h1>⚡ ESP32 Simulator</h1>
+  <p class="subtitle">ZeroClaw Hardware Simulator Frontend</p>
+
+  <div class="card">
+    <div class="status">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">Disconnected</span>
+    </div>
+    <div class="controls">
+      <input type="text" id="wsUrl" value="ws://localhost:8765" placeholder="WebSocket URL" style="flex:1">
+      <button onclick="toggleConnection()" id="connectBtn">Connect</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📡 GPIO Pins</h2>
+    <div class="gpio-grid" id="gpioGrid"></div>
+  </div>
+
+  <div class="card">
+    <h2>🌡️ Sensor Data</h2>
+    <div class="sensor-row">
+      <div class="sensor-card">
+        <div class="sensor-value" id="tempVal">--</div>
+        <div class="sensor-label">Temperature (°C)</div>
+      </div>
+      <div class="sensor-card">
+        <div class="sensor-value" id="humVal">--</div>
+        <div class="sensor-label">Humidity (%)</div>
+      </div>
+      <div class="sensor-card">
+        <div class="sensor-value" id="uptimeVal">0</div>
+        <div class="sensor-label">Uptime (s)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Command Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    const NUM_PINS = 16;
+    const gpioState = new Array(NUM_PINS).fill(0);
+    let ws = null;
+    let uptime = 0;
+    let uptimeInterval = null;
+
+    // Build GPIO grid
+    const grid = document.getElementById('gpioGrid');
+    for (let i = 0; i < NUM_PINS; i++) {
+      const pin = document.createElement('div');
+      pin.className = 'gpio-pin low';
+      pin.id = `pin${i}`;
+      pin.innerHTML = `<div class="pin-num">GPIO ${i}</div><div class="pin-state">LOW</div>`;
+      pin.onclick = () => togglePin(i);
+      grid.appendChild(pin);
+    }
+
+    function updatePin(idx, val) {
+      gpioState[idx] = val;
+      const el = document.getElementById(`pin${idx}`);
+      if (!el) return;
+      el.className = `gpio-pin ${val ? 'high' : 'low'}`;
+      el.querySelector('.pin-state').textContent = val ? 'HIGH' : 'LOW';
+    }
+
+    function togglePin(idx) {
+      const newVal = gpioState[idx] ? 0 : 1;
+      updatePin(idx, newVal);
+      sendCommand('gpio_write', { pin: idx, value: newVal });
+    }
+
+    function log(msg, type = '') {
+      const el = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      el.appendChild(entry);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function sendCommand(cmd, params = {}) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log('Not connected', 'error');
+        return;
+      }
+      const msg = JSON.stringify({ cmd, params });
+      ws.send(msg);
+      log(`→ ${msg}`, 'info');
+    }
+
+    function toggleConnection() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+        return;
+      }
+      const url = document.getElementById('wsUrl').value;
+      try {
+        ws = new WebSocket(url);
+        ws.onopen = () => {
+          document.getElementById('statusDot').className = 'dot connected';
+          document.getElementById('statusText').textContent = 'Connected';
+          document.getElementById('connectBtn').textContent = 'Disconnect';
+          log('Connected to simulator');
+          uptimeInterval = setInterval(() => {
+            uptime++;
+            document.getElementById('uptimeVal').textContent = uptime;
+          }, 1000);
+          sendCommand('capabilities');
+        };
+        ws.onmessage = (e) => {
+          log(`← ${e.data}`);
+          try {
+            const resp = JSON.parse(e.data);
+            if (resp.data) {
+              if (resp.data.temperature_c !== undefined)
+                document.getElementById('tempVal').textContent = resp.data.temperature_c.toFixed(1);
+              if (resp.data.humidity_pct !== undefined)
+                document.getElementById('humVal').textContent = resp.data.humidity_pct.toFixed(1);
+              if (resp.data.pin !== undefined && resp.data.value !== undefined)
+                updatePin(resp.data.pin, resp.data.value);
+            }
+          } catch (_) {}
+        };
+        ws.onclose = () => {
+          document.getElementById('statusDot').className = 'dot';
+          document.getElementById('statusText').textContent = 'Disconnected';
+          document.getElementById('connectBtn').textContent = 'Connect';
+          log('Disconnected', 'error');
+          clearInterval(uptimeInterval);
+        };
+        ws.onerror = (e) => log(`WebSocket error: ${e.message || 'unknown'}`, 'error');
+      } catch (e) {
+        log(`Connection error: ${e.message}`, 'error');
+      }
+    }
+
+    // Initial demo with simulated sensor values
+    setTimeout(() => {
+      document.getElementById('tempVal').textContent = '23.5';
+      document.getElementById('humVal').textContent = '55.2';
+      log('Simulator frontend ready. Connect to a running esp32_sim instance.', 'info');
+    }, 100);
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+appId: com.zeroclaw.android
+tags:
+  - journey
+  - agents
+---
+- runFlow: ../subflows/complete-onboarding.yaml
+
+# Navigate to Connections tab (index: 1 avoids tapping the metric card)
+- tapOn:
+    text: "Connections"
+    index: 1
+- extendedWaitUntil:
+    visible: "Search connections"
+    timeout: 10000
+- tapOn: "Add new connection"

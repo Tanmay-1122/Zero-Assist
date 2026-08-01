@@ -1,0 +1,1 @@
+import{T as e}from"./api-CDY1Gbv5.js";var t=new Map,n=new Map,r=null;function i(e){return e.replace(/-/g,`_`)}function a(){return r||(r=e().then(e=>{for(let r of e.providers){let e=i(r.name);t.set(e,r.local),n.set(e,r.display_name)}}).catch(()=>{r=null}),r)}function o(e){return t.get(i(e))??!1}function s(e){return n.get(i(e))??e}export{s as n,a as r,o as t};

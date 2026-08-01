@@ -1,0 +1,64 @@
+[package]
+name = "zeroclaw-ffi"
+version = "0.0.37"
+edition = "2024"
+license = "MIT"
+description = "UniFFI-annotated facade for ZeroClaw Android bindings"
+workspace = "../../zeroclaw"
+
+[lib]
+crate-type = ["cdylib"]
+name = "zeroclaw"
+
+[dependencies]
+uniffi = "0.29"
+thiserror = "2.0"
+# default-features = false: Keep the Android FFI binary lean and opt in only to
+# upstream capabilities we actively expose in the app. Newer upstream ZeroClaw
+# gates runtime/gateway modules behind features, so Android enables those
+# surfaces explicitly plus WebAuthn routes used by the security UI.
+zeroclaw = { package = "zeroclawlabs", path = "../../zeroclaw", default-features = false, features = ["agent-runtime", "gateway", "webauthn"] }
+zeroclaw-runtime = { path = "../../zeroclaw/crates/zeroclaw-runtime", default-features = false }
+zeroclaw-channels = { path = "../../zeroclaw/crates/zeroclaw-channels", default-features = false, features = [
+    "channel-telegram",
+    "channel-discord",
+    "channel-slack",
+    "channel-mattermost",
+    "channel-signal",
+    "channel-imessage",
+    "channel-irc",
+    "channel-dingtalk",
+    "channel-qq",
+    "channel-linq",
+    "channel-wati",
+    "channel-nextcloud",
+    "channel-clawdtalk",
+    "channel-whatsapp-cloud",
+    "channel-email",
+] }
+
+zeroclaw-config = { path = "../../zeroclaw/crates/zeroclaw-config", default-features = false }
+tokio = { version = "1.42", features = ["rt-multi-thread", "sync", "macros", "process"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+base64 = "0.22"
+nanohtml2text = "0.1"
+futures-util = "0.3"
+anyhow = "1.0"
+async-trait = "0.1"
+toml = "0.8"
+tracing = "0.1"
+chrono = "0.4"
+rhai = { version = "1.21", features = ["sync"] }
+uuid = { version = "1.22", features = ["v4"] }
+directories = "5.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+libc = "0.2"
+
+[dev-dependencies]
+
+[features]
+channel-nostr = ["zeroclaw/channel-nostr"]

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zero-Assist</string>
+
+    <string name="notification_channel_name">Daemon Status</string>
+    <string name="notification_channel_description">Ongoing notification for the Zero-Assist daemon foreground service</string>
+    <string name="notification_title">Zero-Assist Daemon</string>
+    <string name="notification_action_stop">Stop</string>
+    <string name="notification_action_retry">Retry</string>
+    <string name="notification_status_stopped">Stopped</string>
+    <string name="notification_status_starting">Starting\u2026</string>
+    <string name="notification_status_running">Running</string>
+    <string name="notification_status_stopping">Stopping\u2026</string>
+    <string name="notification_status_error">Error</string>
+
+    <string name="device_control_accessibility_description">Screen reading and touch simulation for AI-driven phone automation. Enabled when you activate the Device Control plugin.</string>
+</resources>

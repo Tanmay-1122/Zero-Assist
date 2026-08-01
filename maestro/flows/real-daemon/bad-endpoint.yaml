@@ -1,0 +1,33 @@
+appId: com.zeroclaw.android
+tags:
+  - real-daemon
+  - error
+---
+- stopApp
+- launchApp:
+    clearState: true
+
+# Complete onboarding
+- extendedWaitUntil:
+    visible: "Permissions"
+    timeout: 30000
+- tapOn: "Next"
+- assertVisible: "API Provider"
+- tapOn: "Next"
+- assertVisible: "Step 3 of 5"
+- tapOn: "Next"
+- assertVisible: "Step 4 of 5"
+- tapOn: "Next"
+- assertVisible: "Ready to Go"
+- tapOn: "Start Daemon"
+
+# Wait for dashboard to load
+- extendedWaitUntil:
+    visible: "Daemon Status"
+    timeout: 30000
+
+# Verify the daemon either starts or shows an error
+# (behavior depends on whether a valid provider is configured)
+- extendedWaitUntil:
+    visible: "Running|Error|Failed|Stopped"
+    timeout: 30000
