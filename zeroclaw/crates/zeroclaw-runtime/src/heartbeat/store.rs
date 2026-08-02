@@ -1,6 +1,6 @@
 //! SQLite persistence for heartbeat task execution history.
 //!
-//! Mirrors the `cron/store.rs` pattern: fresh connection per call, schema
+//! Mirrors the `heartbeat/engine.rs` pattern: fresh connection per call, schema
 //! auto-created, output truncated, history pruned to a configurable limit.
 
 use anyhow::{Context, Result};

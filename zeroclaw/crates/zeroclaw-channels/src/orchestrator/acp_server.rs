@@ -604,11 +604,10 @@ fn map_tool_kind(name: &str) -> &'static str {
     match name {
         "ask_user" | "calculator" | "claude_code" | "claude_code_runner" | "codex_cli"
         | "composio" | "delegate" | "escalate_to_human" | "execute_pipeline" | "gemini_cli"
-        | "jira" | "llm_task" | "opencode_cli" | "schedule" | "security_ops" | "shell"
+        | "jira" | "llm_task" | "opencode_cli" | "security_ops" | "shell"
         | "sop_advance" | "sop_approve" | "sop_execute" | "swarm" | "vi_verify" => "execute",
         "backup" | "browser_open" | "canvas" | "cloud_ops" | "file_edit" | "file_write"
-        | "memory_export" | "memory_store" | "report_template" => "edit",
-        "cron_add" | "poll" | "reaction" => "edit",
+        | "memory_export" | "memory_store" | "poll" | "reaction" | "report_template" => "edit",
         "memory_forget" | "memory_purge" => "delete",
         "content_search" | "discord_search" | "glob_search" | "knowledge" | "search"
         | "tool_search" | "web_search_tool" => "search",
@@ -638,11 +637,9 @@ fn map_tool_kind(name: &str) -> &'static str {
         | "text_browser"
         | "weather"
         | "workspace" => "read",
-        "cron_list" | "cron_runs" | "memory_recall" => "read",
+        "memory_recall" => "read",
         "http_request" | "web_fetch" => "fetch",
         "image_gen" => "other",
-        "cron_remove" => "delete",
-        "cron_run" => "execute",
         "sessions_send" => "execute",
         _ => "other",
     }
@@ -879,7 +876,6 @@ mod tests {
     fn map_tool_kind_uses_explicit_tool_names() {
         assert_eq!(map_tool_kind("memory_forget"), "delete");
         assert_eq!(map_tool_kind("memory_purge"), "delete");
-        assert_eq!(map_tool_kind("cron_run"), "execute");
         assert_eq!(map_tool_kind("file_read"), "read");
         assert_eq!(map_tool_kind("file_write"), "edit");
         assert_eq!(map_tool_kind("web_fetch"), "fetch");

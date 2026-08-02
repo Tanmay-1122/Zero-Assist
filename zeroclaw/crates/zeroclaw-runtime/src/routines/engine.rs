@@ -3,7 +3,7 @@
 //!
 //! A **routine** is a lightweight automation rule: when an event matches one of
 //! its patterns, the associated action fires (provided cooldown has elapsed).
-//! The engine bridges channel messages, cron ticks, webhooks, and system events
+//! The engine bridges channel messages, webhooks, and system events
 //! into the existing SOP pipeline.
 
 use std::collections::HashMap;
@@ -24,8 +24,6 @@ pub enum RoutineAction {
     Shell { command: String },
     /// Send a message to a channel.
     Message { channel: String, text: String },
-    /// Run a cron job by name.
-    CronJob { job_name: String },
 }
 
 /// A single automation routine definition.

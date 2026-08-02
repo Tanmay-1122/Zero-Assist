@@ -85,13 +85,13 @@ use zeroclaw_runtime::util::truncate_with_ellipsis;
 
 /// Live channel registry populated by `start_channels()`. Used by `deliver_announcement()` to
 /// reuse authenticated channel instances (critical for Matrix E2EE — avoids re-running session
-/// restore on every cron delivery).
+/// restore on every delivery).
 ///
 /// Set once at startup; valid for the process lifetime. Daemon restart is required to pick up
 /// channel-config changes — there's no in-flight refresh path. Callers must tolerate the
 /// `OnceLock::get()` returning `None` during the brief window before `start_channels` populates
 /// it; `deliver_announcement` falls back to per-call channel reconstruction in that case.
-static CRON_CHANNEL_REGISTRY: OnceLock<Arc<HashMap<String, Arc<dyn Channel>>>> = OnceLock::new();
+static LIVE_CHANNEL_REGISTRY: OnceLock<Arc<HashMap<String, Arc<dyn Channel>>>> = OnceLock::new();
 
 /// Observer wrapper that forwards tool-call events to a channel sender
 /// for real-time threaded notifications.
@@ -673,11 +673,7 @@ fn build_channel_system_prompt(
             "\n\nChannel context: You are currently responding on channel={channel_name}, \
              reply_target={reply_target}, sender={sender}. \
              The sender field is the platform-specific user ID of the person who sent \
-             this message. Use it to distinguish between different users. \
-             When scheduling delayed messages or reminders \
-             via cron_add for this conversation, use delivery={{\"mode\":\"announce\",\
-             \"channel\":\"{channel_name}\",\"to\":\"{reply_target}\"}} so the message \
-             reaches the user."
+             this message. Use it to distinguish between different users."
         );
         prompt.push_str(&context);
     }
@@ -5688,10 +5684,6 @@ pub async fn start_channels_with_observer(
         ));
     }
     tool_descs.push((
-        "schedule",
-        "Manage scheduled tasks (create/list/get/cancel/pause/resume). Supports recurring cron and one-shot delays.",
-    ));
-    tool_descs.push((
         "pushover",
         "Send a Pushover notification to your device. Requires PUSHOVER_TOKEN and PUSHOVER_USER_KEY in .env file.",
     ));
@@ -5845,7 +5837,7 @@ pub async fn start_channels_with_observer(
             .map(|ch| (ch.name().to_string(), Arc::clone(ch)))
             .collect::<HashMap<_, _>>(),
     );
-    let _ = CRON_CHANNEL_REGISTRY.set(Arc::clone(&channels_by_name));
+    let _ = LIVE_CHANNEL_REGISTRY.set(Arc::clone(&channels_by_name));
 
     // Populate the reaction tool's channel map now that channels are initialized.
     if let Some(ref handle) = reaction_handle_ch {
@@ -6086,7 +6078,7 @@ pub async fn start_channels_with_observer(
     Ok(())
 }
 
-/// Deliver a cron job announcement to a configured channel.
+/// Deliver an announcement to a configured channel.
 /// Scans for credential leaks before delivery.
 pub async fn deliver_announcement(
     config: &zeroclaw_config::schema::Config,
@@ -6105,7 +6097,7 @@ pub async fn deliver_announcement(
 
     // Use the live channel instance when available — critical for Matrix E2EE which must
     // reuse the authenticated client rather than re-running session restore per delivery.
-    if let Some(registry) = CRON_CHANNEL_REGISTRY.get()
+    if let Some(registry) = LIVE_CHANNEL_REGISTRY.get()
         && let Some(ch) = registry.get(channel.to_ascii_lowercase().as_str())
     {
         return ch.send(&SendMessage::new(&safe_output, target)).await;

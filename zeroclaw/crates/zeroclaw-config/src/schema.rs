@@ -143,11 +143,6 @@ pub struct Config {
     #[nested]
     pub reliability: ReliabilityConfig,
 
-    /// Scheduler configuration for periodic task execution (`[scheduler]`).
-    #[serde(default)]
-    #[nested]
-    pub scheduler: SchedulerConfig,
-
     /// Agent orchestration settings (`[agent]`).
     #[serde(default)]
     #[nested]
@@ -177,11 +172,6 @@ pub struct Config {
     #[serde(default)]
     #[nested]
     pub heartbeat: HeartbeatConfig,
-
-    /// Cron job configuration (`[cron]`).
-    #[serde(default)]
-    #[nested]
-    pub cron: CronConfig,
 
     /// Channel configurations: Telegram, Discord, Slack, etc. (`[channels]`).
     #[serde(default, alias = "channels_config")]
@@ -3172,12 +3162,6 @@ pub struct BackupConfig {
     /// Output directory for backup archives (relative to workspace root).
     #[serde(default = "default_backup_destination_dir")]
     pub destination_dir: String,
-    /// Optional cron expression for scheduled automatic backups.
-    #[serde(default)]
-    pub schedule_cron: Option<String>,
-    /// IANA timezone for `schedule_cron`.
-    #[serde(default)]
-    pub schedule_timezone: Option<String>,
     /// Compress backup archives.
     #[serde(default = "default_true")]
     pub compress: bool,
@@ -3210,8 +3194,6 @@ impl Default for BackupConfig {
             max_keep: default_backup_max_keep(),
             include_dirs: default_backup_include_dirs(),
             destination_dir: default_backup_destination_dir(),
-            schedule_cron: None,
-            schedule_timezone: None,
             compress: true,
             encrypt: false,
         }
@@ -6037,12 +6019,6 @@ pub struct ReliabilityConfig {
     /// Max backoff for channel/daemon restarts.
     #[serde(default = "default_channel_backoff_max_secs")]
     pub channel_max_backoff_secs: u64,
-    /// Scheduler polling cadence in seconds.
-    #[serde(default = "default_scheduler_poll_secs")]
-    pub scheduler_poll_secs: u64,
-    /// Max retries for cron job execution attempts.
-    #[serde(default = "default_scheduler_retries")]
-    pub scheduler_retries: u32,
 }
 
 fn default_provider_retries() -> u32 {
@@ -6061,14 +6037,6 @@ fn default_channel_backoff_max_secs() -> u64 {
     60
 }
 
-fn default_scheduler_poll_secs() -> u64 {
-    15
-}
-
-fn default_scheduler_retries() -> u32 {
-    2
-}
-
 impl Default for ReliabilityConfig {
     fn default() -> Self {
         Self {
@@ -6079,48 +6047,6 @@ impl Default for ReliabilityConfig {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: default_channel_backoff_secs(),
             channel_max_backoff_secs: default_channel_backoff_max_secs(),
-            scheduler_poll_secs: default_scheduler_poll_secs(),
-            scheduler_retries: default_scheduler_retries(),
-        }
-    }
-}
-
-// ── Scheduler ────────────────────────────────────────────────────
-
-/// Scheduler configuration for periodic task execution (`[scheduler]` section).
-#[derive(Debug, Clone, Serialize, Deserialize, Configurable)]
-#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
-#[prefix = "scheduler"]
-pub struct SchedulerConfig {
-    /// Enable the built-in scheduler loop.
-    #[serde(default = "default_scheduler_enabled")]
-    pub enabled: bool,
-    /// Maximum number of persisted scheduled tasks.
-    #[serde(default = "default_scheduler_max_tasks")]
-    pub max_tasks: usize,
-    /// Maximum tasks executed per scheduler polling cycle.
-    #[serde(default = "default_scheduler_max_concurrent")]
-    pub max_concurrent: usize,
-}
-
-fn default_scheduler_enabled() -> bool {
-    true
-}
-
-fn default_scheduler_max_tasks() -> usize {
-    64
-}
-
-fn default_scheduler_max_concurrent() -> usize {
-    4
-}
-
-impl Default for SchedulerConfig {
-    fn default() -> Self {
-        Self {
-            enabled: default_scheduler_enabled(),
-            max_tasks: default_scheduler_max_tasks(),
-            max_concurrent: default_scheduler_max_concurrent(),
         }
     }
 }
@@ -6336,138 +6262,6 @@ impl Default for HeartbeatConfig {
             max_run_history: default_heartbeat_max_run_history(),
             load_session_context: false,
             task_timeout_secs: default_heartbeat_task_timeout(),
-        }
-    }
-}
-
-// ── Cron ────────────────────────────────────────────────────────
-
-/// Cron job configuration (`[cron]` section).
-#[derive(Debug, Clone, Serialize, Deserialize, Configurable)]
-#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
-#[prefix = "cron"]
-pub struct CronConfig {
-    /// Enable the cron subsystem. Default: `true`.
-    #[serde(default = "default_true")]
-    pub enabled: bool,
-    /// Run all overdue jobs at scheduler startup. Default: `true`.
-    ///
-    /// When the machine boots late or the daemon restarts, jobs whose
-    /// `next_run` is in the past are considered "missed". With this
-    /// option enabled the scheduler fires them once before entering
-    /// the normal polling loop. Disable if you prefer missed jobs to
-    /// simply wait for their next scheduled occurrence.
-    #[serde(default = "default_true")]
-    pub catch_up_on_startup: bool,
-    /// Maximum number of historical cron run records to retain. Default: `50`.
-    #[serde(default = "default_max_run_history")]
-    pub max_run_history: u32,
-    /// Declarative cron job definitions (`[[cron.jobs]]`).
-    ///
-    /// Jobs declared here are synced into the database at scheduler startup.
-    /// They use `source = "declarative"` to distinguish them from jobs
-    /// created imperatively via CLI or API. Declarative config takes
-    /// precedence on each sync: if the config changes, the DB is updated
-    /// to match. Imperative jobs are never deleted by the sync process.
-    #[serde(default)]
-    pub jobs: Vec<CronJobDecl>,
-}
-
-/// A declarative cron job definition for the `[[cron.jobs]]` config array.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
-pub struct CronJobDecl {
-    /// Stable identifier used for merge semantics across syncs.
-    pub id: String,
-    /// Human-readable name.
-    #[serde(default)]
-    pub name: Option<String>,
-    /// Job type: `"shell"` (default) or `"agent"`.
-    #[serde(default = "default_job_type_decl")]
-    pub job_type: String,
-    /// Schedule for the job.
-    pub schedule: CronScheduleDecl,
-    /// Shell command to run (required when `job_type = "shell"`).
-    #[serde(default)]
-    pub command: Option<String>,
-    /// Agent prompt (required when `job_type = "agent"`).
-    #[serde(default)]
-    pub prompt: Option<String>,
-    /// Whether the job is enabled. Default: `true`.
-    #[serde(default = "default_true")]
-    pub enabled: bool,
-    /// Model override for agent jobs.
-    #[serde(default)]
-    pub model: Option<String>,
-    /// Allowlist of tool names for agent jobs.
-    #[serde(default)]
-    pub allowed_tools: Option<Vec<String>>,
-    /// Whether to recall and inject memory context before this agent job runs.
-    /// Defaults to `true`; set to `false` for stateless digest jobs.
-    #[serde(default = "default_true")]
-    pub uses_memory: bool,
-    /// Session target: `"isolated"` (default) or `"main"`.
-    #[serde(default)]
-    pub session_target: Option<String>,
-    /// Delivery configuration.
-    #[serde(default)]
-    pub delivery: Option<DeliveryConfigDecl>,
-}
-
-/// Schedule variant for declarative cron jobs.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "lowercase")]
-pub enum CronScheduleDecl {
-    /// Classic cron expression.
-    Cron {
-        expr: String,
-        #[serde(default)]
-        tz: Option<String>,
-    },
-    /// Interval in milliseconds.
-    Every { every_ms: u64 },
-    /// One-shot at an RFC 3339 timestamp.
-    At { at: String },
-}
-
-/// Delivery configuration for declarative cron jobs.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
-pub struct DeliveryConfigDecl {
-    /// Delivery mode: `"none"` or `"announce"`.
-    #[serde(default = "default_delivery_mode")]
-    pub mode: String,
-    /// Channel name (e.g. `"telegram"`, `"discord"`).
-    #[serde(default)]
-    pub channel: Option<String>,
-    /// Target/recipient identifier.
-    #[serde(default)]
-    pub to: Option<String>,
-    /// Best-effort delivery. Default: `true`.
-    #[serde(default = "default_true")]
-    pub best_effort: bool,
-}
-
-fn default_job_type_decl() -> String {
-    "shell".to_string()
-}
-
-fn default_delivery_mode() -> String {
-    "none".to_string()
-}
-
-fn default_max_run_history() -> u32 {
-    50
-}
-
-impl Default for CronConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            catch_up_on_startup: true,
-            max_run_history: default_max_run_history(),
-            jobs: Vec::new(),
         }
     }
 }
@@ -9517,13 +9311,11 @@ impl Default for Config {
             security_ops: SecurityOpsConfig::default(),
             runtime: RuntimeConfig::default(),
             reliability: ReliabilityConfig::default(),
-            scheduler: SchedulerConfig::default(),
             agent: AgentConfig::default(),
             pacing: PacingConfig::default(),
             skills: SkillsConfig::default(),
             pipeline: PipelineConfig::default(),
             heartbeat: HeartbeatConfig::default(),
-            cron: CronConfig::default(),
             channels: ChannelsConfig::default(),
             memory: MemoryConfig::default(),
             storage: StorageConfig::default(),
@@ -9804,7 +9596,7 @@ impl ConfigResolutionSource {
 
 /// Expand tilde in paths, falling back to `UserDirs` when HOME is unset.
 ///
-/// In non-TTY environments (e.g. cron), HOME may not be set, causing
+/// In non-TTY environments, HOME may not be set, causing
 /// `shellexpand::tilde` to return the literal `~` unexpanded. This helper
 /// detects that case and uses `directories::UserDirs` as a fallback.
 fn expand_tilde_path(path: &str) -> PathBuf {
@@ -9824,7 +9616,7 @@ fn expand_tilde_path(path: &str) -> PathBuf {
         tracing::warn!(
             path = path,
             "Failed to expand tilde: HOME environment variable is not set and UserDirs failed. \
-             In cron/non-TTY environments, use absolute paths or set HOME explicitly."
+             In non-TTY environments, use absolute paths or set HOME explicitly."
         );
     }
 
@@ -9970,7 +9762,7 @@ fn read_codex_openai_api_key() -> Option<String> {
 /// Ensure that essential bootstrap files exist in the workspace directory.
 ///
 /// When the workspace is created outside of `zeroclaw onboard` (e.g., non-tty
-/// daemon/cron sessions), these files would otherwise be missing. This function
+/// daemon sessions), these files would otherwise be missing. This function
 /// creates sensible defaults that allow the agent to operate with a basic identity.
 async fn ensure_bootstrap_files(workspace_dir: &Path) -> Result<()> {
     let defaults: &[(&str, &str)] = &[
@@ -10440,14 +10232,6 @@ impl Config {
         )?;
         if self.security.estop.state_file.trim().is_empty() {
             anyhow::bail!("security.estop.state_file must not be empty");
-        }
-
-        // Scheduler
-        if self.scheduler.max_concurrent == 0 {
-            anyhow::bail!("scheduler.max_concurrent must be greater than 0");
-        }
-        if self.scheduler.max_tasks == 0 {
-            anyhow::bail!("scheduler.max_tasks must be greater than 0");
         }
 
         // Model routes
@@ -11622,7 +11406,6 @@ impl_enum_prop_kind!(
     FirecrawlMode,
     ProxyScope,
     SearchMode,
-    CronScheduleDecl,
     StreamMode,
     WhatsAppWebMode,
     WhatsAppChatPolicy,
@@ -11905,42 +11688,6 @@ recipient = "42"
     }
 
     #[test]
-    async fn cron_config_default() {
-        let c = CronConfig::default();
-        assert!(c.enabled);
-        assert_eq!(c.max_run_history, 50);
-    }
-
-    #[test]
-    async fn cron_config_serde_roundtrip() {
-        let c = CronConfig {
-            enabled: false,
-            catch_up_on_startup: false,
-            max_run_history: 100,
-            jobs: Vec::new(),
-        };
-        let json = serde_json::to_string(&c).unwrap();
-        let parsed: CronConfig = serde_json::from_str(&json).unwrap();
-        assert!(!parsed.enabled);
-        assert!(!parsed.catch_up_on_startup);
-        assert_eq!(parsed.max_run_history, 100);
-    }
-
-    #[test]
-    async fn config_defaults_cron_when_section_missing() {
-        let toml_str = r#"
-workspace_dir = "/tmp/workspace"
-config_path = "/tmp/config.toml"
-default_temperature = 0.7
-"#;
-
-        let parsed = parse_test_config(toml_str);
-        assert!(parsed.cron.enabled);
-        assert!(parsed.cron.catch_up_on_startup);
-        assert_eq!(parsed.cron.max_run_history, 50);
-    }
-
-    #[test]
     async fn memory_config_default_hygiene_settings() {
         let m = MemoryConfig::default();
         assert_eq!(m.backend, "sqlite");
@@ -12148,7 +11895,6 @@ auto_save = true
                 ..RuntimeConfig::default()
             },
             reliability: ReliabilityConfig::default(),
-            scheduler: SchedulerConfig::default(),
             skills: SkillsConfig::default(),
             pipeline: PipelineConfig::default(),
             query_classification: QueryClassificationConfig::default(),
@@ -12161,7 +11907,6 @@ auto_save = true
                 to: Some("123456".into()),
                 ..HeartbeatConfig::default()
             },
-            cron: CronConfig::default(),
             channels: ChannelsConfig {
                 cli: true,
                 telegram: Some(TelegramConfig {
@@ -12781,12 +12526,10 @@ default_temperature = 0.7
             security_ops: SecurityOpsConfig::default(),
             runtime: RuntimeConfig::default(),
             reliability: ReliabilityConfig::default(),
-            scheduler: SchedulerConfig::default(),
             skills: SkillsConfig::default(),
             pipeline: PipelineConfig::default(),
             query_classification: QueryClassificationConfig::default(),
             heartbeat: HeartbeatConfig::default(),
-            cron: CronConfig::default(),
             channels: ChannelsConfig::default(),
             memory: MemoryConfig::default(),
             storage: StorageConfig::default(),

@@ -808,7 +808,7 @@ mod tests {
         let config_path = root.join("config.toml");
         let _ = tokio::fs::remove_dir_all(&root).await;
         tokio::fs::create_dir_all(&workspace).await.unwrap();
-        tokio::fs::write(&config_path, "always_ask = [\"cron_add\"]")
+        tokio::fs::write(&config_path, "always_ask = [\"network_request\"]")
             .await
             .unwrap();
 

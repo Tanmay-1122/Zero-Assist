@@ -14,7 +14,7 @@
 //! # Extension
 //!
 //! To add a new provider, implement [`Provider`] in a new submodule and register it
-//! in [`create_provider_with_url`]. See `AGENTS.md` §7.1 for the full change playbook.
+//! in [`create_provider_with_url`]. See `AGENTS.md` Â§7.1 for the full change playbook.
 
 pub mod anthropic;
 pub mod auth;
@@ -25,7 +25,7 @@ pub mod compatible;
 pub mod copilot;
 pub mod gemini;
 pub mod gemini_cli;
-// glm.rs excluded — not compiled in upstream (dead code with known issues)
+// glm.rs excluded â€” not compiled in upstream (dead code with known issues)
 pub mod kilocli;
 pub mod models_dev;
 pub mod multimodal;
@@ -743,7 +743,7 @@ pub fn provider_runtime_options_from_config(
 ) -> ProviderRuntimeOptions {
     let fallback = config.providers.fallback_provider();
     // Resolve merge_system_into_user from the active model provider profile by
-    // matching api_url — apply_named_model_provider_profile() has already run
+    // matching api_url â€” apply_named_model_provider_profile() has already run
     // and rewritten providers.fallback, but providers.models retains all profiles.
     let merge_system_into_user = fallback
         .and_then(|e| e.base_url.as_deref())
@@ -1046,7 +1046,7 @@ fn check_api_key_prefix(provider_name: &str, key: &str) -> Option<&'static str> 
         "xai" | "grok" => expected == "xai",
         "nvidia" | "nvidia-nim" | "build.nvidia.com" => expected == "nvidia",
         "telnyx" => expected == "telnyx",
-        _ => return None, // Unknown format provider — skip
+        _ => return None, // Unknown format provider â€” skip
     };
 
     if matches { None } else { Some(expected) }
@@ -1184,7 +1184,7 @@ fn create_provider_with_url_and_options(
                 key,
             )?))
         }
-        // ── Primary providers (custom implementations) ───────
+        // â”€â”€ Primary providers (custom implementations) â”€â”€â”€â”€â”€â”€â”€
         "openrouter" => {
             let mut p = openrouter::OpenRouterProvider::new(key, options.provider_timeout_secs)
                 .with_max_tokens(options.provider_max_tokens);
@@ -1235,7 +1235,7 @@ fn create_provider_with_url_and_options(
         }
         "telnyx" => Ok(Box::new(telnyx::TelnyxProvider::new(key))),
 
-        // ── OpenAI-compatible providers ──────────────────────
+        // â”€â”€ OpenAI-compatible providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "venice" => Ok(compat(
             OpenAiCompatibleProvider::new(
                 "Venice",
@@ -1395,7 +1395,7 @@ fn create_provider_with_url_and_options(
             )))
         }
 
-        // ── Extended ecosystem (community favorites) ─────────
+        // â”€â”€ Extended ecosystem (community favorites) â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "groq" => Ok(compat(
             OpenAiCompatibleProvider::new(
                 "Groq",
@@ -1541,7 +1541,7 @@ fn create_provider_with_url_and_options(
             )))
         }
 
-        // ── AI inference routers ─────────────────────────────
+        // â”€â”€ AI inference routers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "astrai" => Ok(compat(OpenAiCompatibleProvider::new(
             "Astrai",
             "https://as-trai.com/v1",
@@ -1573,7 +1573,7 @@ fn create_provider_with_url_and_options(
             )))
         }
 
-        // ── Fast inference providers ──────────────────────────
+        // â”€â”€ Fast inference providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "cerebras" => Ok(compat(OpenAiCompatibleProvider::new(
             "Cerebras",
             "https://api.cerebras.ai/v1",
@@ -1593,7 +1593,7 @@ fn create_provider_with_url_and_options(
             AuthStyle::Bearer,
         ))),
 
-        // ── Model hosting platforms ──────────────────────────
+        // â”€â”€ Model hosting platforms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "deepinfra" | "deep-infra" => Ok(compat(OpenAiCompatibleProvider::new(
             "DeepInfra",
             "https://api.deepinfra.com/v1/openai",
@@ -1661,7 +1661,7 @@ fn create_provider_with_url_and_options(
             )))
         }
 
-        // ── Chinese AI providers ─────────────────────────────
+        // â”€â”€ Chinese AI providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "stepfun" | "step" => Ok(compat(OpenAiCompatibleProvider::new(
             "Stepfun",
             "https://api.stepfun.com/v1",
@@ -1699,13 +1699,13 @@ fn create_provider_with_url_and_options(
             AuthStyle::Bearer,
         ))),
 
-        // ── Cloud AI endpoints ───────────────────────────────
+        // â”€â”€ Cloud AI endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         "ovhcloud" | "ovh" => Ok(Box::new(openai::OpenAiProvider::with_base_url(
             Some("https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"),
             key,
         ))),
 
-        // ── Bring Your Own Provider (custom URL) ───────────
+        // â”€â”€ Bring Your Own Provider (custom URL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Format: "custom:https://your-api.com" or "custom:http://localhost:1234"
         name if name.starts_with("custom:") => {
             let base_url = parse_custom_provider_url(
@@ -1728,7 +1728,7 @@ fn create_provider_with_url_and_options(
             Ok(compat(provider))
         }
 
-        // ── Anthropic-compatible custom endpoints ───────────
+        // â”€â”€ Anthropic-compatible custom endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Format: "anthropic-custom:https://your-api.com"
         name if name.starts_with("anthropic-custom:") => {
             let base_url = parse_custom_provider_url(
@@ -1965,7 +1965,7 @@ pub struct ProviderInfo {
 /// (display concern vs. construction concern).
 pub fn list_providers() -> Vec<ProviderInfo> {
     vec![
-        // ── Primary providers ────────────────────────────────
+        // â”€â”€ Primary providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "openrouter",
             display_name: "OpenRouter",
@@ -2014,7 +2014,7 @@ pub fn list_providers() -> Vec<ProviderInfo> {
             aliases: &["google", "google-gemini"],
             local: false,
         },
-        // ── OpenAI-compatible providers ──────────────────────
+        // â”€â”€ OpenAI-compatible providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "venice",
             display_name: "Venice",
@@ -2262,7 +2262,7 @@ pub fn list_providers() -> Vec<ProviderInfo> {
             aliases: &["lite-llm"],
             local: false,
         },
-        // ── Fast inference ────────────────────────────────────
+        // â”€â”€ Fast inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "cerebras",
             display_name: "Cerebras",
@@ -2281,7 +2281,7 @@ pub fn list_providers() -> Vec<ProviderInfo> {
             aliases: &[],
             local: false,
         },
-        // ── Model hosting platforms ──────────────────────────
+        // â”€â”€ Model hosting platforms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "deepinfra",
             display_name: "DeepInfra",
@@ -2342,7 +2342,7 @@ pub fn list_providers() -> Vec<ProviderInfo> {
             aliases: &["lepton-ai"],
             local: false,
         },
-        // ── Chinese AI providers ─────────────────────────────
+        // â”€â”€ Chinese AI providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "stepfun",
             display_name: "Stepfun",
@@ -2367,7 +2367,7 @@ pub fn list_providers() -> Vec<ProviderInfo> {
             aliases: &["tencent"],
             local: false,
         },
-        // ── Cloud AI endpoints ───────────────────────────────
+        // â”€â”€ Cloud AI endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ProviderInfo {
             name: "ovhcloud",
             display_name: "OVHcloud AI Endpoints",
@@ -2684,7 +2684,7 @@ mod tests {
         assert_eq!(zai_base_url("z.ai-cn"), Some(ZAI_CN_BASE_URL));
     }
 
-    // ── Primary providers ────────────────────────────────────
+    // â”€â”€ Primary providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_openrouter() {
@@ -2731,7 +2731,7 @@ mod tests {
         assert!(create_provider("telnyx", None).is_ok());
     }
 
-    // ── OpenAI-compatible providers ──────────────────────────
+    // â”€â”€ OpenAI-compatible providers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_venice() {
@@ -2936,7 +2936,7 @@ mod tests {
     #[test]
     fn factory_osaurus_uses_default_key_when_none() {
         // Verify that create_provider_with_url_and_options succeeds even
-        // without an API key — the match arm provides a default placeholder.
+        // without an API key â€” the match arm provides a default placeholder.
         let options = ProviderRuntimeOptions::default();
         let p = create_provider_with_url_and_options("osaurus", None, None, &options);
         assert!(p.is_ok());
@@ -3009,7 +3009,7 @@ mod tests {
         }
     }
 
-    // ── Extended ecosystem ───────────────────────────────────
+    // â”€â”€ Extended ecosystem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_groq() {
@@ -3095,7 +3095,7 @@ mod tests {
         assert!(create_provider("build.nvidia.com", Some("nvapi-test")).is_ok());
     }
 
-    // ── AI inference routers ─────────────────────────────────
+    // â”€â”€ AI inference routers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_astrai() {
@@ -3121,7 +3121,7 @@ mod tests {
         assert_eq!(resolved, Some("dm-test-key".to_string()));
     }
 
-    // ── Custom / BYOP provider ─────────────────────────────
+    // â”€â”€ Custom / BYOP provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_custom_url() {
@@ -3180,7 +3180,7 @@ mod tests {
         assert!(p.is_ok());
     }
 
-    // ── Anthropic-compatible custom endpoints ─────────────────
+    // â”€â”€ Anthropic-compatible custom endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_anthropic_custom_url() {
@@ -3233,7 +3233,7 @@ mod tests {
         }
     }
 
-    // ── Error cases ──────────────────────────────────────────
+    // â”€â”€ Error cases â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn factory_unknown_provider_errors() {
@@ -3264,8 +3264,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         let provider = create_resilient_provider(
@@ -3303,8 +3301,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         // Primary uses a ZAI key; fallbacks (lmstudio, ollama) should NOT
@@ -3325,8 +3321,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         let provider =
@@ -3351,8 +3345,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         let provider = create_resilient_provider("zai", Some("zai-test-key"), None, &reliability);
@@ -3383,8 +3375,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         let provider = create_resilient_provider("zai", Some("zai-test-key"), None, &reliability);
@@ -3505,7 +3495,7 @@ mod tests {
         }
     }
 
-    // ── API error sanitization ───────────────────────────────
+    // â”€â”€ API error sanitization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn sanitize_scrubs_sk_prefix() {
@@ -3580,7 +3570,7 @@ mod tests {
 
     #[test]
     fn sanitize_preserves_unicode_boundaries() {
-        let input = format!("{} sk-abcdef123", "hello🙂".repeat(80));
+        let input = format!("{} sk-abcdef123", "helloðŸ™‚".repeat(80));
         let result = sanitize_api_error(&input);
         assert!(std::str::from_utf8(result.as_bytes()).is_ok());
         assert!(!result.contains("sk-abcdef123"));
@@ -3681,8 +3671,6 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         // openai-codex resolves its own OAuth credential; it should not
@@ -3710,15 +3698,13 @@ mod tests {
             model_fallbacks: std::collections::HashMap::new(),
             channel_initial_backoff_secs: 2,
             channel_max_backoff_secs: 60,
-            scheduler_poll_secs: 15,
-            scheduler_retries: 2,
         };
 
         let provider = create_resilient_provider("ollama", None, None, &reliability);
         assert!(provider.is_ok());
     }
 
-    // ── API key prefix pre-flight ───────────────────────────
+    // â”€â”€ API key prefix pre-flight â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     #[test]
     fn api_key_prefix_cross_provider_mismatch() {

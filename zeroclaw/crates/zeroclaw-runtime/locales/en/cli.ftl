@@ -11,7 +11,6 @@ cli-service-about = Manage OS service lifecycle (launchd/systemd user service)
 cli-doctor-about = Run diagnostics for daemon/scheduler/channel freshness
 cli-status-about = Show system status (full details)
 cli-estop-about = Engage, inspect, and resume emergency-stop states
-cli-cron-about = Configure and manage scheduled tasks
 cli-models-about = Manage provider model catalogs
 cli-providers-about = List supported AI providers
 cli-channel-about = Manage communication channels
@@ -56,16 +55,6 @@ cli-skills-audit-about = Audit a skill source directory or installed skill name
 cli-skills-install-about = Install a new skill from a URL or local path
 cli-skills-remove-about = Remove an installed skill
 cli-skills-test-about = Run TEST.sh validation for a skill (or all skills)
-
-cli-cron-list-about = List all scheduled tasks
-cli-cron-add-about = Add a new recurring scheduled task
-cli-cron-add-at-about = Add a one-shot task that fires at a specific UTC timestamp
-cli-cron-add-every-about = Add a task that repeats at a fixed interval
-cli-cron-once-about = Add a one-shot task that fires after a delay from now
-cli-cron-remove-about = Remove a scheduled task
-cli-cron-update-about = Update one or more fields of an existing scheduled task
-cli-cron-pause-about = Pause a scheduled task
-cli-cron-resume-about = Resume a paused task
 
 cli-auth-login-about = Login with OAuth (OpenAI Codex or Gemini)
 cli-auth-refresh-about = Refresh OpenAI Codex access token using refresh token
@@ -139,7 +128,7 @@ cli-acp-long-about =
 cli-daemon-long-about =
     Start the long-running autonomous daemon.
 
-    Launches the full ZeroClaw runtime: gateway server, all configured channels (Telegram, Discord, Slack, etc.), heartbeat monitor, and the cron scheduler. This is the recommended way to run ZeroClaw in production or as an always-on assistant.
+    Launches the full ZeroClaw runtime: gateway server, all configured channels (Telegram, Discord, Slack, etc.), and the heartbeat monitor. This is the recommended way to run ZeroClaw in production or as an always-on assistant.
 
     Use 'zeroclaw service install' to register the daemon as an OS service (systemd/launchd) for auto-start on boot.
 
@@ -147,24 +136,6 @@ cli-daemon-long-about =
       zeroclaw daemon                   # use config defaults
       zeroclaw daemon -p 9090           # gateway on port 9090
       zeroclaw daemon --host 127.0.0.1  # localhost only
-
-cli-cron-long-about =
-    Configure and manage scheduled tasks.
-
-    Schedule recurring, one-shot, or interval-based tasks using cron expressions, RFC 3339 timestamps, durations, or fixed intervals.
-
-    Cron expressions use the standard 5-field format: 'min hour day month weekday'. Timezones default to UTC; override with --tz and an IANA timezone name.
-
-    Examples:
-      zeroclaw cron list
-      zeroclaw cron add '0 9 * * 1-5' 'Good morning' --tz America/New_York --agent
-      zeroclaw cron add '*/30 * * * *' 'Check system health' --agent
-      zeroclaw cron add '*/5 * * * *' 'echo ok'
-      zeroclaw cron add-at 2025-01-15T14:00:00Z 'Send reminder' --agent
-      zeroclaw cron add-every 60000 'Ping heartbeat'
-      zeroclaw cron once 30m 'Run backup in 30 minutes' --agent
-      zeroclaw cron pause TASK_ID
-      zeroclaw cron update TASK_ID --expression '0 8 * * *' --tz Europe/London
 
 cli-channel-long-about =
     Manage communication channels.

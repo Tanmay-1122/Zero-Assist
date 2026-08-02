@@ -50,15 +50,11 @@ pub mod config;
 #[cfg(feature = "agent-runtime")]
 pub(crate) mod cost;
 #[cfg(feature = "agent-runtime")]
-pub mod cron;
-#[cfg(feature = "agent-runtime")]
 pub(crate) mod daemon;
 #[cfg(feature = "agent-runtime")]
 pub(crate) mod doctor;
 #[cfg(feature = "gateway")]
 pub mod gateway;
-#[cfg(feature = "agent-runtime")]
-pub mod hands;
 #[cfg(feature = "agent-runtime")]
 pub(crate) mod hardware;
 #[cfg(feature = "agent-runtime")]
@@ -315,149 +311,6 @@ pub enum MigrateCommands {
         /// Validate and preview migration without writing any data
         #[arg(long)]
         dry_run: bool,
-    },
-}
-
-/// Cron subcommands
-#[derive(Subcommand, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum CronCommands {
-    /// List all scheduled tasks
-    List,
-    /// Add a new scheduled task
-    #[command(long_about = "\
-Add a new recurring scheduled task.
-
-Uses standard 5-field cron syntax: 'min hour day month weekday'. \
-Times are evaluated in UTC by default; use --tz with an IANA \
-timezone name to override.
-
-Examples:
-  zeroclaw cron add '0 9 * * 1-5' 'Good morning' --tz America/New_York --agent
-  zeroclaw cron add '*/30 * * * *' 'Check system health' --agent
-  zeroclaw cron add '*/5 * * * *' 'echo ok'")]
-    Add {
-        /// Cron expression
-        expression: String,
-        /// Optional IANA timezone (e.g. America/Los_Angeles)
-        #[arg(long)]
-        tz: Option<String>,
-        /// Treat the argument as an agent prompt instead of a shell command
-        #[arg(long)]
-        agent: bool,
-        /// Restrict agent cron jobs to the specified tool names (repeatable, agent-only)
-        #[arg(long = "allowed-tool")]
-        allowed_tools: Vec<String>,
-        /// Command (shell) or prompt (agent) to run
-        command: String,
-    },
-    /// Add a one-shot scheduled task at an RFC3339 timestamp
-    #[command(long_about = "\
-Add a one-shot task that fires at a specific UTC timestamp.
-
-The timestamp must be in RFC 3339 format (e.g. 2025-01-15T14:00:00Z).
-
-Examples:
-  zeroclaw cron add-at 2025-01-15T14:00:00Z 'Send reminder'
-  zeroclaw cron add-at 2025-12-31T23:59:00Z 'Happy New Year!'")]
-    AddAt {
-        /// One-shot timestamp in RFC3339 format
-        at: String,
-        /// Treat the argument as an agent prompt instead of a shell command
-        #[arg(long)]
-        agent: bool,
-        /// Restrict agent cron jobs to the specified tool names (repeatable, agent-only)
-        #[arg(long = "allowed-tool")]
-        allowed_tools: Vec<String>,
-        /// Command (shell) or prompt (agent) to run
-        command: String,
-    },
-    /// Add a fixed-interval scheduled task
-    #[command(long_about = "\
-Add a task that repeats at a fixed interval.
-
-Interval is specified in milliseconds. For example, 60000 = 1 minute.
-
-Examples:
-  zeroclaw cron add-every 60000 'Ping heartbeat'     # every minute
-  zeroclaw cron add-every 3600000 'Hourly report'    # every hour")]
-    AddEvery {
-        /// Interval in milliseconds
-        every_ms: u64,
-        /// Treat the argument as an agent prompt instead of a shell command
-        #[arg(long)]
-        agent: bool,
-        /// Restrict agent cron jobs to the specified tool names (repeatable, agent-only)
-        #[arg(long = "allowed-tool")]
-        allowed_tools: Vec<String>,
-        /// Command (shell) or prompt (agent) to run
-        command: String,
-    },
-    /// Add a one-shot delayed task (e.g. "30m", "2h", "1d")
-    #[command(long_about = "\
-Add a one-shot task that fires after a delay from now.
-
-Accepts human-readable durations: s (seconds), m (minutes), \
-h (hours), d (days).
-
-Examples:
-  zeroclaw cron once 30m 'Run backup in 30 minutes'
-  zeroclaw cron once 2h 'Follow up on deployment'
-  zeroclaw cron once 1d 'Daily check'")]
-    Once {
-        /// Delay duration
-        delay: String,
-        /// Treat the argument as an agent prompt instead of a shell command
-        #[arg(long)]
-        agent: bool,
-        /// Restrict agent cron jobs to the specified tool names (repeatable, agent-only)
-        #[arg(long = "allowed-tool")]
-        allowed_tools: Vec<String>,
-        /// Command (shell) or prompt (agent) to run
-        command: String,
-    },
-    /// Remove a scheduled task
-    Remove {
-        /// Task ID
-        id: String,
-    },
-    /// Update a scheduled task
-    #[command(long_about = "\
-Update one or more fields of an existing scheduled task.
-
-Only the fields you specify are changed; others remain unchanged.
-
-Examples:
-  zeroclaw cron update TASK_ID --expression '0 8 * * *'
-  zeroclaw cron update TASK_ID --tz Europe/London --name 'Morning check'
-  zeroclaw cron update TASK_ID --command 'Updated message'")]
-    Update {
-        /// Task ID
-        id: String,
-        /// New cron expression
-        #[arg(long)]
-        expression: Option<String>,
-        /// New IANA timezone
-        #[arg(long)]
-        tz: Option<String>,
-        /// New command to run
-        #[arg(long)]
-        command: Option<String>,
-        /// New job name
-        #[arg(long)]
-        name: Option<String>,
-        /// Replace the agent job allowlist with the specified tool names (repeatable)
-        #[arg(long = "allowed-tool")]
-        allowed_tools: Vec<String>,
-    },
-    /// Pause a scheduled task
-    Pause {
-        /// Task ID
-        id: String,
-    },
-    /// Resume a paused task
-    Resume {
-        /// Task ID
-        id: String,
     },
 }
 

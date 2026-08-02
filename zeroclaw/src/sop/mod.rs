@@ -424,8 +424,9 @@ type = "webhook"
 path = "/sop/test"
 
 [[triggers]]
-type = "cron"
-expression = "0 */5 * * *"
+type = "mqtt"
+topic = "sensors/valve"
+condition = "$.state == \"open\""
 
 [[triggers]]
 type = "peripheral"
@@ -441,7 +442,10 @@ type = "manual"
 
         assert!(matches!(manifest.triggers[0], SopTrigger::Mqtt { .. }));
         assert!(matches!(manifest.triggers[1], SopTrigger::Webhook { .. }));
-        assert!(matches!(manifest.triggers[2], SopTrigger::Cron { .. }));
+        assert!(matches!(
+            manifest.triggers[2],
+            SopTrigger::Mqtt { .. }
+        ));
         assert!(matches!(
             manifest.triggers[3],
             SopTrigger::Peripheral { .. }

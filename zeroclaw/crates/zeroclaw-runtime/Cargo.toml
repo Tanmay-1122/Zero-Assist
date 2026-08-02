@@ -3,7 +3,7 @@ name = "zeroclaw-runtime"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Miscellaneous ZeroClaw subsystems: security, observability, gateway, cron, SOP, skills, hardware, TUI, and more."
+description = "Miscellaneous ZeroClaw subsystems: security, observability, gateway, SOP, skills, hardware, TUI, and more."
 publish = false
 
 [dependencies]
@@ -22,7 +22,6 @@ chacha20poly1305 = "0.10"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 chrono-tz = "0.10"
 console = "0.16"
-cron = "0.15"
 dialoguer = { version = "0.12", features = ["fuzzy-select"] }
 directories = "6.0"
 flate2 = "1"

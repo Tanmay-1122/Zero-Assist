@@ -579,7 +579,7 @@ pub async fn run_gateway(
 
     // SSE broadcast channel for real-time events.
     // Use an externally provided sender (e.g. from the daemon) so that other
-    // components (cron, heartbeat) can publish events to the same bus.
+    // components (heartbeat) can publish events to the same bus.
     let event_tx = external_event_tx.unwrap_or_else(|| {
         let (tx, _rx) = tokio::sync::broadcast::channel::<serde_json::Value>(256);
         tx
@@ -994,17 +994,6 @@ pub async fn run_gateway(
         .route("/api/status", get(api::handle_api_status))
         .route("/api/config", get(api::handle_api_config_get))
         .route("/api/tools", get(api::handle_api_tools))
-        .route("/api/cron", get(api::handle_api_cron_list))
-        .route("/api/cron", post(api::handle_api_cron_add))
-        .route(
-            "/api/cron/settings",
-            get(api::handle_api_cron_settings_get).patch(api::handle_api_cron_settings_patch),
-        )
-        .route(
-            "/api/cron/{id}",
-            delete(api::handle_api_cron_delete).patch(api::handle_api_cron_patch),
-        )
-        .route("/api/cron/{id}/runs", get(api::handle_api_cron_runs))
         .route("/api/integrations", get(api::handle_api_integrations))
         .route(
             "/api/integrations/settings",

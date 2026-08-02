@@ -182,7 +182,6 @@ lru = { version = "0.16", optional = true }
 rusqlite = { version = "0.37", features = ["bundled"], optional = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 chrono-tz = { version = "0.10", optional = true }
-cron = { version = "0.15", optional = true }
 
 # Interactive CLI prompts (memory CLI uses dialoguer unconditionally)
 dialoguer = { version = "0.12", features = ["fuzzy-select"] }
@@ -254,7 +253,7 @@ default = [
 agent-runtime = [
     "dep:zeroclaw-runtime", "dep:zeroclaw-channels", "dep:zeroclaw-tools",
     "dep:rusqlite",
-    "dep:ring", "dep:lru", "dep:chrono-tz", "dep:cron", "dep:glob", "dep:which",
+    "dep:ring", "dep:lru", "dep:chrono-tz", "dep:glob", "dep:which",
     "dep:ratatui", "dep:crossterm",
     "dep:tokio-tungstenite", "dep:tokio-socks", "dep:hostname",
     "dep:rustls", "dep:rustls-pemfile", "dep:rustls-pki-types", "dep:tokio-rustls", "dep:webpki-roots",

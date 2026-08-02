@@ -76,7 +76,7 @@ impl Clone for ActionTracker {
 ///
 /// Each unique sender key (Telegram thread ID, Discord channel, etc.) gets
 /// its own independent [`ActionTracker`] bucket. When no sender is in scope
-/// (cron jobs, CLI), the `GLOBAL_KEY` bucket is used.
+/// (CLI), the `GLOBAL_KEY` bucket is used.
 ///
 /// Note: sender buckets accumulate for the daemon lifetime with no eviction.
 /// This is acceptable for bounded sets of chat IDs; in high-cardinality deployments,
@@ -87,7 +87,7 @@ pub struct PerSenderTracker {
 }
 
 impl PerSenderTracker {
-    /// Bucket key used when no per-sender context is available (cron, CLI).
+    /// Bucket key used when no per-sender context is available (CLI).
     pub const GLOBAL_KEY: &'static str = "__global__";
 
     /// Create an empty tracker with no sender buckets.
@@ -1114,7 +1114,7 @@ impl SecurityPolicy {
         }
 
         // Block `tee` — it can write to arbitrary files, bypassing the
-        // redirect check above (e.g. `echo secret | tee /etc/crontab`)
+        // redirect check above
         if command
             .split_whitespace()
             .any(|w| w == "tee" || w.ends_with("/tee"))
@@ -2464,7 +2464,7 @@ mod tests {
     #[test]
     fn command_injection_redirect_blocked() {
         let p = default_policy();
-        assert!(!p.is_command_allowed("echo secret > /etc/crontab"));
+        assert!(!p.is_command_allowed("echo secret > /etc/hosts"));
         assert!(!p.is_command_allowed("ls >> /tmp/exfil.txt"));
         assert!(!p.is_command_allowed("cat < /etc/passwd"));
         assert!(!p.is_command_allowed("echo secret > output.txt"));
@@ -2665,7 +2665,7 @@ mod tests {
     #[test]
     fn command_injection_tee_blocked() {
         let p = default_policy();
-        assert!(!p.is_command_allowed("echo secret | tee /etc/crontab"));
+        assert!(!p.is_command_allowed("echo secret | tee /etc/hosts"));
         assert!(!p.is_command_allowed("ls | /usr/bin/tee outfile"));
         assert!(!p.is_command_allowed("tee file.txt"));
     }

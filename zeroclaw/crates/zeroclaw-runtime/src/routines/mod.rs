@@ -1,9 +1,9 @@
 //! Event-triggered automation (routines engine).
 //!
 //! Routines are lightweight automation rules that match incoming events (from
-//! channels, cron, webhooks, or system signals) using configurable pattern
+//! channels, webhooks, or system signals) using configurable pattern
 //! strategies (exact, glob, regex) and fire actions (SOP triggers, shell
-//! commands, messages, cron jobs).  Each routine supports per-routine cooldown
+//! commands, messages).  Each routine supports per-routine cooldown
 //! to prevent rapid re-triggering.
 //!
 //! ## Loading

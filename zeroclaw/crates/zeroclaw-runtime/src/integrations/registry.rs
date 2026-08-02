@@ -675,18 +675,6 @@ pub fn all_integrations() -> Vec<IntegrationEntry> {
             status_fn: |_| IntegrationStatus::Active,
         },
         IntegrationEntry {
-            name: "Cron",
-            description: "Scheduled tasks",
-            category: IntegrationCategory::ToolsAutomation,
-            status_fn: |c| {
-                if c.cron.enabled {
-                    IntegrationStatus::Active
-                } else {
-                    IntegrationStatus::Available
-                }
-            },
-        },
-        IntegrationEntry {
             name: "Voice",
             description: "Voice wake + talk mode",
             category: IntegrationCategory::ToolsAutomation,
@@ -990,30 +978,6 @@ mod tests {
         let email = entries.iter().find(|e| e.name == "Email").unwrap();
         assert!(matches!(
             (email.status_fn)(&config),
-            IntegrationStatus::Available
-        ));
-    }
-
-    #[test]
-    fn cron_active_when_enabled() {
-        let mut config = Config::default();
-        config.cron.enabled = true;
-        let entries = all_integrations();
-        let cron = entries.iter().find(|e| e.name == "Cron").unwrap();
-        assert!(matches!(
-            (cron.status_fn)(&config),
-            IntegrationStatus::Active
-        ));
-    }
-
-    #[test]
-    fn cron_available_when_disabled() {
-        let mut config = Config::default();
-        config.cron.enabled = false;
-        let entries = all_integrations();
-        let cron = entries.iter().find(|e| e.name == "Cron").unwrap();
-        assert!(matches!(
-            (cron.status_fn)(&config),
             IntegrationStatus::Available
         ));
     }

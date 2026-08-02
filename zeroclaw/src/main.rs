@@ -110,8 +110,6 @@ mod config;
 #[cfg(feature = "agent-runtime")]
 mod cost;
 #[cfg(feature = "agent-runtime")]
-mod cron;
-#[cfg(feature = "agent-runtime")]
 mod daemon;
 #[cfg(feature = "agent-runtime")]
 mod doctor;
@@ -172,8 +170,8 @@ use config::Config;
 
 // Re-export so binary modules can use crate::<CommandEnum> while keeping a single source of truth.
 pub use zeroclaw::{
-    ChannelCommands, CronCommands, GatewayCommands, HardwareCommands, IntegrationCommands,
-    MigrateCommands, PeripheralCommands, ServiceCommands, SkillCommands, SopCommands,
+    ChannelCommands, GatewayCommands, HardwareCommands, IntegrationCommands, MigrateCommands,
+    PeripheralCommands, ServiceCommands, SkillCommands, SopCommands,
 };
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
@@ -353,13 +351,13 @@ Examples:
         session_timeout: Option<u64>,
     },
 
-    /// Start long-running autonomous runtime (gateway + channels + heartbeat + scheduler)
+    /// Start long-running autonomous runtime (gateway + channels + heartbeat)
     #[command(long_about = "\
 Start the long-running autonomous daemon.
 
 Launches the full ZeroClaw runtime: gateway server, all configured \
-channels (Telegram, Discord, Slack, etc.), heartbeat monitor, and \
-the cron scheduler. This is the recommended way to run ZeroClaw in \
+channels (Telegram, Discord, Slack, etc.), and the heartbeat monitor. \
+This is the recommended way to run ZeroClaw in \
 production or as an always-on assistant.
 
 Use 'zeroclaw service install' to register the daemon as an OS \
@@ -428,32 +426,6 @@ Examples:
         /// Tool name(s) for `tool-freeze` (repeatable).
         #[arg(long = "tool")]
         tools: Vec<String>,
-    },
-
-    /// Configure and manage scheduled tasks
-    #[command(long_about = "\
-Configure and manage scheduled tasks.
-
-Schedule recurring, one-shot, or interval-based tasks using cron \
-expressions, RFC 3339 timestamps, durations, or fixed intervals.
-
-Cron expressions use the standard 5-field format: \
-'min hour day month weekday'. Timezones default to UTC; \
-override with --tz and an IANA timezone name.
-
-Examples:
-  zeroclaw cron list
-  zeroclaw cron add '0 9 * * 1-5' 'Good morning' --tz America/New_York --agent
-  zeroclaw cron add '*/30 * * * *' 'Check system health' --agent
-  zeroclaw cron add '*/5 * * * *' 'echo ok'
-  zeroclaw cron add-at 2025-01-15T14:00:00Z 'Send reminder' --agent
-  zeroclaw cron add-every 60000 'Ping heartbeat'
-  zeroclaw cron once 30m 'Run backup in 30 minutes' --agent
-  zeroclaw cron pause TASK_ID
-  zeroclaw cron update TASK_ID --expression '0 8 * * *' --tz Europe/London")]
-    Cron {
-        #[command(subcommand)]
-        cron_command: CronCommands,
     },
 
     /// Manage provider model catalogs
@@ -1632,9 +1604,9 @@ async fn main() -> Result<()> {
                 })
             }));
 
-            // Wire cron delivery to the channels orchestrator
+            // Wire channel announcement delivery (heartbeat deadman alerts, task results)
             #[cfg(feature = "agent-runtime")]
-            zeroclaw_runtime::cron::scheduler::register_delivery_fn(Box::new(
+            zeroclaw_runtime::heartbeat::delivery::register_delivery_fn(Box::new(
                 |config, channel, target, output| {
                     Box::pin(async move {
                         zeroclaw_channels::orchestrator::deliver_announcement(
@@ -1840,8 +1812,6 @@ async fn main() -> Result<()> {
             domains,
             tools,
         } => handle_estop_command(&config, estop_command, level, domains, tools),
-
-        Commands::Cron { cron_command } => cron::handle_command(cron_command, &config),
 
         Commands::Models { model_command } => {
             let provider = match &model_command {

@@ -10,7 +10,6 @@ cli-service-about = OSサービスライフサイクルを管理 (launchd/system
 cli-doctor-about = デーモン/スケジューラー/チャネル鮮度の診断を実行
 cli-status-about = システムステータスを表示 (詳細)
 cli-estop-about = エマージェンシーストップ状態を開始・検査・再開
-cli-cron-about = スケジュール済みタスクを設定・管理
 cli-models-about = プロバイダーモデルカタログを管理
 cli-providers-about = サポートされているAIプロバイダーをリスト表示
 cli-channel-about = 通信チャネルを管理
@@ -51,15 +50,6 @@ cli-skills-audit-about = スキルソースディレクトリまたはインス�
 cli-skills-install-about = URLまたはローカルパスから新しいスキルをインストール
 cli-skills-remove-about = インストール済みスキルを削除
 cli-skills-test-about = スキル (またはすべてのスキル) の TEST.sh 検証を実行
-cli-cron-list-about = すべてのスケジュールタスクを一覧表示
-cli-cron-add-about = 新しい定期スケジュールタスクを追加
-cli-cron-add-at-about = 特定の UTC タイムスタンプで発火するワンショットタスクを追加
-cli-cron-add-every-about = 固定間隔で繰り返すタスクを追加
-cli-cron-once-about = 現在から遅延後に発火するワンショットタスクを追加
-cli-cron-remove-about = スケジュールタスクを削除
-cli-cron-update-about = 既存のスケジュールタスクの 1 つ以上のフィールドを更新
-cli-cron-pause-about = スケジュールタスクを一時停止
-cli-cron-resume-about = 一時停止したタスクを再開
 cli-auth-login-about = OAuth でログイン (OpenAI Codex または Gemini)
 cli-auth-refresh-about = リフレッシュトークンを使用して OpenAI Codex アクセストークンをリフレッシュ
 cli-auth-logout-about = 認証プロファイルを削除
@@ -120,7 +110,7 @@ cli-acp-long-about =
 cli-daemon-long-about =
     長時間実行の自律型デーモンを起動します。
 
-    完全な ZeroClaw ランタイムを起動します: ゲートウェイサーバー、すべての設定されたチャネル（Telegram、Discord、Slack など）、ハートビートモニター、および cron スケジューラー。これは本番環境またはオンアシスタントとして ZeroClaw を実行する推奨方法です。
+    完全な ZeroClaw ランタイムを起動します: ゲートウェイサーバー、すべての設定されたチャネル（Telegram、Discord、Slack など）、ハートビートモニター。これは本番環境またはオンアシスタントとして ZeroClaw を実行する推奨方法です。
 
     デーモンを OS サービス（systemd/launchd）として登録し、ブート時に自動起動するには「zeroclaw service install」を使用してください。
 
@@ -128,23 +118,6 @@ cli-daemon-long-about =
     zeroclaw daemon                   # 設定デフォルトを使用
     zeroclaw daemon -p 9090           # ポート 9090 のゲートウェイ
     zeroclaw daemon --host 127.0.0.1  # ローカルホストのみ
-cli-cron-long-about =
-    スケジュール済みタスクを設定および管理します。
-
-    cron 式、RFC 3339 タイムスタンプ、期間、または固定間隔を使用して、定期的、ワンショット、または間隔ベースのタスクをスケジュールします。
-
-    Cron 式は標準 5 フィールド形式を使用します: 「min hour day month weekday」。タイムゾーンはデフォルトで UTC です。--tz と IANA タイムゾーン名で上書きしてください。
-
-    例:
-    zeroclaw cron list
-    zeroclaw cron add '0 9 * * 1-5' 'Good morning' --tz America/New_York --agent
-    zeroclaw cron add '*/30 * * * *' 'Check system health' --agent
-    zeroclaw cron add '*/5 * * * *' 'echo ok'
-    zeroclaw cron add-at 2025-01-15T14:00:00Z 'Send reminder' --agent
-    zeroclaw cron add-every 60000 'Ping heartbeat'
-    zeroclaw cron once 30m 'Run backup in 30 minutes' --agent
-    zeroclaw cron pause TASK_ID
-    zeroclaw cron update TASK_ID --expression '0 8 * * *' --tz Europe/London
 cli-channel-long-about =
     通信チャネルを管理します。
 

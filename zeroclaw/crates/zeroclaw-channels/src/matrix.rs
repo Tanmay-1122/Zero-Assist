@@ -922,7 +922,7 @@ mod client {
     }
 
     /// Be lenient with `<anything>||<room-id-or-alias>` recipients (some
-    /// operators write cron `delivery.to` that way). Extracts the last
+    /// operators write channel `delivery.to` that way). Extracts the last
     /// segment that looks like a Matrix room id (`!…`) or alias (`#…`).
     /// Returns `(chosen, was_normalized)` so the caller can log a warning
     /// when normalization actually triggered.
@@ -947,7 +947,7 @@ mod client {
         let (id_or_alias, normalized) = normalize_recipient(id_or_alias);
         if normalized {
             warn!(
-                "matrix: recipient contains `||`; using {id_or_alias:?} as the room target. Update channels.matrix or cron `delivery.to` to a plain room id/alias to silence this warning."
+                "matrix: recipient contains `||`; using {id_or_alias:?} as the room target. Update channels.matrix or `delivery.to` to a plain room id/alias to silence this warning."
             );
         }
         if id_or_alias.starts_with('!') {
@@ -3520,8 +3520,8 @@ mod tests {
         }
     }
 
-    mod cron_recipient {
-        //! Cron operators sometimes write `delivery.to` as `<sender>||<room>`.
+    mod delivery_recipient {
+        //! Channel operators sometimes write `delivery.to` as `<sender>||<room>`.
         //! `client::normalize_recipient` extracts the last `!`/`#`-prefixed
         //! segment and signals whether it changed anything.
 

@@ -1,6 +1,6 @@
 //! Unified SOP event dispatch helpers.
 //!
-//! All event sources (MQTT, webhook, cron, peripheral) route through
+//! All event sources (MQTT, webhook, peripheral) route through
 //! `dispatch_sop_event` so that locking, audit, and health bookkeeping
 //! happen in exactly one place.
 
@@ -156,7 +156,7 @@ pub async fn dispatch_sop_event(
 
 /// Process dispatch results in headless (non-agent-loop) callers.
 ///
-/// This handles audit and logging for fan-in callers (MQTT, webhook, cron)
+/// This handles audit and logging for fan-in callers (MQTT, webhook)
 /// that cannot execute SOP steps interactively. For `WaitApproval` actions,
 /// approval timeout polling in the scheduler handles progression.
 /// For `ExecuteStep` actions, the run is started in the engine but steps
@@ -238,111 +238,6 @@ pub async fn dispatch_peripheral_signal(
         timestamp: now_iso8601(),
     };
     dispatch_sop_event(engine, audit, event).await
-}
-
-// ── Cron SOP cache + check ──────────────────────────────────────
-
-/// Pre-parsed cron schedules for SOP triggers.
-///
-/// Built once at daemon startup to avoid re-parsing cron expressions
-/// on every scheduler tick.
-#[derive(Clone)]
-pub struct SopCronCache {
-    /// (sop_name, raw_expression, parsed_schedule)
-    schedules: Vec<(String, String, cron::Schedule)>,
-}
-
-impl SopCronCache {
-    /// Build cache from the current engine state.
-    ///
-    /// Locks the engine once, iterates SOPs, parses Cron trigger expressions.
-    /// Invalid expressions are logged and skipped (fail-closed).
-    pub fn from_engine(engine: &Arc<Mutex<SopEngine>>) -> Self {
-        let mut schedules = Vec::new();
-        let eng = match engine.lock() {
-            Ok(e) => e,
-            Err(e) => {
-                warn!("SopCronCache: engine lock poisoned: {e}");
-                return Self { schedules };
-            }
-        };
-
-        for sop in eng.sops() {
-            for trigger in &sop.triggers {
-                if let super::types::SopTrigger::Cron { expression } = trigger {
-                    // Normalize 5-field crontab to 6-field (prepend seconds)
-                    let normalized = match crate::cron::normalize_expression(expression) {
-                        Ok(n) => n,
-                        Err(e) => {
-                            warn!(
-                                "SopCronCache: invalid cron expression '{}' in SOP '{}': {e}",
-                                expression, sop.name
-                            );
-                            continue;
-                        }
-                    };
-                    match normalized.parse::<cron::Schedule>() {
-                        Ok(schedule) => {
-                            schedules.push((sop.name.clone(), expression.clone(), schedule));
-                        }
-                        Err(e) => {
-                            warn!(
-                                "SopCronCache: failed to parse cron schedule '{}' for SOP '{}': {e}",
-                                normalized, sop.name
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        info!("SopCronCache: cached {} cron schedule(s)", schedules.len());
-        Self { schedules }
-    }
-
-    /// Return the cached schedules (for testing).
-    #[cfg(test)]
-    pub fn schedules(&self) -> &[(String, String, cron::Schedule)] {
-        &self.schedules
-    }
-}
-
-/// Check all cached cron SOP triggers for firings in the window
-/// `(last_check, now]` and dispatch events for each.
-///
-/// Uses window-based evaluation so ticks between polls are never missed.
-pub async fn check_sop_cron_triggers(
-    engine: &Arc<Mutex<SopEngine>>,
-    audit: &SopAuditLogger,
-    cache: &SopCronCache,
-    last_check: &mut chrono::DateTime<chrono::Utc>,
-) -> Vec<DispatchResult> {
-    let now = chrono::Utc::now();
-    let mut all_results = Vec::new();
-
-    for (_sop_name, expression, schedule) in &cache.schedules {
-        // Check if any occurrence fell in the window (last_check, now].
-        // At-most-once semantics: even if multiple ticks of the same expression
-        // fell in the window (e.g., scheduler delayed), we fire only once.
-        // This is intentional — SOP triggers should not retroactively batch-fire.
-        let mut upcoming = schedule.after(last_check);
-        if let Some(next) = upcoming.next()
-            && next <= now
-        {
-            // This expression fired in the window
-            let event = SopEvent {
-                source: SopTriggerSource::Cron,
-                topic: Some(expression.clone()),
-                payload: None,
-                timestamp: now_iso8601(),
-            };
-            let results = dispatch_sop_event(engine, audit, event).await;
-            all_results.extend(results);
-        }
-    }
-
-    *last_check = now;
-    all_results
 }
 
 // ── Tests ───────────────────────────────────────────────────────
@@ -629,125 +524,5 @@ mod tests {
         let results = dispatch_peripheral_signal(&engine, &audit, "rpi", "gpio_5", None).await;
         assert_eq!(results.len(), 1);
         assert!(matches!(&results[0], DispatchResult::NoMatch));
-    }
-
-    #[test]
-    fn cron_cache_skips_invalid_expression() {
-        let sop = test_sop(
-            "bad-cron",
-            vec![SopTrigger::Cron {
-                expression: "not a valid cron".into(),
-            }],
-        );
-        let engine = test_engine(vec![sop]);
-        let cache = SopCronCache::from_engine(&engine);
-        assert!(cache.schedules().is_empty());
-    }
-
-    #[test]
-    fn cron_cache_parses_valid_expression() {
-        let sop = test_sop(
-            "valid-cron",
-            vec![SopTrigger::Cron {
-                expression: "0 */5 * * *".into(),
-            }],
-        );
-        let engine = test_engine(vec![sop]);
-        let cache = SopCronCache::from_engine(&engine);
-        assert_eq!(cache.schedules().len(), 1);
-        assert_eq!(cache.schedules()[0].0, "valid-cron");
-        assert_eq!(cache.schedules()[0].1, "0 */5 * * *");
-    }
-
-    #[tokio::test]
-    async fn cron_sop_trigger_fires_on_schedule() {
-        let sop = test_sop(
-            "cron-sop",
-            vec![SopTrigger::Cron {
-                expression: "* * * * *".into(),
-            }],
-        );
-        let engine = test_engine(vec![sop]);
-        let audit = test_audit();
-        let cache = SopCronCache::from_engine(&engine);
-
-        // Set last_check to 2 minutes ago so the window contains a tick
-        let mut last_check = chrono::Utc::now() - chrono::Duration::minutes(2);
-        let results = check_sop_cron_triggers(&engine, &audit, &cache, &mut last_check).await;
-
-        let started = results
-            .iter()
-            .filter(|r| matches!(r, DispatchResult::Started { .. }))
-            .count();
-        assert!(started >= 1, "Expected at least 1 started SOP from cron");
-    }
-
-    #[tokio::test]
-    async fn cron_sop_only_matching_expression_fires() {
-        let sop1 = test_sop(
-            "every-min",
-            vec![SopTrigger::Cron {
-                expression: "* * * * *".into(),
-            }],
-        );
-        // An expression that won't fire in a 2-minute window from now:
-        // "0 0 1 1 *" = midnight Jan 1
-        let sop2 = test_sop(
-            "yearly",
-            vec![SopTrigger::Cron {
-                expression: "0 0 1 1 *".into(),
-            }],
-        );
-        let engine = test_engine(vec![sop1, sop2]);
-        let audit = test_audit();
-        let cache = SopCronCache::from_engine(&engine);
-
-        let mut last_check = chrono::Utc::now() - chrono::Duration::minutes(2);
-        let results = check_sop_cron_triggers(&engine, &audit, &cache, &mut last_check).await;
-
-        // Only "every-min" should have fired
-        let started_names: Vec<&str> = results
-            .iter()
-            .filter_map(|r| match r {
-                DispatchResult::Started { sop_name, .. } => Some(sop_name.as_str()),
-                _ => None,
-            })
-            .collect();
-        assert!(started_names.contains(&"every-min"));
-        assert!(!started_names.contains(&"yearly"));
-    }
-
-    #[tokio::test]
-    async fn cron_sop_window_check_does_not_miss_tick() {
-        let sop = test_sop(
-            "every-min",
-            vec![SopTrigger::Cron {
-                expression: "* * * * *".into(),
-            }],
-        );
-        let engine = test_engine(vec![sop]);
-        let audit = test_audit();
-        let cache = SopCronCache::from_engine(&engine);
-
-        // Simulate: last_check was 5 minutes ago, poll just now
-        let mut last_check = chrono::Utc::now() - chrono::Duration::minutes(5);
-        let results = check_sop_cron_triggers(&engine, &audit, &cache, &mut last_check).await;
-
-        // At least one tick should have been caught
-        let started = results
-            .iter()
-            .filter(|r| matches!(r, DispatchResult::Started { .. }))
-            .count();
-        assert!(
-            started >= 1,
-            "Window-based check should catch ticks from 5 minutes ago"
-        );
-
-        // last_check should be updated to approximately now
-        let now = chrono::Utc::now();
-        assert!(
-            (now - last_check).num_seconds() < 2,
-            "last_check should be updated to now"
-        );
     }
 }

@@ -1,4 +1,4 @@
-//! Agent runtime — orchestration, security, observability, cron, SOP, skills, hardware, and more.
+//! Agent runtime — orchestration, security, observability, SOP, skills, hardware, and more.
 
 pub mod capabilities;
 pub mod cli_input;
@@ -9,7 +9,6 @@ pub mod util;
 pub mod agent;
 pub mod approval;
 pub mod cost;
-pub mod cron;
 pub mod daemon;
 pub mod doctor;
 pub mod health;

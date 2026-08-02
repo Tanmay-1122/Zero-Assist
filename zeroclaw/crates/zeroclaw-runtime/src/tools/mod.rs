@@ -6,7 +6,7 @@
 //! schema, and an async `execute` method returning a structured [`ToolResult`].
 //!
 //! Tools are assembled into registries by [`default_tools`] (shell, file read/write)
-//! and [`all_tools`] (full set including memory, browser, cron, HTTP, delegation,
+//! and [`all_tools`] (full set including memory, browser, HTTP, delegation,
 //! and optional integrations). Security policy enforcement is injected via
 //! [`SecurityPolicy`] at construction time.
 //!
@@ -15,18 +15,11 @@
 //! To add a new tool, implement [`Tool`] in a new submodule and register it in
 //! [`all_tools_with_runtime`]. See `AGENTS.md` §7.3 for the full change playbook.
 
-pub mod cron_add;
-pub mod cron_list;
-pub mod cron_remove;
-pub mod cron_run;
-pub mod cron_runs;
-pub mod cron_update;
 pub mod delegate;
 pub mod device_control;
 pub mod file_read;
 pub mod model_switch;
 pub mod read_skill;
-pub mod schedule;
 pub mod security_ops;
 pub mod skill_http;
 pub mod skill_tool;
@@ -116,20 +109,13 @@ pub use zeroclaw_api::schema::{CleaningStrategy, SchemaCleanr};
 pub use zeroclaw_api::tool::{Tool, ToolResult, ToolSpec};
 
 // Local tool re-exports (tools with root deps, kept in misc)
-pub use cron_add::CronAddTool;
-pub use cron_list::CronListTool;
 pub use device_control::DeviceControlTool;
 pub use device_control::device_control_available;
 pub use device_control::register_device_control_dispatch;
-pub use cron_remove::CronRemoveTool;
-pub use cron_run::CronRunTool;
-pub use cron_runs::CronRunsTool;
-pub use cron_update::CronUpdateTool;
 pub use delegate::DelegateTool;
 pub use file_read::FileReadTool;
 pub use model_switch::ModelSwitchTool;
 pub use read_skill::ReadSkillTool;
-pub use schedule::ScheduleTool;
 pub use security_ops::SecurityOpsTool;
 pub use skill_http::SkillHttpTool;
 pub use skill_tool::SkillShellTool;
@@ -393,18 +379,11 @@ pub fn all_tools_with_runtime(
     tool_arcs.push(Arc::new(FileEditTool::new(security.clone())));
     tool_arcs.push(Arc::new(GlobSearchTool::new(security.clone())));
     tool_arcs.push(Arc::new(ContentSearchTool::new(security.clone())));
-    tool_arcs.push(Arc::new(CronAddTool::new(config.clone(), security.clone())));
-    tool_arcs.push(Arc::new(CronListTool::new(config.clone())));
-    tool_arcs.push(Arc::new(CronRemoveTool::new(config.clone(), security.clone())));
-    tool_arcs.push(Arc::new(CronUpdateTool::new(config.clone(), security.clone())));
-    tool_arcs.push(Arc::new(CronRunTool::new(config.clone(), security.clone())));
-    tool_arcs.push(Arc::new(CronRunsTool::new(config.clone())));
     tool_arcs.push(Arc::new(MemoryStoreTool::new(memory.clone(), security.clone())));
     tool_arcs.push(Arc::new(MemoryRecallTool::new(memory.clone())));
     tool_arcs.push(Arc::new(MemoryForgetTool::new(memory.clone(), security.clone())));
     tool_arcs.push(Arc::new(MemoryExportTool::new(memory.clone())));
     tool_arcs.push(Arc::new(MemoryPurgeTool::new(memory.clone(), security.clone())));
-    tool_arcs.push(Arc::new(ScheduleTool::new(security.clone(), root_config.clone())));
     tool_arcs.push(Arc::new(ModelRoutingConfigTool::new(
         config.clone(),
         security.clone(),
@@ -1086,7 +1065,6 @@ mod tests {
         );
         let names: Vec<&str> = tools.iter().map(|t| t.name()).collect();
         assert!(!names.contains(&"browser_open"));
-        assert!(names.contains(&"schedule"));
         assert!(names.contains(&"model_routing_config"));
         assert!(names.contains(&"pushover"));
         assert!(names.contains(&"proxy_config"));

@@ -222,7 +222,7 @@ resource "aws_ecs_service" "app" {
             name: "serverless_migration".into(),
             description: "Migrate event-driven or periodic workloads to serverless compute.".into(),
             cloud_providers: vec!["aws".into(), "azure".into(), "gcp".into()],
-            use_case: "Batch jobs, API backends, event processing, cron tasks with variable load.".into(),
+            use_case: "Batch jobs, API backends, event processing, scheduled tasks with variable load.".into(),
             example_iac: r#"# Terraform Lambda example
 resource "aws_lambda_function" "handler" {
   function_name = "event-handler"
@@ -232,7 +232,7 @@ resource "aws_lambda_function" "handler" {
   memory_size   = 256
   timeout       = 30
 }"#.into(),
-            keywords: vec!["serverless".into(), "lambda".into(), "function".into(), "event".into(), "batch".into(), "cron".into(), "api".into(), "webhook".into()],
+            keywords: vec!["serverless".into(), "lambda".into(), "function".into(), "event".into(), "batch".into(), "scheduled".into(), "api".into(), "webhook".into()],
         },
         CloudPattern {
             name: "database_modernization".into(),
@@ -323,7 +323,7 @@ mod tests {
         let result = tool
             .execute(json!({
                 "action": "match",
-                "workload": "Batch processing cron jobs that handle event data"
+                "workload": "Batch processing scheduled jobs that handle event data"
             }))
             .await
             .unwrap();

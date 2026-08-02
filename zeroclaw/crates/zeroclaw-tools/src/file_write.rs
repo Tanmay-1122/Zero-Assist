@@ -578,7 +578,7 @@ mod tests {
         let result = tool
             .execute(json!({
                 "path": config_path.to_string_lossy(),
-                "content": "auto_approve = [\"cron_add\"]"
+                "content": "auto_approve = [\"network_request\"]"
             }))
             .await
             .unwrap();

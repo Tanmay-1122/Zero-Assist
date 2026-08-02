@@ -10,7 +10,6 @@ cli-service-about = Gérer le cycle de vie du service OS (service utilisateur la
 cli-doctor-about = Exécuter des diagnostics sur le daemon, le planificateur et l'actualisation des canaux
 cli-status-about = Afficher l'état du système (détails complets)
 cli-estop-about = Activer, inspecter et reprendre les états d'arrêt d'urgence
-cli-cron-about = Configurer et gérer les tâches planifiées
 cli-models-about = Gérer les catalogues de modèles des fournisseurs
 cli-providers-about = Lister les fournisseurs d'IA pris en charge
 cli-channel-about = Gérer les canaux de communication
@@ -51,15 +50,6 @@ cli-skills-audit-about = Auditer un répertoire source de compétence ou une com
 cli-skills-install-about = Installer une nouvelle compétence à partir d'une URL ou d'un chemin local
 cli-skills-remove-about = Supprimer une compétence installée
 cli-skills-test-about = Exécuter la validation TEST.sh pour une compétence (ou toutes les compétences)
-cli-cron-list-about = Lister toutes les tâches planifiées
-cli-cron-add-about = Ajouter une nouvelle tâche planifiée récurrente
-cli-cron-add-at-about = Ajouter une tâche unique qui se déclenche à un moment UTC spécifique
-cli-cron-add-every-about = Ajouter une tâche qui se répète à un intervalle fixe
-cli-cron-once-about = Ajouter une tâche unique qui se déclenche après un délai à partir de maintenant
-cli-cron-remove-about = Supprimer une tâche planifiée
-cli-cron-update-about = Mettre à jour un ou plusieurs champs d'une tâche planifiée existante
-cli-cron-pause-about = Mettre en pause une tâche planifiée
-cli-cron-resume-about = Reprendre une tâche en pause
 cli-auth-login-about = Se connecter avec OAuth (OpenAI Codex ou Gemini)
 cli-auth-refresh-about = Actualiser le jeton d'accès OpenAI Codex en utilisant le jeton d'actualisation
 cli-auth-logout-about = Supprimer le profil d'authentification
@@ -120,7 +110,7 @@ cli-acp-long-about =
 cli-daemon-long-about =
     Démarrer le daemon autonome longue durée.
 
-    Lance l'exécution Runtime complète de ZeroClaw : serveur gateway, tous les canaux configurés (Telegram, Discord, Slack, etc., moniteur de cœur et planificateur cron. C'est la méthode recommandée pour exécuter ZeroClaw en production ou comme assistant toujours actif.
+    Lance l'exécution Runtime complète de ZeroClaw : serveur gateway, tous les canaux configurés (Telegram, Discord, Slack, etc.) et moniteur de cœur. C'est la méthode recommandée pour exécuter ZeroClaw en production ou comme assistant toujours actif.
 
     Utilisez 'zeroclaw service install' pour enregistrer le daemon en tant que service OS (systemd/launchd) pour un démarrage automatique au démarrage.
 
@@ -128,23 +118,6 @@ cli-daemon-long-about =
     zeroclaw daemon                   # utiliser les défauts de configuration
     zeroclaw daemon -p 9090           # gateway sur le port 9090
     zeroclaw daemon --host 127.0.0.1  # uniquement localhost
-cli-cron-long-about =
-    Configurer et gérer les tâches planifiées.
-
-    Programmez des tâches récurrentes, uniques ou basées sur des intervalles en utilisant des expressions cron, des horodatages RFC 3339, des durées ou des intervalles fixes.
-
-    Les expressions cron utilisent le format standard à 5 champs : 'min heure jour mois jour_semaine'. Les fuseaux horaires sont par défaut UTC ; modifiez-les avec --tz et un nom de fuseau horaire IANA.
-
-    Exemples :
-    zeroclaw cron list
-    zeroclaw cron add '0 9 * * 1-5' 'Bonjour' --tz America/New_York --agent
-    zeroclaw cron add '*/30 * * * *' 'Vérifier la santé du système' --agent
-    zeroclaw cron add '*/5 * * * *' 'echo ok'
-    zeroclaw cron add-at 2025-01-15T14:00:00Z 'Envoyer un rappel' --agent
-    zeroclaw cron add-every 60000 'Ping de santé'
-    zeroclaw cron once 30m 'Lancer une sauvegarde dans 30 minutes' --agent
-    zeroclaw cron pause IDENTIFIANT_TACHE
-    zeroclaw cron update IDENTIFIANT_TACHE --expression '0 8 * * *' --tz Europe/London
 cli-channel-long-about =
     Gérer les canaux de communication.
 

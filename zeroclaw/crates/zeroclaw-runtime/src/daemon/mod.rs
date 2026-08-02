@@ -96,7 +96,7 @@ pub async fn run(
 
     crate::health::mark_component_ok("daemon");
 
-    // Shared broadcast channel so all daemon components (gateway, cron,
+    // Shared broadcast channel so all daemon components (gateway,
     // heartbeat) can publish real-time events to dashboard clients.
     let (event_tx, _rx) = tokio::sync::broadcast::channel::<serde_json::Value>(256);
 
@@ -190,27 +190,9 @@ pub async fn run(
         ));
     }
 
-    if config.cron.enabled {
-        let scheduler_cfg = config.clone();
-        let scheduler_event_tx = event_tx.clone();
-        handles.push(spawn_component_supervisor(
-            "scheduler",
-            initial_backoff,
-            max_backoff,
-            move || {
-                let cfg = scheduler_cfg.clone();
-                let tx = scheduler_event_tx.clone();
-                async move { Box::pin(crate::cron::scheduler::run(cfg, Some(tx))).await }
-            },
-        ));
-    } else {
-        crate::health::mark_component_ok("scheduler");
-        tracing::info!("Cron disabled; scheduler supervisor not started");
-    }
-
     println!("🧠 ZeroClaw daemon started");
     println!("   Gateway:  http://{host}:{port}");
-    println!("   Components: gateway, channels, heartbeat, scheduler");
+    println!("   Components: gateway, channels, heartbeat");
     if config.gateway.require_pairing {
         println!("   Pairing:    enabled (code appears in gateway output above)");
     }
@@ -348,7 +330,7 @@ async fn run_heartbeat_worker(config: Config) -> Result<()> {
                     } else {
                         continue;
                     };
-                    let delivery_fut = crate::cron::scheduler::deliver_announcement(
+                    let delivery_fut = crate::heartbeat::delivery::deliver_announcement(
                         &dm_config, &channel, &target, &alert,
                     );
                     match tokio::time::timeout(Duration::from_secs(30), delivery_fut).await {
@@ -611,7 +593,7 @@ async fn run_heartbeat_worker(config: Config) -> Result<()> {
                     if let Some((channel, target)) = &delivery {
                         let delivery_result = tokio::time::timeout(
                             Duration::from_secs(30),
-                            crate::cron::scheduler::deliver_announcement(
+                            crate::heartbeat::delivery::deliver_announcement(
                                 &config,
                                 channel,
                                 target,

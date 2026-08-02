@@ -299,7 +299,7 @@ async fn handle_socket(
         }
     }
 
-    // Subscribe to the shared broadcast channel so cron/heartbeat events
+    // Subscribe to the shared broadcast channel so heartbeat events
     // are forwarded to this WebSocket client.
     let mut broadcast_rx = state.event_tx.subscribe();
 
@@ -396,7 +396,7 @@ async fn handle_socket(
                 process_chat_message(&state, &mut agent, &mut sender, &content, &session_key).await;
             }
 
-            // ── Broadcast event (cron/heartbeat results) ──────────────
+            // ── Broadcast event (heartbeat results) ──────────────
             event = broadcast_rx.recv() => {
                 if let Ok(event) = event {
                     let _ = sender.send(Message::Text(event.to_string().into())).await;

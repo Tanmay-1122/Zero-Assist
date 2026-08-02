@@ -710,101 +710,6 @@ pub async fn agent_turn(
     )
     .await
 }
-
-fn maybe_inject_channel_delivery_defaults(
-    tool_name: &str,
-    tool_args: &mut serde_json::Value,
-    channel_name: &str,
-    channel_reply_target: Option<&str>,
-) {
-    if tool_name != "cron_add" {
-        return;
-    }
-
-    if !matches!(
-        channel_name,
-        "telegram" | "discord" | "slack" | "mattermost" | "matrix"
-    ) {
-        return;
-    }
-
-    let Some(reply_target) = channel_reply_target
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    else {
-        return;
-    };
-
-    let Some(args) = tool_args.as_object_mut() else {
-        return;
-    };
-
-    let is_agent_job = args
-        .get("job_type")
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|job_type| job_type.eq_ignore_ascii_case("agent"))
-        || args
-            .get("prompt")
-            .and_then(serde_json::Value::as_str)
-            .is_some_and(|prompt| !prompt.trim().is_empty());
-    if !is_agent_job {
-        return;
-    }
-
-    let default_delivery = || {
-        serde_json::json!({
-            "mode": "announce",
-            "channel": channel_name,
-            "to": reply_target,
-        })
-    };
-
-    match args.get_mut("delivery") {
-        None => {
-            args.insert("delivery".to_string(), default_delivery());
-        }
-        Some(serde_json::Value::Null) => {
-            *args.get_mut("delivery").expect("delivery key exists") = default_delivery();
-        }
-        Some(serde_json::Value::Object(delivery)) => {
-            if delivery
-                .get("mode")
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(|mode| mode.eq_ignore_ascii_case("none"))
-            {
-                return;
-            }
-
-            delivery
-                .entry("mode".to_string())
-                .or_insert_with(|| serde_json::Value::String("announce".to_string()));
-
-            let needs_channel = delivery
-                .get("channel")
-                .and_then(serde_json::Value::as_str)
-                .is_none_or(|value| value.trim().is_empty());
-            if needs_channel {
-                delivery.insert(
-                    "channel".to_string(),
-                    serde_json::Value::String(channel_name.to_string()),
-                );
-            }
-
-            let needs_target = delivery
-                .get("to")
-                .and_then(serde_json::Value::as_str)
-                .is_none_or(|value| value.trim().is_empty());
-            if needs_target {
-                delivery.insert(
-                    "to".to_string(),
-                    serde_json::Value::String(reply_target.to_string()),
-                );
-            }
-        }
-        Some(_) => {}
-    }
-}
-
 // ── Agent Tool-Call Loop ──────────────────────────────────────────────────
 // Core agentic iteration: send conversation to the LLM, parse any tool
 // calls from the response, execute them, append results to history, and
@@ -1635,13 +1540,6 @@ pub async fn run_tool_call_loop(
                 }
             }
 
-            maybe_inject_channel_delivery_defaults(
-                &tool_name,
-                &mut tool_args,
-                channel_name,
-                channel_reply_target,
-            );
-
             // ── Approval hook ────────────────────────────────
             if let Some(mgr) = approval
                 && mgr.needs_approval(&tool_name)
@@ -2437,27 +2335,6 @@ pub async fn run(
         ));
     }
     tool_descs.push((
-        "cron_add",
-        "Create a cron job. Supports schedule kinds: cron, at, every; and job types: shell or agent.",
-    ));
-    tool_descs.push((
-        "cron_list",
-        "List all cron jobs with schedule, status, and metadata.",
-    ));
-    tool_descs.push(("cron_remove", "Remove a cron job by job_id."));
-    tool_descs.push((
-        "cron_update",
-        "Patch a cron job (schedule, enabled, command/prompt, model, delivery, session_target).",
-    ));
-    tool_descs.push((
-        "cron_run",
-        "Force-run a cron job immediately and record a run history entry.",
-    ));
-    tool_descs.push((
-        "cron_runs",
-        "Show recent run history for a specific cron job by job_id.",
-    ));
-    tool_descs.push((
         "screenshot",
         "Capture a screenshot of the current screen. Returns file path and base64-encoded PNG. Use when: visual verification, UI inspection, debugging displays.",
     ));
@@ -2477,10 +2354,6 @@ pub async fn run(
             "Execute actions on 1000+ apps via Composio (Gmail, Notion, GitHub, Slack, etc.). Use action='list' to discover, 'execute' to run (optionally with connected_account_id), 'connect' to OAuth.",
         ));
     }
-    tool_descs.push((
-        "schedule",
-        "Manage scheduled tasks (create/list/get/cancel/pause/resume). Supports recurring cron and one-shot delays.",
-    ));
     tool_descs.push((
         "model_routing_config",
         "Configure default model, scenario routing, and delegate agents. Use for natural-language requests like: 'set conversation to kimi and coding to gpt-5.3-codex'.",
@@ -2568,7 +2441,7 @@ pub async fn run(
         }
     });
 
-    // ── Cost tracking context (scoped for CLI / cron / web agents) ──
+    // ── Cost tracking context (scoped for CLI / web agents) ──
     let cost_tracking_context: Option<ToolLoopCostTrackingContext> =
         crate::cost::CostTracker::get_or_init_global(config.cost.clone(), &config.workspace_dir)
             .map(|tracker| {
@@ -4496,58 +4369,6 @@ mod tests {
         }
     }
 
-    struct RecordingArgsTool {
-        name: String,
-        recorded_args: Arc<Mutex<Vec<serde_json::Value>>>,
-    }
-
-    impl RecordingArgsTool {
-        fn new(name: &str, recorded_args: Arc<Mutex<Vec<serde_json::Value>>>) -> Self {
-            Self {
-                name: name.to_string(),
-                recorded_args,
-            }
-        }
-    }
-
-    #[async_trait]
-    impl Tool for RecordingArgsTool {
-        fn name(&self) -> &str {
-            &self.name
-        }
-
-        fn description(&self) -> &str {
-            "Records tool arguments for regression tests"
-        }
-
-        fn parameters_schema(&self) -> serde_json::Value {
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "prompt": { "type": "string" },
-                    "schedule": { "type": "object" },
-                    "delivery": { "type": "object" }
-                }
-            })
-        }
-
-        async fn execute(
-            &self,
-            args: serde_json::Value,
-        ) -> anyhow::Result<crate::tools::ToolResult> {
-            self.recorded_args
-                .lock()
-                .expect("recorded args lock should be valid")
-                .push(args.clone());
-            Ok(crate::tools::ToolResult {
-                success: true,
-                output: args.to_string(),
-                error: None,
-            metadata: None,
-            })
-        }
-    }
-
     struct DelayTool {
         name: String,
         delay_ms: u64,
@@ -5325,142 +5146,6 @@ mod tests {
             idx_a < idx_b,
             "tool results should preserve input order for tool call mapping"
         );
-    }
-
-    #[tokio::test]
-    async fn run_tool_call_loop_injects_channel_delivery_defaults_for_cron_add() {
-        let provider = ScriptedProvider::from_text_responses(vec![
-            r#"<tool_call>
-{"name":"cron_add","arguments":{"job_type":"agent","prompt":"remind me later","schedule":{"kind":"every","every_ms":60000}}}
-</tool_call>"#,
-            "done",
-        ]);
-
-        let recorded_args = Arc::new(Mutex::new(Vec::new()));
-        let tools_registry: Vec<Box<dyn Tool>> = vec![Box::new(RecordingArgsTool::new(
-            "cron_add",
-            Arc::clone(&recorded_args),
-        ))];
-
-        let mut history = vec![
-            ChatMessage::system("test-system"),
-            ChatMessage::user("schedule a reminder"),
-        ];
-        let observer = NoopObserver;
-
-        let result = run_tool_call_loop(
-            &provider,
-            &mut history,
-            &tools_registry,
-            &observer,
-            "mock-provider",
-            "mock-model",
-            0.0,
-            true,
-            None,
-            "telegram",
-            Some("chat-42"),
-            &zeroclaw_config::schema::MultimodalConfig::default(),
-            4,
-            None,
-            None,
-            None,
-            &[],
-            &[],
-            None,
-            None,
-            &zeroclaw_config::schema::PacingConfig::default(),
-            0,
-            0,
-            None,
-            None, // channel
-            None, // receipt_generator
-            None, // collected_receipts
-        )
-        .await
-        .expect("cron_add delivery defaults should be injected");
-
-        assert!(
-            result.ends_with("done"),
-            "result should end with 'done', got: {result}"
-        );
-
-        let recorded = recorded_args
-            .lock()
-            .expect("recorded args lock should be valid");
-        let delivery = recorded[0]["delivery"].clone();
-        assert_eq!(
-            delivery,
-            serde_json::json!({
-                "mode": "announce",
-                "channel": "telegram",
-                "to": "chat-42",
-            })
-        );
-    }
-
-    #[tokio::test]
-    async fn run_tool_call_loop_preserves_explicit_cron_delivery_none() {
-        let provider = ScriptedProvider::from_text_responses(vec![
-            r#"<tool_call>
-{"name":"cron_add","arguments":{"job_type":"agent","prompt":"run silently","schedule":{"kind":"every","every_ms":60000},"delivery":{"mode":"none"}}}
-</tool_call>"#,
-            "done",
-        ]);
-
-        let recorded_args = Arc::new(Mutex::new(Vec::new()));
-        let tools_registry: Vec<Box<dyn Tool>> = vec![Box::new(RecordingArgsTool::new(
-            "cron_add",
-            Arc::clone(&recorded_args),
-        ))];
-
-        let mut history = vec![
-            ChatMessage::system("test-system"),
-            ChatMessage::user("schedule a quiet cron job"),
-        ];
-        let observer = NoopObserver;
-
-        let result = run_tool_call_loop(
-            &provider,
-            &mut history,
-            &tools_registry,
-            &observer,
-            "mock-provider",
-            "mock-model",
-            0.0,
-            true,
-            None,
-            "telegram",
-            Some("chat-42"),
-            &zeroclaw_config::schema::MultimodalConfig::default(),
-            4,
-            None,
-            None,
-            None,
-            &[],
-            &[],
-            None,
-            None,
-            &zeroclaw_config::schema::PacingConfig::default(),
-            0,
-            0,
-            None,
-            None, // channel
-            None, // receipt_generator
-            None, // collected_receipts
-        )
-        .await
-        .expect("explicit delivery mode should be preserved");
-
-        assert!(
-            result.ends_with("done"),
-            "result should end with 'done', got: {result}"
-        );
-
-        let recorded = recorded_args
-            .lock()
-            .expect("recorded args lock should be valid");
-        assert_eq!(recorded[0]["delivery"], serde_json::json!({"mode": "none"}));
     }
 
     #[tokio::test]

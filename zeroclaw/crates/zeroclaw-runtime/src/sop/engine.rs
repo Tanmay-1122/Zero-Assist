@@ -713,10 +713,6 @@ fn trigger_matches(trigger: &SopTrigger, event: &SopEvent) -> bool {
             }
         }
 
-        (SopTrigger::Cron { expression }, SopTriggerSource::Cron) => {
-            event.topic.as_deref().is_some_and(|t| t == expression)
-        }
-
         (SopTrigger::Manual, SopTriggerSource::Manual) => true,
 
         _ => false,
@@ -1162,46 +1158,6 @@ mod tests {
             timestamp: now_iso8601(),
         };
         assert_eq!(engine.match_trigger(&event).len(), 1);
-    }
-
-    // ── Cron trigger matching ─────────────────────────
-
-    #[test]
-    fn cron_trigger_matches_only_matching_expression() {
-        let sop = Sop {
-            triggers: vec![SopTrigger::Cron {
-                expression: "0 */5 * * *".into(),
-            }],
-            ..test_sop("cron-sop", SopExecutionMode::Auto, SopPriority::Normal)
-        };
-        let engine = engine_with_sops(vec![sop]);
-
-        // Matching expression
-        let event = SopEvent {
-            source: SopTriggerSource::Cron,
-            topic: Some("0 */5 * * *".into()),
-            payload: None,
-            timestamp: now_iso8601(),
-        };
-        assert_eq!(engine.match_trigger(&event).len(), 1);
-
-        // Different expression — should NOT match
-        let event = SopEvent {
-            source: SopTriggerSource::Cron,
-            topic: Some("0 */10 * * *".into()),
-            payload: None,
-            timestamp: now_iso8601(),
-        };
-        assert!(engine.match_trigger(&event).is_empty());
-
-        // No topic — should NOT match
-        let event = SopEvent {
-            source: SopTriggerSource::Cron,
-            topic: None,
-            payload: None,
-            timestamp: now_iso8601(),
-        };
-        assert!(engine.match_trigger(&event).is_empty());
     }
 
     // ── Condition-based trigger matching ────────────────

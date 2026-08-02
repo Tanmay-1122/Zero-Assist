@@ -183,8 +183,7 @@ pub fn should_skip_autosave_content(content: &str) -> bool {
     }
 
     let lowered = normalized.to_ascii_lowercase();
-    lowered.starts_with("[cron:")
-        || lowered.starts_with("[heartbeat task")
+    lowered.starts_with("[heartbeat task")
         || lowered.starts_with("[distilled_")
         || lowered.starts_with("[memory context]")
         || lowered.contains("distilled_index_sig:")
@@ -522,8 +521,7 @@ mod tests {
     }
 
     #[test]
-    fn autosave_content_filter_drops_cron_and_distilled_noise() {
-        assert!(should_skip_autosave_content("[cron:auto] patrol check"));
+    fn autosave_content_filter_drops_distilled_noise() {
         assert!(should_skip_autosave_content(
             "[DISTILLED_MEMORY_CHUNK 1/2] DISTILLED_INDEX_SIG:abc123"
         ));
@@ -534,7 +532,7 @@ mod tests {
             "[Heartbeat Task | high] Execute scheduled patrol"
         ));
         assert!(should_skip_autosave_content(
-            "[Memory context]\n- user_msg_abc: some recalled memory\n[/Memory context]\n\n[cron:uuid job] prompt"
+            "[Memory context]\n- user_msg_abc: some recalled memory\n[/Memory context]"
         ));
         assert!(!should_skip_autosave_content(
             "User prefers concise answers."

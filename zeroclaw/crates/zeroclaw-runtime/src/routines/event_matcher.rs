@@ -23,7 +23,7 @@ pub enum MatchStrategy {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventPattern {
     /// The source type this pattern applies to (e.g. `"channel"`, `"webhook"`,
-    /// `"cron"`, `"system"`).  Must match `RoutineEvent::source` exactly.
+    /// `"system"`).  Must match `RoutineEvent::source` exactly.
     pub source: String,
 
     /// Pattern to match against `RoutineEvent::topic`.
@@ -38,10 +38,10 @@ pub struct EventPattern {
 /// An event emitted by the system that may trigger routines.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoutineEvent {
-    /// Source type: `"channel"`, `"webhook"`, `"cron"`, `"system"`.
+    /// Source type: `"channel"`, `"webhook"`, `"system"`.
     pub source: String,
-    /// Topic / identifier to match against (channel name, webhook path, cron
-    /// label, system event name).
+    /// Topic / identifier to match against (channel name, webhook path,
+    /// system event name).
     pub topic: String,
     /// Optional payload (JSON string, message text, etc.).
     #[serde(default)]
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn source_mismatch_never_matches() {
         let pat = EventPattern {
-            source: "cron".into(),
+            source: "channel".into(),
             pattern: "*".into(),
             strategy: MatchStrategy::Glob,
         };

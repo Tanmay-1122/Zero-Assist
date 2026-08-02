@@ -144,11 +144,6 @@ pub fn show_integration_info(config: &Config, name: &str) -> Result<()> {
             println!("    ZeroClaw can control Chrome/Chromium for web tasks.");
             println!("    Uses headless browser automation.");
         }
-        "Cron" => {
-            println!("  Built-in:");
-            println!("    Schedule tasks in ~/.zeroclaw/workspace/cron/");
-            println!("    Run: zeroclaw cron list");
-        }
         "Weather" => {
             println!("  Built-in:");
             println!("    Fetches live conditions from wttr.in — no API key required.");
