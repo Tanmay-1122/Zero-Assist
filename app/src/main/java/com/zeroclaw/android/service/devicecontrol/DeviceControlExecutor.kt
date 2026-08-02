@@ -626,7 +626,7 @@ class DeviceControlExecutor(
                     val launchResult = launcher.launch(appName)
                     if (launchResult.success) {
                         Log.d(TAG, "[$requestId] bootstrap launch '$appName' succeeded (pkg=${launchResult.packageName}), brief pause for UI render")
-                        delay(500)
+                        delay(200)
                     } else {
                         Log.d(TAG, "[$requestId] bootstrap launch '$appName' skipped/failed: ${launchResult.message}")
                     }

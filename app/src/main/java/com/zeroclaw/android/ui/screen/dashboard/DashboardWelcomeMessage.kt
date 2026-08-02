@@ -37,9 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zeroclaw.android.ui.theme.AccentBlue
-import com.zeroclaw.android.ui.theme.DarkGray
-import com.zeroclaw.android.ui.theme.MediumGray
 import com.zeroclaw.android.ui.theme.ZeroClawTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -48,9 +45,10 @@ import java.util.Locale
 /**
  * Dashboard welcome message shown on every app launch.
  *
- * Displays a plain greeting (e.g. "Good morning, Tanmay!") in a flat
- * surface card with a date subtitle for context. No animated gradient
- * text — color is reserved for status elsewhere on the screen.
+ * Displays a greeting (e.g. "Good morning, Tanmay!") in a theme-aware
+ * surface card with a date subtitle for context. The card tint comes from
+ * the active [MaterialTheme] color scheme so text contrast stays correct in
+ * both light and dark mode.
  */
 @Composable
 internal fun DashboardWelcomeMessage(
@@ -63,6 +61,9 @@ internal fun DashboardWelcomeMessage(
         enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 3 },
         modifier = modifier.fillMaxWidth(),
     ) {
+        val accent = MaterialTheme.colorScheme.primary
+        val tint = MaterialTheme.colorScheme.primaryContainer
+        val cardEnd = MaterialTheme.colorScheme.surfaceContainerHigh
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,9 +71,8 @@ internal fun DashboardWelcomeMessage(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            AccentBlue.copy(alpha = 0.08f),
-                            DarkGray,
-                            MediumGray,
+                            tint.copy(alpha = 0.55f),
+                            cardEnd.copy(alpha = 0.9f),
                         ),
                     ),
                 ),
@@ -82,7 +82,7 @@ internal fun DashboardWelcomeMessage(
                 modifier = Modifier
                     .width(3.dp)
                     .matchParentSize()
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(accent),
             )
             Row(
                 modifier = Modifier
@@ -95,13 +95,13 @@ internal fun DashboardWelcomeMessage(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        .background(tint.copy(alpha = 0.55f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.WavingHand,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(22.dp),
                     )
                 }
@@ -144,6 +144,22 @@ private fun DashboardWelcomeMessagePreview() {
         DashboardWelcomeMessage(
             visible = true,
             greetingText = "Good evening, Tanmay!",
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@Preview(
+    name = "Dashboard Welcome - Light",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+)
+@Composable
+private fun DashboardWelcomeMessageLightPreview() {
+    ZeroClawTheme(darkTheme = false) {
+        DashboardWelcomeMessage(
+            visible = true,
+            greetingText = "Good morning, Tanmay!",
             modifier = Modifier.padding(16.dp),
         )
     }

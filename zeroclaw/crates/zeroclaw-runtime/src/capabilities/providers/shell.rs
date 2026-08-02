@@ -173,6 +173,49 @@ impl ShellExecutor {
             }
         }
 
+        // Step 1b: Prefer the sandbox bridge when one is registered (Android).
+        // The `"sandbox"` capability must mean the sandbox everywhere — on
+        // Android the bridge routes into the PRoot Alpine environment, never
+        // a raw device shell. Local host execution is only used when no
+        // sandbox bridge exists (pure desktop).
+        if let Some(bridge) = super::bridge::sandbox_bridge() {
+            if bridge.has_token() {
+                let args = serde_json::json!({ "command": command });
+                return match bridge.execute(args).await {
+                    Ok(value) => {
+                        let success = value
+                            .get("success")
+                            .and_then(serde_json::Value::as_bool)
+                            .unwrap_or(false);
+                        let stdout = value
+                            .get("stdout")
+                            .and_then(serde_json::Value::as_str)
+                            .unwrap_or("");
+                        let stderr = value
+                            .get("stderr")
+                            .and_then(serde_json::Value::as_str)
+                            .unwrap_or("");
+                        Ok(ToolResult {
+                            success,
+                            output: stdout.to_string(),
+                            error: if stderr.is_empty() && success {
+                                None
+                            } else {
+                                Some(stderr.to_string())
+                            },
+                            metadata: None,
+                        })
+                    }
+                    Err(e) => Ok(ToolResult {
+                        success: false,
+                        output: String::new(),
+                        error: Some(format!("Sandbox bridge execution failed: {e}")),
+                        metadata: None,
+                    }),
+                };
+            }
+        }
+
         // Step 2: Determine cwd from ShellRuntime state
         let cwd = {
             let rt = self.runtime_state.lock().unwrap();

@@ -107,11 +107,51 @@ class LiveActivityGrouperTest {
     }
 
     @Test
-    fun `error removes item`() {
+    fun `error marks item as ERROR`() {
         grouper.process(inboundMessage("telegram", "alice", "hello"))
         val result = grouper.process(errorEvent("provider", "rate limited"))
 
-        assertTrue(result.isEmpty())
+        // Item stays visible with the red-X state so the user sees the failure.
+        assertEquals(1, result.size)
+        assertEquals(ActivityStatus.ERROR, result[0].status)
+    }
+
+    @Test
+    fun `llm_response with success=false marks item as ERROR`() {
+        grouper.process(inboundMessage("telegram", "alice", "hello"))
+        val result = grouper.process(llmResponse("openai", "gpt-4o", 500, false))
+
+        assertEquals(1, result.size)
+        assertEquals(ActivityStatus.ERROR, result[0].status)
+        assertEquals(1, result[0].steps.size)
+        assertEquals(false, result[0].steps[0].success)
+    }
+
+    @Test
+    fun `turn_complete upgrades ERROR item to COMPLETED`() {
+        // A failed LLM response is surfaced as ERROR, but a later
+        // turn_complete means the daemon recovered the turn — green tick wins.
+        grouper.process(inboundMessage("telegram", "alice", "hello"))
+        grouper.process(llmResponse("openai", "gpt-4o", 500, false))
+        val result = grouper.process(turnComplete())
+
+        assertEquals(ActivityStatus.COMPLETED, result[0].status)
+    }
+
+    @Test
+    fun `turn_complete completes the newest in-progress item only`() {
+        // Older request failed and stayed visible as ERROR.
+        grouper.process(inboundMessage("telegram", "alice", "first"))
+        grouper.process(llmResponse("openai", "gpt-4o", 500, false))
+        // Newer request is still processing.
+        grouper.process(inboundMessage("discord", "bob", "second"))
+        val result = grouper.process(turnComplete())
+
+        assertEquals(2, result.size)
+        assertEquals("discord", result[0].channel)
+        assertEquals("bob", result[0].sender)
+        assertEquals(ActivityStatus.COMPLETED, result[0].status)
+        assertEquals(ActivityStatus.ERROR, result[1].status)
     }
 
     @Test

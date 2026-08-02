@@ -93,7 +93,7 @@
             android:exported="true"
             android:enableOnBackInvokedCallback="true"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustNothing"
             android:theme="@style/Theme.ZeroAssist">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -109,7 +109,7 @@
             android:launchMode="singleTop"
             android:noHistory="true"
             android:taskAffinity="com.zeroclaw.android.assistant"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustNothing"
             android:theme="@style/Theme.ZeroAssist.Assistant">
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />

@@ -23,6 +23,8 @@ import com.zeroclaw.android.data.local.dao.ScheduledTaskDao
 import com.zeroclaw.android.data.local.dao.ScheduledTaskRunDao
 import com.zeroclaw.android.data.local.entity.ScheduledTaskEntity
 import com.zeroclaw.android.data.local.entity.ScheduledTaskRunEntity
+import com.zeroclaw.android.service.sandbox.SandboxState
+import com.zeroclaw.android.service.sandbox.SessionShell
 import com.zeroclaw.android.startup.AppStartupTrace
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -260,23 +262,34 @@ class ScheduledTaskWorker(
         task: ScheduledTaskEntity,
     ): TaskResult {
         return when (task.jobType) {
-            "shell" -> executeShellCommand(task.command)
+            "shell" -> executeShellCommand(app, task.command)
             "agent" -> executeAgentPrompt(app, task.command)
             else -> TaskResult(false, "", "Unknown job type: ${task.jobType}")
         }
     }
 
-    private fun executeShellCommand(command: String): TaskResult {
+    /**
+     * Executes a shell job inside the Linux sandbox (PRoot Alpine), never on
+     * the Android host. Shell = sandbox: scheduled commands share the same
+     * execution backend as sandbox_execute so their filesystem side effects
+     * land inside the sandbox.
+     */
+    private suspend fun executeShellCommand(app: ZeroClawApplication, command: String): TaskResult {
         return try {
-            val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
-            val stdout = process.inputStream.bufferedReader().readText()
-            val stderr = process.errorStream.bufferedReader().readText()
-            val finished = process.waitFor(120, TimeUnit.SECONDS)
-            if (!finished) {
-                process.destroyForcibly()
-                return TaskResult(false, stdout, "Command timed out after 120s")
+            val sandboxManager = app.linuxSandboxManager
+            if (sandboxManager.state.value !is SandboxState.Ready) {
+                return TaskResult(
+                    false,
+                    "",
+                    "Linux Sandbox is not ready — enable it in Plugins -> Installed before scheduling shell jobs",
+                )
             }
-            val exitCode = process.exitValue()
+            val result = sandboxManager
+                .shellFor(SessionShell.DEFAULT_SESSION_ID)
+                .run(command, timeoutSeconds = 120)
+            val exitCode = result["exit_code"] as? Int ?: -1
+            val stdout = result["stdout"] as? String ?: ""
+            val stderr = result["stderr"] as? String ?: ""
             if (exitCode == 0) {
                 TaskResult(true, stdout, null)
             } else {

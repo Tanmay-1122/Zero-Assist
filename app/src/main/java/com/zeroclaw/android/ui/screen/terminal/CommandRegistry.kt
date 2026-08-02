@@ -396,33 +396,47 @@ object CommandRegistry {
                 toExpression = { "tools()" },
             ),
             SlashCommand(
+                name = "sandbox status",
+                description = "Show sandbox bridge readiness",
+                toExpression = { "sandbox_status()" },
+            ),
+            SlashCommand(
+                name = "sandbox",
+                description = "Run a command inside the Alpine Linux sandbox",
+                usage = "<command...>",
+                toExpression = { args ->
+                    val command = args.joinToString(" ")
+                    "sandbox(${rhaiString(command)})"
+                },
+            ),
+            SlashCommand(
                 name = "termux status",
-                description = "Show Termux bridge readiness",
+                description = "Show Termux bridge readiness (legacy, opt-in)",
                 toExpression = { null },
             ),
             SlashCommand(
                 name = "termux start",
-                description = "Start the Zero-Assist Termux bridge",
+                description = "Start the Zero-Assist Termux bridge (legacy, opt-in)",
                 toExpression = { null },
             ),
             SlashCommand(
                 name = "termux setup",
-                description = "Repair Termux after storage reset and start the bridge",
+                description = "Repair Termux after storage reset and start the bridge (legacy, opt-in)",
                 toExpression = { null },
             ),
             SlashCommand(
                 name = "termux doctor",
-                description = "Run Termux runtime diagnostics",
+                description = "Run Termux runtime diagnostics (legacy, opt-in)",
                 toExpression = { null },
             ),
             SlashCommand(
                 name = "termux smoke",
-                description = "Run a safe Termux command execution smoke test",
+                description = "Run a safe Termux command execution smoke test (legacy, opt-in)",
                 toExpression = { null },
             ),
             SlashCommand(
                 name = "termux capabilities",
-                description = "Show Termux commands exposed to the AI",
+                description = "Show Termux commands exposed to the AI (legacy, opt-in)",
                 toExpression = { null },
             ),
 

@@ -56,7 +56,7 @@ struct BuiltInTool {
 const CORE_TOOLS: &[BuiltInTool] = &[
     BuiltInTool {
         name: "shell",
-        description: "Execute host/workspace shell commands through daemon-channel security policy. Android device commands are routed through termux_run with user approval when needed.",
+        description: "Execute shell commands through daemon-channel security policy. Shell = sandbox: on Android, shell commands are routed through sandbox_execute inside the isolated Alpine environment.",
     },
     BuiltInTool {
         name: "file_read",
@@ -145,13 +145,13 @@ const HTTP_TOOL: BuiltInTool = BuiltInTool {
 /// First-party Termux capability discovery tool backed by Zero-Assist's bridge.
 const TERMUX_CAPABILITIES_TOOL: BuiltInTool = BuiltInTool {
     name: "termux_get_capabilities",
-    description: "Inspect the user's local Termux runtime through Zero Assist's authenticated bridge. Returns installed commands, Python version, workspace paths, proot status, and execution limits. Use this only when verifying Termux-specific capabilities; for general Linux work, use sandbox_execute.",
+    description: "LEGACY / OPT-IN ONLY. Inspect the user's local Termux runtime through Zero Assist's authenticated bridge. Returns installed commands, Python version, workspace paths, proot status, and execution limits. Only registered when the user explicitly enables the Termux plugin; the Linux sandbox (sandbox_execute) is the default shell backend.",
 };
 
 /// First-party low-risk Termux execution tool backed by Zero-Assist's bridge.
 const TERMUX_RUN_TOOL: BuiltInTool = BuiltInTool {
     name: "termux_run",
-    description: "Execute commands directly in the user's existing Termux environment on the Android device. Use only when the user explicitly asks to interact with their Termux installation, its files, or Android host tools. For general Linux commands, packages, and scripting, use sandbox_execute instead.",
+    description: "LEGACY / OPT-IN ONLY. Execute commands directly in the user's existing Termux environment on the Android device. Only registered when the user explicitly enables the Termux plugin. Use only when the user explicitly asks to interact with their Termux installation, its files, or Android host tools. For general Linux commands, packages, and scripting, use sandbox_execute instead.",
 };
 
 /// First-party Linux sandbox shell execution tool backed by Zero-Assist's bridge.
@@ -644,7 +644,7 @@ mod tests {
     fn test_android_facing_tool_descriptions_reduce_ambiguous_routing() {
         let shell = CORE_TOOLS.iter().find(|t| t.name == "shell").unwrap();
         assert!(shell.description.contains("daemon-channel security policy"));
-        assert!(shell.description.contains("termux_run"));
+        assert!(shell.description.contains("sandbox_execute"));
 
         let cron_runs = CORE_TOOLS.iter().find(|t| t.name == "cron_runs").unwrap();
         assert!(cron_runs.description.contains("specific cron job"));

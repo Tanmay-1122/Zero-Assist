@@ -80,12 +80,17 @@ class AppLauncher(private val context: Context) {
             // Non-blocking poll-based foreground verification.
             var fgPkg: String? = null
             var launchedCorrectly = false
-            for (delayMs in longArrayOf(200, 400, 600, 800)) {
-                delay(delayMs)
+            var totalElapsed = 0L
+            val deadlineMs = 1200L
+            val pollStepMs = 100L
+
+            while (totalElapsed < deadlineMs) {
+                delay(pollStepMs)
+                totalElapsed += pollStepMs
                 fgPkg = getForegroundPackage()
                 launchedCorrectly = fgPkg == pkg || fgPkg?.startsWith(pkg) == true
                 if (launchedCorrectly) break
-                Log.d(TAG, "Launch '$appName' poll fg=$fgPkg (expected=$pkg) after ${delayMs}ms")
+                Log.d(TAG, "Launch '$appName' poll fg=$fgPkg (expected=$pkg) after ${totalElapsed}ms")
             }
 
             val diagnostics = buildDiagnostics(appName, normalizedQuery, appList, pkg, true, fgPkg)
@@ -146,7 +151,8 @@ class AppLauncher(private val context: Context) {
             Log.w(TAG, "getInstalledApplications failed: ${e.message}")
             emptyList()
         }
-        val entries = apps.map { info ->
+        val entries = apps.mapNotNull { info ->
+            if (pm.getLaunchIntentForPackage(info.packageName) == null) return@mapNotNull null
             val label = pm.getApplicationLabel(info).toString()
             CachedAppEntry(info.packageName, label, normalizeAppLabel(label))
         }
@@ -195,9 +201,9 @@ class AppLauncher(private val context: Context) {
             }
             Log.w(TAG, "Explicit package '$explicitPackage' for '$appName' is not launchable; trying installed alternatives")
         }
-        return findPackage(apps, appName)
+        return resolveByKnownPackages(pm, normalizedQuery)
+            ?: findPackage(apps, appName)
             ?: findPackageFuzzy(apps, normalizedQuery)
-            ?: resolveByKnownPackages(pm, normalizedQuery)
     }
 
     private fun normalizeAppLabel(label: String): String {

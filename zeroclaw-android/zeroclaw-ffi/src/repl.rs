@@ -393,6 +393,57 @@ fn build_engine() -> Engine {
         Ok(i64::from(count))
     });
 
+    // ── Shell (Sandbox) ─────────────────────────────────────────────
+    //
+    // Deterministic shell execution through the sandbox bridge. The terminal's
+    // shell IS the sandbox: these functions bypass the LLM tool-choice path so
+    // explicit shell input always lands inside the Alpine environment.
+
+    engine.register_fn(
+        "sandbox",
+        |command: String| -> Result<String, Box<EvalAltResult>> {
+            let handle = crate::runtime::get_or_create_runtime().map_err(ffi_err)?;
+            let result = handle
+                .block_on(crate::sandbox_bridge_client::execute(serde_json::json!({
+                    "command": command
+                })))
+                .map_err(|e| -> Box<EvalAltResult> {
+                    format!("sandbox command failed: {e}").into()
+                })?;
+            to_json(&result)
+        },
+    );
+
+    engine.register_fn(
+        "sandbox_status",
+        || -> Result<String, Box<EvalAltResult>> {
+            let handle = crate::runtime::get_or_create_runtime().map_err(ffi_err)?;
+            let result = handle
+                .block_on(crate::sandbox_bridge_client::health())
+                .map_err(|e| -> Box<EvalAltResult> {
+                    format!("sandbox health check failed: {e}").into()
+                })?;
+            to_json(&result)
+        },
+    );
+
+    engine.register_fn(
+        "sandbox_manage",
+        |action: String, session_id: String| -> Result<String, Box<EvalAltResult>> {
+            let handle = crate::runtime::get_or_create_runtime().map_err(ffi_err)?;
+            let mut args = serde_json::json!({ "action": action });
+            if !session_id.is_empty() {
+                args["session_id"] = serde_json::Value::String(session_id);
+            }
+            let result = handle
+                .block_on(crate::sandbox_bridge_client::manage_process(args))
+                .map_err(|e| -> Box<EvalAltResult> {
+                    format!("sandbox process management failed: {e}").into()
+                })?;
+            to_json(&result)
+        },
+    );
+
     // ── Emergency Stop ──────────────────────────────────────────
 
     engine.register_fn("estop", || -> Result<String, Box<EvalAltResult>> {
@@ -685,6 +736,15 @@ mod tests {
     #[test]
     fn test_send_not_running() {
         let result = eval_repl_inner(r#"send("hello")"#.into());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_repl_sandbox_no_bridge() {
+        // No sandbox bridge is running in the unit-test environment, so the
+        // deterministic shell path must fail with a clear error rather than
+        // hanging or crashing.
+        let result = eval_repl_inner(r#"sandbox("echo hi")"#.into());
         assert!(result.is_err());
     }
 

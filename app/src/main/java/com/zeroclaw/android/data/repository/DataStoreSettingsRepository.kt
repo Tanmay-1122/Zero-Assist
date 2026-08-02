@@ -281,12 +281,12 @@ class DataStoreSettingsRepository(
             theme =
                 prefs[KEY_THEME]?.let { name ->
                     runCatching { ThemeMode.valueOf(name) }.getOrNull()
-                } ?: ThemeMode.SYSTEM,
+                } ?: ThemeMode.DARK,
             sharedFolderEnabled = prefs[KEY_SHARED_FOLDER_ENABLED] ?: false,
             sharedFolderUri = prefs[KEY_SHARED_FOLDER_URI] ?: "",
             workflowFolderEnabled = prefs[KEY_WORKFLOW_FOLDER_ENABLED] ?: true,
             workflowFolderUri = prefs[KEY_WORKFLOW_FOLDER_URI] ?: "",
-            linuxSandboxEnabled = prefs[KEY_LINUX_SANDBOX_ENABLED] ?: false,
+            linuxSandboxEnabled = prefs[KEY_LINUX_SANDBOX_ENABLED] ?: true,
             linuxSandboxTimeoutSecs =
                 prefs[KEY_LINUX_SANDBOX_TIMEOUT_SECS]
                     ?: AppSettings.DEFAULT_LINUX_SANDBOX_TIMEOUT_SECS,

@@ -150,5 +150,5 @@ private fun AboutRow(
     }
 }
 
-private const val GITHUB_URL = "https://github.com/Natfii/Zero-Assist-Android"
-private const val LICENSE_URL = "https://github.com/Natfii/Zero-Assist-Android/blob/main/LICENSE"
+private const val GITHUB_URL = "https://github.com/Tanmay-1122/Zero-Assist"
+private const val LICENSE_URL = "https://github.com/Tanmay-1122/Zero-Assist/blob/main/LICENSE"

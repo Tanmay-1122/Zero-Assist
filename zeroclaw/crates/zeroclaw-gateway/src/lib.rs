@@ -522,7 +522,7 @@ pub async fn run_gateway(
             active_mcp_servers.len(),
             config.mcp.servers.len()
         );
-        match tools::McpRegistry::connect_all(&active_mcp_servers).await {
+        match tools::McpRegistry::connect_all_from_config(&config).await {
             Ok(registry) => {
                 let registry = std::sync::Arc::new(registry);
                 if config.mcp.deferred_loading {

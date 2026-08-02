@@ -822,6 +822,38 @@ impl McpRegistry {
         .await
     }
 
+    /// Initialize sub-agent registry using provider credentials and settings from config.
+    pub async fn connect_all_from_config(config: &zeroclaw_config::Config) -> Result<Self> {
+        let active_mcp_servers = config.mcp.active_servers();
+        let fallback_provider = config
+            .providers
+            .fallback
+            .as_deref()
+            .unwrap_or("openrouter");
+        let fallback_model = config
+            .providers
+            .resolve_default_model()
+            .unwrap_or_else(|| "anthropic/claude-sonnet-4".to_string());
+        let fallback_api_key = config
+            .providers
+            .fallback_provider()
+            .and_then(|e| e.api_key.as_deref());
+        let fallback_base_url = config
+            .providers
+            .fallback_provider()
+            .and_then(|e| e.base_url.as_deref());
+
+        Self::connect_all_with_provider(
+            &active_mcp_servers,
+            fallback_provider,
+            &fallback_model,
+            fallback_api_key,
+            fallback_base_url,
+        )
+        .await
+    }
+
+
     pub async fn connect_all_with_provider(
         configs: &[McpServerConfig],
         fallback_provider: &str,
@@ -1116,5 +1148,43 @@ mod tests {
         assert_eq!(provider_cfg.model, "openrouter/free");
         assert_eq!(provider_cfg.api_key.as_deref(), Some("hackclub-key"));
     }
+
+    #[tokio::test]
+    async fn connect_all_from_config_uses_config_provider_credentials() {
+        let mut config = zeroclaw_config::Config::default();
+        config.mcp.enabled = true;
+        config.mcp.servers.push(McpServerConfig {
+            name: "test_server".to_string(),
+            enabled: true,
+            ..Default::default()
+        });
+
+        let mut provider_entry = zeroclaw_config::schema::ModelProviderConfig::default();
+        provider_entry.model = Some("gemini-2.5-flash".to_string());
+        provider_entry.api_key = Some("test-secret-key".to_string());
+        provider_entry.base_url = Some("https://api.example.com/v1".to_string());
+
+        config.providers.fallback = Some("custom_provider".to_string());
+        config
+            .providers
+            .models
+            .insert("custom_provider".to_string(), provider_entry);
+
+        let registry = McpRegistry::connect_all_from_config(&config)
+            .await
+            .expect("should connect from config");
+
+        let p_cfg = registry
+            .manager
+            .provider_configs
+            .get("test_server")
+            .expect("test_server provider config should exist");
+
+        assert_eq!(p_cfg.provider_name, "custom_provider");
+        assert_eq!(p_cfg.model, "gemini-2.5-flash");
+        assert_eq!(p_cfg.api_key.as_deref(), Some("test-secret-key"));
+        assert_eq!(p_cfg.base_url.as_deref(), Some("https://api.example.com/v1"));
+    }
 }
+
 

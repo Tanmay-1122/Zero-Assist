@@ -12,8 +12,8 @@ package com.zeroclaw.android.service.devicecontrol
  * - Compact per-node lines with supported actions
  */
 class ScreenObserver(
-    private val maxNodes: Int = 40,
-    private val maxLabelLength: Int = 48,
+    private val maxNodes: Int = 25,
+    private val maxLabelLength: Int = 40,
 ) {
     /**
      * Describes the current screen for the planner.

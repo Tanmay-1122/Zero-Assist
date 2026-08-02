@@ -65,8 +65,36 @@ use zeroclaw_runtime::capabilities::shell_runtime::ShellRuntime;
 use streaming::{stream_response_text, truncate_tool_args_hint};
 use termux_tools::{FfiTermuxCapabilitiesTool, FfiTermuxRunTool};
 
+/// Env var published by the Kotlin app when the user opts into Termux.
+///
+/// The sandbox is the canonical shell backend: unless the user explicitly
+/// enables Termux, the `termux_run` / `termux_get_capabilities` tools are
+/// NOT registered, so the model can only route shell work through
+/// `sandbox_execute` inside the isolated Alpine environment.
+const TERMUX_ENABLED_ENV: &str = "ZERO_ASSIST_TERMUX_ENABLED";
+
 /// Maximum user message size in bytes (1 MiB).
 const MAX_MESSAGE_BYTES: usize = 1_048_576;
+
+/// Whether the Termux bridge tools should be registered for this session.
+///
+/// Reads `ZERO_ASSIST_TERMUX_ENABLED` published by the Kotlin layer
+/// (`AppSettings.termuxEnabled`). Absent/empty values count as disabled.
+fn termux_enabled() -> bool {
+    std::env::var(TERMUX_ENABLED_ENV)
+        .map(|value| parse_termux_enabled_flag(&value))
+        .unwrap_or(false)
+}
+
+/// Parses the `ZERO_ASSIST_TERMUX_ENABLED` env value.
+fn parse_termux_enabled_flag(value: &str) -> bool {
+    let trimmed = value.trim();
+    !trimmed.is_empty()
+        && !matches!(
+            trimmed.to_ascii_lowercase().as_str(),
+            "0" | "false" | "no"
+        )
+}
 
 /// Default maximum agentic tool-use iterations per user message.
 const DEFAULT_MAX_TOOL_ITERATIONS: usize = 10;
@@ -409,11 +437,17 @@ fn build_tools_registry(
         )));
     }
 
-    // Register the first-party Termux tools unconditionally. Bridge readiness
-    // depends on Android-owned Termux permissions/bootstrap and can change
-    // after session creation, so execution performs live health/token checks.
-    tools.push(Box::new(FfiTermuxCapabilitiesTool));
-    tools.push(Box::new(FfiTermuxRunTool));
+    // Termux tools are OPT-IN. The sandbox is the only shell backend by
+    // default, so the LLM only ever sees sandbox_execute / sandbox_manage_process
+    // for shell work. When the user explicitly enables Termux (Kotlin publishes
+    // ZERO_ASSIST_TERMUX_ENABLED), the Termux tools are added back for explicit
+    // Termux-only interactions. Bridge readiness depends on Android-owned Termux
+    // permissions/bootstrap and can change after session creation, so execution
+    // performs live health/token checks.
+    if termux_enabled() {
+        tools.push(Box::new(FfiTermuxCapabilitiesTool));
+        tools.push(Box::new(FfiTermuxRunTool));
+    }
 
     // Register the first-party Linux sandbox tools unconditionally. The
     // sandbox bridge authentication token must be set via FFI before the
@@ -519,26 +553,7 @@ async fn append_mcp_tools_from_config(
         mcp_servers.len()
     );
 
-    let fallback_provider = config_compat::active_provider_name_or_default(&config, "openrouter");
-    let fallback_model = config_compat::active_model_or_default(&config, "anthropic/claude-sonnet-4");
-    let fallback_api_key = config_compat::active_api_key(&config).map(str::to_string);
-    let fallback_base_url = config_compat::active_base_url(&config).map(str::to_string);
-
-    eprintln!(
-        "[MCP SESSION] Sub-agent provider fallback: name={fallback_provider}, model={fallback_model}, key={}, base_url={}",
-        fallback_api_key.as_deref().map(|_| "<set>").unwrap_or("<none>"),
-        fallback_base_url.as_deref().unwrap_or("<none>"),
-    );
-
-    let registry = match zeroclaw::tools::McpRegistry::connect_all_with_provider(
-        &mcp_servers,
-        &fallback_provider,
-        &fallback_model,
-        fallback_api_key.as_deref(),
-        fallback_base_url.as_deref(),
-    )
-    .await
-    {
+    let registry = match zeroclaw::tools::McpRegistry::connect_all_from_config(&config).await {
         Ok(registry) => Arc::new(registry),
         Err(error) => {
             eprintln!("[MCP SESSION] Registry connect_all FAILED: {:#}", error);
@@ -1142,8 +1157,30 @@ tools when the user specifically asks for the shared folder.",
          it cannot control the Android UI.\n\
          Do NOT use workflow_folder_list for these — that lists files, it cannot \
          control the phone.\n\n\
-         Only use web_search_tool when the user wants to search the internet.\n\
-         Only use sandbox_execute when the user wants to run Linux shell commands.\n\n\
+         Only use web_search_tool when the user wants to search the internet.\n\n\
+         ## Shell Environment Routing (CRITICAL)\n\n\
+         ALL shell command execution goes through sandbox_execute inside the \
+         isolated Alpine Linux sandbox. There is no other shell. Commands like \
+         `ls`, `cd`, `pwd`, `cat`, `grep`, `find`, `echo`, `apk`, `pip`, `npm`, \
+         `git`, `python3`, and `node` MUST be run with sandbox_execute.\n\n\
+         The sandbox shell session is PERSISTENT within this conversation: cwd, \
+         exported variables, and in-shell state carry from one call to the next. \
+         Read the ## Shell Environment section below for the current state.\n",
+    );
+
+    if termux_enabled() {
+        system_prompt.push_str(
+            "\n\n\
+             NOTE: The user has explicitly enabled the Termux bridge, so the \
+             termux_run / termux_get_capabilities tools are available. Use them \
+             ONLY when the user explicitly asks to interact with their Termux \
+             installation, its files, or Android host tools. For general Linux \
+             commands, packages, and scripting, ALWAYS prefer sandbox_execute — \
+             it provides the full Alpine Linux environment without affecting Termux.",
+        );
+    }
+    system_prompt.push_str(
+        "\n\n\
          ## Device Control Error Handling (IMPORTANT)\n\n\
          When device_control returns a failure, it includes a structured error_code. \
          You MUST inspect it and respond appropriately:\n\n\
@@ -3659,6 +3696,37 @@ mod tests {
     // ── dispatch_delta tests ────────────────────────────────────────
 
     #[test]
+    fn test_termux_enabled_flag_parsing() {
+        assert!(!parse_termux_enabled_flag(""));
+        assert!(!parse_termux_enabled_flag("   "));
+        assert!(!parse_termux_enabled_flag("0"));
+        assert!(!parse_termux_enabled_flag("false"));
+        assert!(!parse_termux_enabled_flag("no"));
+        assert!(!parse_termux_enabled_flag(" FALSE "));
+        assert!(parse_termux_enabled_flag("1"));
+        assert!(parse_termux_enabled_flag("true"));
+        assert!(parse_termux_enabled_flag("yes"));
+    }
+
+    #[test]
+    fn test_build_tools_registry_excludes_termux_tools_by_default() {
+        let config = zeroclaw::Config::default();
+
+        let (tools, _shell_runtime) = build_tools_registry(&config, None, false, false);
+
+        assert!(!tools.iter().any(|tool| tool.name() == "termux_run"));
+        assert!(!tools
+            .iter()
+            .any(|tool| tool.name() == "termux_get_capabilities"));
+        assert!(tools
+            .iter()
+            .any(|tool| tool.name() == "sandbox_execute"));
+        assert!(tools
+            .iter()
+            .any(|tool| tool.name() == "sandbox_manage_process"));
+    }
+
+    #[test]
     fn test_build_tools_registry_includes_composio_when_configured() {
         let mut config = zeroclaw::Config::default();
         config.composio.enabled = true;
@@ -4669,7 +4737,7 @@ mod tests {
 
         assert_eq!(parsed["content"], "Let me check");
         assert_eq!(parsed["tool_calls"][0]["id"], "call_123");
-        assert_eq!(parsed["tool_calls"][0]["function"]["name"], "shell");
+        assert_eq!(parsed["tool_calls"][0]["name"], "shell");
         assert!(parsed.get("reasoning_content").is_none());
     }
 
@@ -4887,6 +4955,11 @@ mod tests {
 
     // ── Concurrency stress test ──────────────────────────────────────
 
+    // Requires a live daemon (provider API key + running runtime) and mutates
+    // the process-global SESSION slot, which corrupts other session tests when
+    // run in the same binary. Disabled by default; run explicitly in an
+    // environment with a fully configured daemon.
+    #[ignore = "requires live daemon with configured provider"]
     #[test]
     fn test_concurrent_session_send_race_condition() {
         // Use TryInit to avoid panicking in CI if another test already set
@@ -4948,6 +5021,9 @@ mod tests {
             activated_mcp_tools: None,
             shared_folder_enabled: false,
             workflow_folder_enabled: false,
+            shell_runtime: Arc::new(StdMutex::new(ShellRuntime::new(
+                std::path::PathBuf::from("/tmp"),
+            ))),
         });
 
         eprintln!();

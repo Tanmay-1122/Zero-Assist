@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.zeroclaw.android.ui.component.SectionHeader
 
-/** GitHub releases URL for the Zero-Assist-Android project. */
-private const val RELEASES_URL = "https://github.com/Natfii/Zero-Assist-Android/releases"
+/** GitHub releases URL for the Zero-Assist project. */
+private const val RELEASES_URL = "https://github.com/Tanmay-1122/Zero-Assist/releases"
 
 /**
  * Updates screen with a manual update check button that opens the GitHub

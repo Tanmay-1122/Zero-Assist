@@ -63,7 +63,6 @@ class DeviceControlAccessibilityService : AccessibilityService(), DeviceControlS
         super.onServiceConnected()
         current = this
         _connected.value = true
-        DeviceControlOverlayManager.init(this)
     }
 
     override fun onDestroy() {

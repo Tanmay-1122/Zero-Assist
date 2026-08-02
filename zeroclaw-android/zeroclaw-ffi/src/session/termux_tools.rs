@@ -21,7 +21,7 @@ impl Tool for FfiTermuxCapabilitiesTool {
     }
 
     fn description(&self) -> &'static str {
-        "Inspect the user's local Termux runtime through Zero Assist's authenticated bridge. Returns installed command availability, Python version, workspace paths, proot status, and execution limits. Use this before planning Termux work instead of guessing installed commands."
+        "LEGACY / OPT-IN ONLY. Inspect the user's local Termux runtime through Zero Assist's authenticated bridge. Returns installed command availability, Python version, workspace paths, proot status, and execution limits. This tool is only registered when the user explicitly enables the Termux plugin — the Linux sandbox (sandbox_execute) is the default shell backend."
     }
 
     fn parameters_schema(&self) -> serde_json::Value {
@@ -60,7 +60,7 @@ impl Tool for FfiTermuxRunTool {
     }
 
     fn description(&self) -> &'static str {
-        "Execute commands directly in the user's existing Termux environment on the Android device. Use ONLY when the user explicitly asks to interact with their Termux installation, its files, or Android host tools. For general Linux commands, packages, and scripting, use sandbox_execute instead — it provides a full Alpine Linux environment without affecting Termux."
+        "LEGACY / OPT-IN ONLY. Execute commands directly in the user's existing Termux environment on the Android device. This tool is only registered when the user explicitly enables the Termux plugin. Use ONLY when the user explicitly asks to interact with their Termux installation, its files, or Android host tools. For ALL general Linux commands, packages, and scripting, use sandbox_execute instead — it provides the full Alpine Linux environment without affecting Termux."
     }
 
     fn parameters_schema(&self) -> serde_json::Value {

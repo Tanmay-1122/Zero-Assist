@@ -138,7 +138,7 @@ import com.zeroclaw.android.data.local.SeedData
         ScheduledTaskEntity::class,
         ScheduledTaskRunEntity::class,
     ],
-    version = 25,
+    version = 26,
     exportSchema = true,
 )
 abstract class ZeroClawDatabase : RoomDatabase() {
@@ -1202,6 +1202,24 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 }
             }
 
+        /**
+         * Removes the default seeded agents (master, researcher, coder, planner,
+         * writer, analyst, executor) from existing installs. Agents are no longer
+         * created automatically; they only exist when the user explicitly creates
+         * one via the Connections "Chat" tab "+" button and the agent template
+         * picker. User-created agents always carry UUID ids, so this delete can
+         * never touch them.
+         */
+        private val MIGRATION_25_26 =
+            object : Migration(25, 26) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "DELETE FROM agents WHERE id IN " +
+                            "('master', 'researcher', 'coder', 'planner', 'writer', 'analyst', 'executor')",
+                    )
+                }
+            }
+
         val MIGRATIONS: Array<Migration> =
             arrayOf(
                 MIGRATION_1_2,
@@ -1228,6 +1246,7 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 MIGRATION_22_23,
                 MIGRATION_23_24,
                 MIGRATION_24_25,
+                MIGRATION_25_26,
             )
 
         /**

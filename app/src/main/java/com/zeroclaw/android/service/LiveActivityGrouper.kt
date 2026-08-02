@@ -103,6 +103,16 @@ class LiveActivityGrouper {
                 success = success,
             ),
         )
+        // A failed LLM call aborts the turn on the daemon, so surface the
+        // red X immediately instead of waiting for a (possibly dropped)
+        // error event. A later turn_complete upgrades this to COMPLETED if
+        // the daemon recovered the turn in-loop.
+        if (success == false) {
+            val idx = items.indexOf(active)
+            if (idx != -1) {
+                updateItem(idx, active.copy(status = ActivityStatus.ERROR))
+            }
+        }
     }
 
     private fun handleToolCallStart(event: DaemonEvent) {
@@ -144,10 +154,12 @@ class LiveActivityGrouper {
     }
 
     private fun handleTurnComplete(event: DaemonEvent) {
-        val active = findActive() ?: return
-        val idx = items.indexOf(active)
+        // Complete the most recent in-progress item (ACTIVE or ERROR). ERROR
+        // items are upgraded: a failed LLM call can be recovered in-loop, and
+        // the daemon's terminal turn_complete then wins with the green tick.
+        val idx = items.indexOfFirst { it.status != ActivityStatus.COMPLETED }
         if (idx != -1) {
-            updateItem(idx, active.copy(status = ActivityStatus.COMPLETED))
+            updateItem(idx, items[idx].copy(status = ActivityStatus.COMPLETED))
         }
     }
 
@@ -169,18 +181,25 @@ class LiveActivityGrouper {
         val iterator = items.iterator()
         while (iterator.hasNext()) {
             val item = iterator.next()
-            val age = now - item.timestampMs
 
             // Safety net: if an ACTIVE item has been spinning for longer than
             // STUCK_THRESHOLD_MS, the `turn_complete` event was likely lost
             // (SharedFlow drop, crash, etc.). Transition it to COMPLETED so
             // the UI shows the green tick instead of an infinite spinner.
+            // The timestamp is re-stamped so the forced completion stays
+            // visible for the full COMPLETED_DISPLAY_MS window instead of
+            // being pruned in the same cycle.
             var effectiveStatus = item.status
+            var age = now - item.timestampMs
             if (item.status == ActivityStatus.ACTIVE && age > STUCK_THRESHOLD_MS) {
                 val idx = items.indexOf(item)
                 if (idx != -1) {
-                    updateItem(idx, item.copy(status = ActivityStatus.COMPLETED))
+                    updateItem(
+                        idx,
+                        item.copy(status = ActivityStatus.COMPLETED, timestampMs = now),
+                    )
                     effectiveStatus = ActivityStatus.COMPLETED
+                    age = 0L
                 }
             }
 

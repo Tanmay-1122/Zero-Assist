@@ -171,13 +171,6 @@ class VoiceAssistantViewModel private constructor(
                 wakeupRequested.value = requested
             }
         }
-        viewModelScope.launch {
-            com.zeroclaw.android.service.devicecontrol.DeviceControlMonitor.state.collect { dcState ->
-                if (dcState.isActive && !popupVisible.value) {
-                    openPopup()
-                }
-            }
-        }
         if (activateSpeechOnInit) {
             activateLocalSpeechCapabilities()
         }

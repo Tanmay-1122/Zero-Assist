@@ -12,6 +12,7 @@ pub mod provider_aliases;
 pub mod providers;
 pub mod scattered_types;
 pub mod schema;
+pub use schema::Config;
 pub mod secrets;
 pub mod traits;
 pub mod workspace;

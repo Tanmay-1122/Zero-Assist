@@ -425,6 +425,7 @@ data class GlobalTomlConfig(
         val DEFAULT_OTP_GATED_ACTIONS =
             listOf(
                 "shell",
+                "sandbox_execute",
                 "file_write",
                 "browser_open",
                 "browser",

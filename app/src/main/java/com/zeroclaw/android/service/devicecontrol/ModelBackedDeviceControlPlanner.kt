@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonObject
 class ModelBackedDeviceControlPlanner(
     private val daemonBridge: DaemonServiceBridge,
     private val json: Json = PlannerJson.decisionJson,
-    private val maxRetries: Int = 2,
+    private val maxRetries: Int = 3,
 ) : DeviceControlPlanner {
 
     override suspend fun nextAction(request: PlannerRequest): PlannerDecision {
@@ -256,8 +256,8 @@ class ModelBackedDeviceControlPlanner(
 
     companion object {
         private const val TAG = "ModelDevicePlanner"
-        private const val FIRST_ATTEMPT_TIMEOUT_MS = 10_000L
-        private const val RETRY_TIMEOUT_MS = 8_000L
+        private const val FIRST_ATTEMPT_TIMEOUT_MS = 25_000L
+        private const val RETRY_TIMEOUT_MS = 20_000L
 
         const val SUPPORTED_ACTION_TYPES =
             "click_text, click_index, click_at, type_text, press_enter, " +

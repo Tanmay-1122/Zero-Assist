@@ -98,6 +98,7 @@ fn template_files(
         ("SOUL.md", soul_md(agent, comm_style)),
         ("USER.md", user_md(agent, user, tz, comm_style)),
         ("TOOLS.md", TOOLS_MD.to_string()),
+        ("BOOTSTRAP.md", bootstrap_md(agent, user, tz, comm_style)),
         ("MEMORY.md", MEMORY_MD.to_string()),
     ]
 }

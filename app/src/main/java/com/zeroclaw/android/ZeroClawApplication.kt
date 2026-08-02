@@ -666,8 +666,6 @@ class ZeroClawApplication :
 
         ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-        com.zeroclaw.android.service.devicecontrol.DeviceControlOverlayManager.init(this)
-
         estopRepository = EstopRepository(scope = ioScope)
 
         // All heavy I/O (native library loading, web asset extraction, sandbox server
@@ -741,6 +739,7 @@ class ZeroClawApplication :
         ioScope.launch {
             settingsRepository.settings.collect { settings ->
                 termuxToolCatalog.setPluginEnabled(settings.termuxEnabled)
+                publishTermuxEnabledToNativeEnv(settings.termuxEnabled)
             }
         }
         memoryBridge = MemoryBridge()
@@ -799,7 +798,6 @@ class ZeroClawApplication :
         activityRepository = RoomActivityRepository(database.activityEventDao(), ioScope)
         conversationHistoryRepository = RoomConversationHistoryRepository(database.conversationDao())
         agentRepository = RoomAgentRepository(database, syncRepository)
-        (agentRepository as RoomAgentRepository).seedDefaultAgents()
         pluginRepository = RoomPluginRepository(database.pluginDao(), syncRepository)
         channelConfigRepository = createChannelConfigRepository()
         terminalEntryRepository =
@@ -1023,11 +1021,24 @@ class ZeroClawApplication :
                 internalTermuxBridgeToken,
                 true,
             )
+            // Default Termux tools OFF — the sandbox is the only shell backend
+            // until the user explicitly enables the Termux plugin. The settings
+            // collector keeps this env var in sync at runtime.
+            Os.setenv(TERMUX_ENABLED_ENV, "0", true)
         } catch (e: ErrnoException) {
             Log.w(
                 TAG,
                 "Failed to publish Termux bridge token to native runtime: ${e.message}",
             )
+        }
+    }
+
+    /** Publishes whether Termux bridge tools should be registered in sessions. */
+    private fun publishTermuxEnabledToNativeEnv(enabled: Boolean) {
+        try {
+            Os.setenv(TERMUX_ENABLED_ENV, if (enabled) "1" else "0", true)
+        } catch (e: ErrnoException) {
+            Log.w(TAG, "Failed to publish Termux enabled flag to native runtime: ${e.message}")
         }
     }
 
@@ -1085,6 +1096,13 @@ class ZeroClawApplication :
         deferredTermuxBridgeSupervisionInitialized = true
 
         ioScope.launch {
+            // The Termux bridge is opt-in: it must not spin up on devices that
+            // only use the sandbox shell backend.
+            val termuxEnabled = settingsRepository.settings.first().termuxEnabled
+            if (!termuxEnabled) {
+                Log.d(TAG, "Termux bridge supervision skipped — Termux disabled in settings.")
+                return@launch
+            }
             runCatching { termuxBridgeSupervisor.ensureStarted() }
                 .onSuccess { result ->
                     when (result.status) {
@@ -1143,6 +1161,7 @@ class ZeroClawApplication :
         private const val CODEX_PROVIDER = "openai-codex"
         private const val CHANNEL_CONFIG_PREFS = "connected_channel_secrets"
         private const val TERMUX_BRIDGE_TOKEN_ENV = "ZERO_ASSIST_TERMUX_BRIDGE_TOKEN"
+        private const val TERMUX_ENABLED_ENV = "ZERO_ASSIST_TERMUX_ENABLED"
         private const val TERMUX_BRIDGE_PREFS = "termux_bridge"
         private const val TERMUX_BRIDGE_TOKEN_PREF_KEY = "bridge_token"
         private const val SANDBOX_BRIDGE_TOKEN_ENV = "ZERO_ASSIST_SANDBOX_BRIDGE_TOKEN"

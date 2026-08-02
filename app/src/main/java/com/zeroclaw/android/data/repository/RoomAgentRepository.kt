@@ -8,7 +8,6 @@ package com.zeroclaw.android.data.repository
 
 import androidx.room.withTransaction
 import com.zeroclaw.android.backup.SyncRepository
-import com.zeroclaw.android.data.local.SeedData
 import com.zeroclaw.android.data.local.ZeroClawDatabase
 import com.zeroclaw.android.data.local.entity.toEntity
 import com.zeroclaw.android.data.local.entity.toModel
@@ -63,16 +62,6 @@ class RoomAgentRepository(
     override suspend fun toggleEnabled(id: String) {
         dao.toggleEnabled(id)
         syncRepository?.markPendingSync()
-    }
-
-    /**
-     * Seeds the agents table with default agents if it is empty.
-     *
-     * Uses [insertAllIgnoreConflicts] so that existing user-created agents
-     * are never overwritten. Safe to call on every app launch.
-     */
-    suspend fun seedDefaultAgents() {
-        dao.insertAllIgnoreConflicts(SeedData.seedAgents())
     }
 
     override fun observeByRole(role: AgentRole): Flow<List<Agent>> =

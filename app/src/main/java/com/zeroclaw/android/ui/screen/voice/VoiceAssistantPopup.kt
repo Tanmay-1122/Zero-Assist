@@ -22,7 +22,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,8 +29,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import com.zeroclaw.android.service.devicecontrol.DeviceControlMonitor
-import com.zeroclaw.android.service.devicecontrol.DeviceControlState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -43,16 +40,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -110,7 +110,6 @@ fun VoiceAssistantPopupHost(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val deviceControlState by DeviceControlMonitor.state.collectAsStateWithLifecycle()
     val microphonePermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
@@ -138,7 +137,7 @@ fun VoiceAssistantPopupHost(
 
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
-            visible = uiState.popupVisible || deviceControlState.isActive,
+            visible = uiState.popupVisible,
             enter =
                 slideInVertically(
                     animationSpec = tween(280, easing = FastOutSlowInEasing),
@@ -158,13 +157,13 @@ fun VoiceAssistantPopupHost(
             Box(
                 modifier =
                     Modifier
-                        .navigationBarsPadding()
-                        .imePadding()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.exclude(WindowInsets.statusBars)
+                        )
                         .padding(horizontal = 14.dp, vertical = 16.dp),
             ) {
                 VoiceAssistantPopup(
                     uiState = uiState,
-                    deviceControlState = deviceControlState,
                     onStartListening = {
                         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
                             PackageManager.PERMISSION_GRANTED
@@ -186,7 +185,6 @@ fun VoiceAssistantPopupHost(
 @Composable
 private fun VoiceAssistantPopup(
     uiState: VoiceAssistantUiState,
-    deviceControlState: DeviceControlState,
     onStartListening: () -> Unit,
     onStopListening: () -> Unit,
     onCancelTurn: () -> Unit,
@@ -205,12 +203,12 @@ private fun VoiceAssistantPopup(
     val isIdle = uiState.sessionState == VoiceAssistantSessionState.Idle ||
         uiState.sessionState == VoiceAssistantSessionState.MissingVoice
     val animatedShadow by animateDpAsState(
-        targetValue = if (isIdle && !deviceControlState.isActive) 8.dp else 12.dp,
+        targetValue = if (isIdle) 8.dp else 12.dp,
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "popup-shadow",
     )
     val animatedBorderAlpha by animateFloatAsState(
-        targetValue = if (isIdle && !deviceControlState.isActive) 0.92f else 1f,
+        targetValue = if (isIdle) 0.92f else 1f,
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "popup-border-alpha",
     )
@@ -226,60 +224,44 @@ private fun VoiceAssistantPopup(
         shadowElevation = animatedShadow,
         border = BorderStroke(
             1.dp,
-            if (deviceControlState.isActive) Color(0xFF00E5FF).copy(alpha = 0.5f)
-            else AssistantStrokeIdle.copy(alpha = animatedBorderAlpha)
+            AssistantStrokeIdle.copy(alpha = animatedBorderAlpha),
         ),
         color = AssistantSurface,
         contentColor = AssistantTextPrimary,
     ) {
-        Crossfade(
-            targetState = deviceControlState.isActive,
-            animationSpec = tween(320, easing = FastOutSlowInEasing),
-            label = "assistant-device-control-crossfade",
-        ) { isDeviceControlActive ->
-            if (isDeviceControlActive) {
-                Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
-                    DeviceControlUiContent(
-                        state = deviceControlState,
-                        onCancelControl = { DeviceControlMonitor.requestCancel() },
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    AssistantCompactHeader(
-                        visuals = visuals,
-                        uiState = uiState,
-                    )
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            AssistantCompactHeader(
+                visuals = visuals,
+                uiState = uiState,
+            )
 
-                    if (transcript.isNotBlank() || assistantMessage != null) {
-                        AssistantConversationPanel(
-                            transcript = transcript,
-                            assistantMessage = assistantMessage,
-                        )
-                    }
-
-                    AssistantControls(
-                        uiState = uiState,
-                        accent = visuals.accent,
-                        onStartListening = onStartListening,
-                        onStopListening = onStopListening,
-                        onCancelTurn = onCancelTurn,
-                        prompt = prompt,
-                        onPromptChange = { prompt = it },
-                        onSubmitPrompt = {
-                            val submitted = prompt.trim()
-                            if (submitted.isNotBlank()) {
-                                prompt = ""
-                                onSubmitTextPrompt(submitted)
-                            }
-                        },
-                    )
-                }
+            if (transcript.isNotBlank() || assistantMessage != null) {
+                AssistantConversationPanel(
+                    transcript = transcript,
+                    assistantMessage = assistantMessage,
+                )
             }
+
+            AssistantControls(
+                uiState = uiState,
+                accent = visuals.accent,
+                onStartListening = onStartListening,
+                onStopListening = onStopListening,
+                onCancelTurn = onCancelTurn,
+                prompt = prompt,
+                onPromptChange = { prompt = it },
+                onSubmitPrompt = {
+                    val submitted = prompt.trim()
+                    if (submitted.isNotBlank()) {
+                        prompt = ""
+                        onSubmitTextPrompt(submitted)
+                    }
+                },
+            )
         }
     }
 }
