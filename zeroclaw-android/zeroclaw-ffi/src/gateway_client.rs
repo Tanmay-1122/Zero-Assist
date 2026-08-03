@@ -6,7 +6,7 @@
 
 //! Internal HTTP client for calling the daemon's gateway REST API.
 //!
-//! Upstream v0.1.6 made several modules (`cron`, `cost`, `health`,
+//! Upstream v0.1.6 made several modules (`cost`, `health`,
 //! `skills`) `pub(crate)`, so the FFI crate can no longer call those
 //! functions directly. Instead, we route CRUD operations through the
 //! gateway's REST API on the localhost loopback, reusing the same
@@ -131,13 +131,13 @@ mod tests {
 
     #[test]
     fn test_gateway_post_not_running() {
-        let result = gateway_post("/api/cron", &serde_json::json!({}));
+        let result = gateway_post("/api/status", &serde_json::json!({}));
         assert!(result.is_err());
     }
 
     #[test]
     fn test_gateway_delete_not_running() {
-        let result = gateway_delete("/api/cron/test-id");
+        let result = gateway_delete("/api/integrations/test-id");
         assert!(result.is_err());
     }
 }

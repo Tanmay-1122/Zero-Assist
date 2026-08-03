@@ -24,7 +24,7 @@ data class DaemonStatus(
 /**
  * Health status of a single daemon component.
  *
- * @property name Human-readable component name (e.g. "gateway", "scheduler").
+ * @property name Human-readable component name (e.g. "gateway", "heartbeat").
  * @property status Status string: "ok", "error", or "starting".
  */
 data class ComponentStatus(

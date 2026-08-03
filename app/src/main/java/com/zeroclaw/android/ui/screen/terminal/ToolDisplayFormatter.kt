@@ -48,10 +48,6 @@ internal object ToolDisplayFormatter {
         "web_fetch" to "fetch",
         "http_request" to "http",
 
-        // Cron
-        "cron_list" to "cron",
-        "cron_runs" to "cron",
-
         // Sandbox process management
         "sandbox_manage_process" to "sandbox",
 

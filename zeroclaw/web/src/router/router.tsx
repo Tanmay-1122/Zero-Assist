@@ -8,7 +8,6 @@ import {
   AgentsList,
   Canvas,
   Config,
-  Cron,
   Dashboard,
   Doctor,
   Integrations,
@@ -45,7 +44,6 @@ export const Router = () => (
         <Route path="/agent/:alias" element={<AgentChat />} />
         <Route path="/agent/:alias/workspace" element={<AgentWorkspaceExplorer />} />
         <Route path="/tools" element={<Tools />} />
-        <Route path="/cron" element={<Cron />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/sops" element={<SopsList />} />
         <Route path="/sops/new" element={<SopEditor />} />

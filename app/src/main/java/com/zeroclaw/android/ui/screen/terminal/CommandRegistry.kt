@@ -297,71 +297,6 @@ object CommandRegistry {
                 },
             ),
             SlashCommand(
-                name = "cron get",
-                description = "Get details of a cron job",
-                usage = "<id>",
-                toExpression = { args ->
-                    "cron_get(${rhaiString(args.firstOrNull().orEmpty())})"
-                },
-            ),
-            SlashCommand(
-                name = "cron add",
-                description = "Add a recurring cron job",
-                usage = "<expression> <command>",
-                toExpression = { args ->
-                    if (args.size >= 2) {
-                        val expression = args.first()
-                        val command = args.drop(1).joinToString(" ")
-                        "cron_add(${rhaiString(expression)}, ${rhaiString(command)})"
-                    } else {
-                        "cron_add(\"\", \"\")"
-                    }
-                },
-            ),
-            SlashCommand(
-                name = "cron oneshot",
-                description = "Add a one-shot delayed job",
-                usage = "<delay> <command>",
-                toExpression = { args ->
-                    if (args.size >= 2) {
-                        val delay = args.first()
-                        val command = args.drop(1).joinToString(" ")
-                        "cron_oneshot(${rhaiString(delay)}, ${rhaiString(command)})"
-                    } else {
-                        "cron_oneshot(\"\", \"\")"
-                    }
-                },
-            ),
-            SlashCommand(
-                name = "cron remove",
-                description = "Remove a cron job",
-                usage = "<id>",
-                toExpression = { args ->
-                    "cron_remove(${rhaiString(args.firstOrNull().orEmpty())})"
-                },
-            ),
-            SlashCommand(
-                name = "cron pause",
-                description = "Pause a cron job",
-                usage = "<id>",
-                toExpression = { args ->
-                    "cron_pause(${rhaiString(args.firstOrNull().orEmpty())})"
-                },
-            ),
-            SlashCommand(
-                name = "cron resume",
-                description = "Resume a paused cron job",
-                usage = "<id>",
-                toExpression = { args ->
-                    "cron_resume(${rhaiString(args.firstOrNull().orEmpty())})"
-                },
-            ),
-            SlashCommand(
-                name = "cron",
-                description = "List all cron jobs",
-                toExpression = { "cron_list()" },
-            ),
-            SlashCommand(
                 name = "skills tools",
                 description = "List tools provided by a skill",
                 usage = "<name>",
@@ -559,34 +494,6 @@ object CommandRegistry {
                 name = "auth",
                 description = "List auth profiles",
                 toExpression = { "auth_list()" },
-            ),
-            SlashCommand(
-                name = "cron at",
-                description = "Schedule a job at a specific time",
-                usage = "<timestamp> <command>",
-                toExpression = { args ->
-                    if (args.size >= 2) {
-                        val timestamp = args.first()
-                        val command = args.drop(1).joinToString(" ")
-                        "cron_add_at(${rhaiString(timestamp)}, ${rhaiString(command)})"
-                    } else {
-                        "cron_add_at(\"\", \"\")"
-                    }
-                },
-            ),
-            SlashCommand(
-                name = "cron every",
-                description = "Schedule a repeating job at an interval",
-                usage = "<ms> <command>",
-                toExpression = { args ->
-                    if (args.size >= 2) {
-                        val ms = args.first()
-                        val command = args.drop(1).joinToString(" ")
-                        "cron_add_every($ms, ${rhaiString(command)})"
-                    } else {
-                        "cron_add_every(0, \"\")"
-                    }
-                },
             ),
             SlashCommand(
                 name = "agents",

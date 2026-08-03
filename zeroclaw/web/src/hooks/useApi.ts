@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getStatus,
   getTools,
-  getCronJobs,
   getIntegrations,
   getMemory,
   getCliTools,
@@ -12,7 +11,6 @@ import {
 import type {
   StatusResponse,
   ToolSpec,
-  CronJob,
   Integration,
   MemoryEntry,
   CliTool,
@@ -89,11 +87,6 @@ export function useStatus(): UseApiResult<StatusResponse> {
 /** Fetch registered tools from /api/tools. */
 export function useTools(): UseApiResult<ToolSpec[]> {
   return useApiCall(getTools);
-}
-
-/** Fetch cron jobs from /api/cron. */
-export function useCronJobs(): UseApiResult<CronJob[]> {
-  return useApiCall(getCronJobs);
 }
 
 /** Fetch integrations from /api/integrations. */

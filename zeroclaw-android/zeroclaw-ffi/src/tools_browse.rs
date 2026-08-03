@@ -29,7 +29,7 @@ pub struct FfiToolSpec {
     pub parameters_json: String,
     /// Whether the tool is usable in the current Android session.
     ///
-    /// Session-available tools (memory, cron, web tools) are active.
+    /// Session-available tools (memory, web tools) are active.
     /// Tools requiring a `SecurityPolicy` (shell, file I/O, git) are
     /// inactive because they can only execute through daemon-channel routing.
     pub is_active: bool,
@@ -77,14 +77,6 @@ const CORE_TOOLS: &[BuiltInTool] = &[
     BuiltInTool {
         name: "memory_forget",
         description: "Remove a memory entry by key",
-    },
-    BuiltInTool {
-        name: "cron_list",
-        description: "List cron jobs with schedule, status, and metadata",
-    },
-    BuiltInTool {
-        name: "cron_runs",
-        description: "List recent run records for a specific cron job by job_id",
     },
     BuiltInTool {
         name: "git_operations",
@@ -221,14 +213,12 @@ const DELEGATE_TOOL: BuiltInTool = BuiltInTool {
 
 /// Tools available in the Android session without a [`SecurityPolicy`].
 ///
-/// Memory, cron, and shared folder tools run directly in the FFI session and are always
+/// Memory, web, and shared folder tools run directly in the FFI session and are always
 /// active when the daemon is running and their respective handlers are registered.
 const SESSION_TOOLS: &[&str] = &[
     "memory_store",
     "memory_recall",
     "memory_forget",
-    "cron_list",
-    "cron_runs",
     "shared_folder_list",
     "shared_folder_read",
     "shared_folder_write",
@@ -645,10 +635,6 @@ mod tests {
         let shell = CORE_TOOLS.iter().find(|t| t.name == "shell").unwrap();
         assert!(shell.description.contains("daemon-channel security policy"));
         assert!(shell.description.contains("sandbox_execute"));
-
-        let cron_runs = CORE_TOOLS.iter().find(|t| t.name == "cron_runs").unwrap();
-        assert!(cron_runs.description.contains("specific cron job"));
-        assert!(cron_runs.description.contains("job_id"));
 
         assert!(TERMUX_RUN_TOOL.description.contains("user's existing Termux environment"));
         assert!(TERMUX_RUN_TOOL.description.contains("sandbox_execute instead"));

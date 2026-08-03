@@ -77,7 +77,6 @@ import com.zeroclaw.android.ZeroClawApplication
 import com.zeroclaw.android.backup.SyncStatus
 import com.zeroclaw.android.model.ActivityEvent
 import com.zeroclaw.android.model.CostSummary
-import com.zeroclaw.android.model.CronJob
 import com.zeroclaw.android.model.DaemonStatus
 import com.zeroclaw.android.model.KeyRejectionEvent
 import com.zeroclaw.android.model.LiveActivityItem
@@ -108,7 +107,6 @@ import kotlinx.coroutines.launch
  * @property statusState Daemon status with loading/error variants.
  * @property keyRejection Latest API key rejection event, if any.
  * @property costSummary Accumulated cost summary, if available.
- * @property cronJobs Active cron job list.
  * @property enabledAgentCount Number of enabled agent connections.
  * @property installedPluginCount Number of installed plugins.
  * @property daemonStatus Latest daemon status snapshot, if available.
@@ -127,7 +125,6 @@ data class DashboardState(
     val statusState: DaemonUiState<DaemonStatus>,
     val keyRejection: KeyRejectionEvent?,
     val costSummary: CostSummary?,
-    val cronJobs: List<CronJob>,
     val enabledAgentCount: Int,
     val installedPluginCount: Int,
     val daemonStatus: DaemonStatus?,
@@ -148,14 +145,13 @@ data class DashboardState(
 
 /**
  * Dashboard home screen displaying daemon status, component health,
- * cost summary, cron summary, metrics, and an activity feed.
+ * cost summary, metrics, and an activity feed.
  *
  * Thin stateful wrapper that collects ViewModel flows and delegates
  * rendering to [DashboardContent].
  *
  * @param edgeMargin Horizontal padding based on window width size class.
  * @param onNavigateToCostDetail Callback to navigate to the cost detail screen.
- * @param onNavigateToCronJobs Callback to navigate to the cron jobs management screen.
  * @param restartRequired Whether the daemon needs a restart to apply pending changes.
  * @param onRestartDaemon Callback invoked when the user taps the restart action.
  * @param viewModel The [DaemonViewModel] for daemon state and actions.
@@ -165,7 +161,6 @@ data class DashboardState(
 fun DashboardScreen(
     edgeMargin: Dp,
     onNavigateToCostDetail: () -> Unit = {},
-    onNavigateToCronJobs: () -> Unit = {},
     onNavigateToHub: (Int) -> Unit = {},
     restartRequired: Boolean = false,
     onRestartDaemon: () -> Unit = {},
@@ -177,7 +172,6 @@ fun DashboardScreen(
     val statusState by viewModel.statusState.collectAsStateWithLifecycle()
     val keyRejection by viewModel.keyRejectionEvent.collectAsStateWithLifecycle()
     val costSummary by viewModel.costSummary.collectAsStateWithLifecycle()
-    val cronJobs by viewModel.cronJobs.collectAsStateWithLifecycle()
     val enabledAgentCount by viewModel.enabledAgentCount.collectAsStateWithLifecycle()
     val installedPluginCount by viewModel.installedPluginCount.collectAsStateWithLifecycle()
     val daemonStatus by viewModel.daemonStatus.collectAsStateWithLifecycle()
@@ -225,7 +219,6 @@ fun DashboardScreen(
                 statusState = statusState,
                 keyRejection = keyRejection,
                 costSummary = costSummary,
-                cronJobs = cronJobs,
                 enabledAgentCount = enabledAgentCount,
                 installedPluginCount = installedPluginCount,
                 daemonStatus = daemonStatus,
@@ -245,7 +238,6 @@ fun DashboardScreen(
             ),
         edgeMargin = edgeMargin,
         onNavigateToCostDetail = onNavigateToCostDetail,
-        onNavigateToCronJobs = onNavigateToCronJobs,
         onNavigateToHub = onNavigateToHub,
         onStartDaemon = viewModel::requestStart,
         onStopDaemon = viewModel::requestStop,
@@ -279,7 +271,6 @@ fun DashboardScreen(
  * @param state Aggregated dashboard state snapshot.
  * @param edgeMargin Horizontal padding based on window width size class.
  * @param onNavigateToCostDetail Callback to navigate to cost detail.
- * @param onNavigateToCronJobs Callback to navigate to cron jobs.
  * @param onStartDaemon Callback to start the daemon.
  * @param onStopDaemon Callback to stop the daemon.
  * @param onRestartDaemon Callback to restart the daemon after settings changes.
@@ -295,7 +286,6 @@ internal fun DashboardContent(
     state: DashboardState,
     edgeMargin: Dp,
     onNavigateToCostDetail: () -> Unit,
-    onNavigateToCronJobs: () -> Unit,
     onNavigateToHub: (Int) -> Unit = {},
     onStartDaemon: () -> Unit,
     onStopDaemon: () -> Unit,
@@ -414,7 +404,6 @@ internal fun DashboardContent(
                 installedPluginCount = state.installedPluginCount,
                 daemonStatus = state.daemonStatus,
                 serviceState = state.serviceState,
-                cronJobCount = state.cronJobs.size,
                 onNavigateToHub = onNavigateToHub,
             )
         }
@@ -1036,17 +1025,16 @@ private fun serviceStateDescription(state: ServiceState): String =
 private const val STATUS_DOT_SIZE = 8
 
 /**
- * Compact key-metrics strip: four columns in a single flat card, separated
+ * Compact key-metrics strip: three columns in a single flat card, separated
  * by hairline dividers instead of four separate floating cards. Connections
  * and Plugins are tappable shortcuts into the Hub (marked with a small
- * chevron); Uptime and Crons are read-only.
+ * chevron); Uptime is read-only.
  *
  * @param enabledAgentCount Number of enabled agent connections.
  * @param installedPluginCount Number of installed plugins.
  * @param daemonStatus Latest daemon status snapshot, or null if unavailable.
  * @param serviceState Current service lifecycle state; used to determine
  *   whether to show uptime or "Offline".
- * @param cronJobCount Number of scheduled cron jobs.
  * @param onNavigateToHub Callback invoked with a hub tab index when a
  *   tappable column is selected.
  */
@@ -1056,7 +1044,6 @@ private fun KeyMetricsStrip(
     installedPluginCount: Int,
     daemonStatus: DaemonStatus?,
     serviceState: ServiceState,
-    cronJobCount: Int,
     onNavigateToHub: (Int) -> Unit,
 ) {
     val uptimeText = formatUptime(daemonStatus, serviceState)
@@ -1089,15 +1076,6 @@ private fun KeyMetricsStrip(
                     icon = Icons.Outlined.Schedule,
                     value = uptimeText,
                     caption = if (serviceState == ServiceState.RUNNING) "running" else "",
-                    navigable = false,
-                    modifier = Modifier.weight(1f),
-                )
-                StatDivider()
-                StatColumn(
-                    label = "Crons",
-                    icon = Icons.Outlined.Event,
-                    value = cronJobCount.toString(),
-                    caption = "scheduled",
                     navigable = false,
                     modifier = Modifier.weight(1f),
                 )

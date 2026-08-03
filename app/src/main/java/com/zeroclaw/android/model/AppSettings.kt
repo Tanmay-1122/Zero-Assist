@@ -50,9 +50,6 @@ package com.zeroclaw.android.model
  * @property gatewayPairRateLimit Pairing rate limit per minute.
  * @property gatewayWebhookRateLimit Webhook rate limit per minute.
  * @property gatewayIdempotencyTtl Idempotency TTL in seconds.
- * @property schedulerEnabled Whether the task scheduler is active.
- * @property schedulerMaxTasks Maximum concurrent scheduler tasks.
- * @property schedulerMaxConcurrent Maximum concurrent task executions.
  * @property heartbeatEnabled Whether the heartbeat engine is active.
  * @property heartbeatIntervalMinutes Interval between heartbeat ticks.
  * @property observabilityBackend Observability backend: "none", "log", "otel".
@@ -172,9 +169,6 @@ data class AppSettings(
     val gatewayPairRateLimit: Int = DEFAULT_PAIR_RATE_LIMIT,
     val gatewayWebhookRateLimit: Int = DEFAULT_WEBHOOK_RATE_LIMIT,
     val gatewayIdempotencyTtl: Int = DEFAULT_IDEMPOTENCY_TTL,
-    val schedulerEnabled: Boolean = true,
-    val schedulerMaxTasks: Int = DEFAULT_SCHEDULER_MAX_TASKS,
-    val schedulerMaxConcurrent: Int = DEFAULT_SCHEDULER_MAX_CONCURRENT,
     val heartbeatEnabled: Boolean = false,
     val heartbeatIntervalMinutes: Int = DEFAULT_HEARTBEAT_INTERVAL,
     val observabilityBackend: String = "none",
@@ -340,12 +334,6 @@ data class AppSettings(
 
         /** Default idempotency TTL in seconds. */
         const val DEFAULT_IDEMPOTENCY_TTL = 300
-
-        /** Default scheduler max tasks. */
-        const val DEFAULT_SCHEDULER_MAX_TASKS = 64
-
-        /** Default scheduler max concurrent executions. */
-        const val DEFAULT_SCHEDULER_MAX_CONCURRENT = 4
 
         /** Default heartbeat interval in minutes. */
         const val DEFAULT_HEARTBEAT_INTERVAL = 30

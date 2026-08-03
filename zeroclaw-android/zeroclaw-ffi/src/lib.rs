@@ -9,7 +9,7 @@
 //! UniFFI-annotated facade for `ZeroClaw` Android bindings.
 //!
 //! This crate provides a thin FFI layer over the `ZeroClaw` daemon,
-//! exposing daemon lifecycle, health, cost, events, cron, skills, tools,
+//! exposing daemon lifecycle, health, cost, events, skills, tools,
 //! and memory browsing functions to Kotlin via UniFFI-generated bindings.
 
 uniffi::setup_scaffolding!();
@@ -20,7 +20,6 @@ mod auto_delegate;
 mod bridge_registration;
 mod config_compat;
 mod cost;
-mod cron;
 mod error;
 mod estop;
 mod events;
@@ -563,7 +562,7 @@ pub fn resume_estop() -> Result<(), FfiError> {
 
 /// Scaffolds the `ZeroClaw` workspace directory with identity files.
 ///
-/// Creates 5 subdirectories (`sessions/`, `memory/`, `state/`, `cron/`,
+/// Creates 4 subdirectories (`sessions/`, `memory/`, `state/`,
 /// `skills/`) and writes 8 markdown template files (`IDENTITY.md`,
 /// `AGENTS.md`, `HEARTBEAT.md`, `SOUL.md`, `USER.md`, `TOOLS.md`,
 /// `BOOTSTRAP.md`, `MEMORY.md`) inside `workspace_path`.
@@ -735,179 +734,6 @@ pub fn unregister_event_listener() -> Result<(), FfiError> {
 #[uniffi::export]
 pub fn get_recent_events(limit: u32) -> Result<String, FfiError> {
     catch_unwind(|| events::get_recent_events_inner(limit)).unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Lists all cron jobs registered with the running daemon.
-///
-/// Requires the daemon to be running so the cron SQLite database is accessible.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on database access failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn list_cron_jobs() -> Result<Vec<cron::FfiCronJob>, FfiError> {
-    catch_unwind(cron::list_cron_jobs_inner).unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Retrieves a single cron job by its identifier.
-///
-/// Returns `None` if no job with the given `id` exists.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on database access failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn get_cron_job(id: String) -> Result<Option<cron::FfiCronJob>, FfiError> {
-    catch_unwind(AssertUnwindSafe(|| cron::get_cron_job_inner(id))).unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Adds a new recurring cron job with the given expression and command.
-///
-/// The `expression` must be a valid cron expression (e.g. `"0 0/5 * * *"`).
-/// The `command` is the prompt or action the scheduler will execute.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on invalid expression or database failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn add_cron_job(expression: String, command: String) -> Result<cron::FfiCronJob, FfiError> {
-    catch_unwind(AssertUnwindSafe(|| {
-        cron::add_cron_job_inner(expression, command)
-    }))
-    .unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Adds a one-shot job that fires once after the given delay.
-///
-/// The `delay` string uses human-readable durations (e.g. `"5m"`, `"2h"`).
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on invalid delay or database failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn add_one_shot_job(delay: String, command: String) -> Result<cron::FfiCronJob, FfiError> {
-    catch_unwind(AssertUnwindSafe(|| {
-        cron::add_one_shot_job_inner(delay, command)
-    }))
-    .unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Adds a one-shot cron job that fires at a specific RFC 3339 timestamp.
-///
-/// The `timestamp_rfc3339` must be a valid RFC 3339 string (e.g.
-/// `"2026-12-31T23:59:59Z"`). The job self-deletes after firing.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on invalid timestamp or database failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn add_cron_job_at(
-    timestamp_rfc3339: String,
-    command: String,
-) -> Result<cron::FfiCronJob, FfiError> {
-    catch_unwind(AssertUnwindSafe(|| {
-        cron::add_cron_job_at_inner(timestamp_rfc3339, command)
-    }))
-    .unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Adds a fixed-interval repeating cron job.
-///
-/// The `interval_ms` specifies the repeat interval in milliseconds.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] on database failure, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn add_cron_job_every(interval_ms: u64, command: String) -> Result<cron::FfiCronJob, FfiError> {
-    catch_unwind(AssertUnwindSafe(|| {
-        cron::add_cron_job_every_inner(interval_ms, command)
-    }))
-    .unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Removes a cron job by its identifier.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn remove_cron_job(id: String) -> Result<(), FfiError> {
-    catch_unwind(AssertUnwindSafe(|| cron::remove_cron_job_inner(id))).unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Pauses a cron job so it will not fire until resumed.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn pause_cron_job(id: String) -> Result<(), FfiError> {
-    catch_unwind(AssertUnwindSafe(|| cron::pause_cron_job_inner(id))).unwrap_or_else(|e| {
-        Err(FfiError::InternalPanic {
-            detail: panic_detail(&e),
-        })
-    })
-}
-
-/// Resumes a previously paused cron job.
-///
-/// # Errors
-///
-/// Returns [`FfiError::StateError`] if the daemon is not running,
-/// [`FfiError::SpawnError`] if the job does not exist or database fails, or
-/// [`FfiError::InternalPanic`] if native code panics.
-#[uniffi::export]
-pub fn resume_cron_job(id: String) -> Result<(), FfiError> {
-    catch_unwind(AssertUnwindSafe(|| cron::resume_cron_job_inner(id))).unwrap_or_else(|e| {
         Err(FfiError::InternalPanic {
             detail: panic_detail(&e),
         })
@@ -1718,7 +1544,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        for subdir in &["sessions", "memory", "state", "cron", "skills"] {
+        for subdir in &["sessions", "memory", "state", "skills"] {
             assert!(dir.join(subdir).is_dir(), "missing directory: {subdir}");
         }
 

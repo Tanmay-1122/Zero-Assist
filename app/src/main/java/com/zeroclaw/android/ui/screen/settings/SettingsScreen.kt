@@ -316,13 +316,6 @@ internal fun SettingsContent(
                     onClick = { onNavigate(SettingsNavAction.EmbeddingRoutes) },
                 )
                 SettingsListItem(
-                    icon = Icons.Outlined.Schedule,
-                    title = "Scheduler & Heartbeat",
-                    subtitle =
-                        if (settings.schedulerEnabled) "Scheduler on" else "Scheduler off",
-                    onClick = { onNavigate(SettingsNavAction.Scheduler) },
-                )
-                SettingsListItem(
                     icon = Icons.Outlined.Speed,
                     title = "Observability",
                     subtitle = settings.observabilityBackend,
@@ -385,12 +378,6 @@ internal fun SettingsContent(
                     title = "Memory Browser",
                     subtitle = "Browse and search memory entries",
                     onClick = { onNavigate(SettingsNavAction.MemoryBrowser) },
-                )
-                SettingsListItem(
-                    icon = Icons.Outlined.TaskAlt,
-                    title = "Scheduled Tasks",
-                    subtitle = "View and manage cron jobs",
-                    onClick = { onNavigate(SettingsNavAction.CronJobs) },
                 )
             }
         }

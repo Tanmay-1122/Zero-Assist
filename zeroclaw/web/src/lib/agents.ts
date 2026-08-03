@@ -13,8 +13,6 @@ export interface AgentSummary {
   skillBundles: string[];
   knowledgeBundles: string[];
   mcpBundles: string[];
-  /** Cron alias list from `[agents.<alias>].cron_jobs`. */
-  cronJobs: string[];
   /** Peer-group aliases this agent appears in (reverse-resolved by
    * walking `[peer_groups.<alias>].agents`). */
   peerGroups: string[];
@@ -113,7 +111,6 @@ export async function loadAgentSummaries(): Promise<AgentSummary[]> {
         skillBundles: entryAsStringArray(lookup('skill_bundles')),
         knowledgeBundles: entryAsStringArray(lookup('knowledge_bundles')),
         mcpBundles: entryAsStringArray(lookup('mcp_bundles')),
-        cronJobs: entryAsStringArray(lookup('cron_jobs')),
         peerGroups: [],
         sessionCount: 0,
         lastActivity: null,

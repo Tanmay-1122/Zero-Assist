@@ -72,11 +72,7 @@ import com.zeroclaw.android.model.SensorAlert
 import com.zeroclaw.android.model.ActuatorCommand
 import com.zeroclaw.android.model.HardwareAuditLog
 import com.zeroclaw.android.data.local.entity.GreetingHistoryEntity
-import com.zeroclaw.android.data.local.entity.ScheduledTaskEntity
-import com.zeroclaw.android.data.local.entity.ScheduledTaskRunEntity
 import com.zeroclaw.android.data.local.dao.GreetingHistoryDao
-import com.zeroclaw.android.data.local.dao.ScheduledTaskDao
-import com.zeroclaw.android.data.local.dao.ScheduledTaskRunDao
 import com.zeroclaw.android.data.db.greeting.GreetingTypeConverters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -135,10 +131,8 @@ import com.zeroclaw.android.data.local.SeedData
         TermuxAuditEntity::class,
         // Greeting history for dynamic welcome messages
         GreetingHistoryEntity::class,
-        ScheduledTaskEntity::class,
-        ScheduledTaskRunEntity::class,
     ],
-    version = 26,
+    version = 27,
     exportSchema = true,
 )
 abstract class ZeroClawDatabase : RoomDatabase() {
@@ -201,12 +195,6 @@ abstract class ZeroClawDatabase : RoomDatabase() {
 
     /** Data access object for hardware audit logs. */
     abstract fun hardwareAuditLogDao(): HardwareAuditLogDao
-
-    /** Data access object for scheduled tasks. */
-    abstract fun scheduledTaskDao(): ScheduledTaskDao
-
-    /** Data access object for scheduled task runs. */
-    abstract fun scheduledTaskRunDao(): ScheduledTaskRunDao
 
     /** Data access object for persisted agent chat messages. */
     abstract fun agentChatMessageDao(): AgentChatMessageDao
@@ -1220,6 +1208,19 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 }
             }
 
+        /**
+         * Drops the native task-scheduler tables. The cron feature (native
+         * scheduled tasks and their run history) was removed from the daemon
+         * and Android app; scheduled task data is no longer persisted locally.
+         */
+        private val MIGRATION_26_27 =
+            object : Migration(26, 27) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("DROP TABLE IF EXISTS scheduled_task_runs")
+                    db.execSQL("DROP TABLE IF EXISTS scheduled_tasks")
+                }
+            }
+
         val MIGRATIONS: Array<Migration> =
             arrayOf(
                 MIGRATION_1_2,
@@ -1247,6 +1248,7 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 MIGRATION_23_24,
                 MIGRATION_24_25,
                 MIGRATION_25_26,
+                MIGRATION_26_27,
             )
 
         /**

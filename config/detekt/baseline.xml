@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+﻿<?xml version='1.0' encoding='UTF-8'?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
@@ -62,10 +62,6 @@
     <ID>OutdatedDocumentation:AgentsScreen.kt$AgentsState</ID>
     <ID>OutdatedDocumentation:ConnectionsHubScreen.kt$@Composable fun ConnectionsHubScreen( onNavigateToAgentDetail: (String) -> Unit, onNavigateToAddAgent: () -> Unit, onNavigateToGroupChat: () -> Unit, onNavigateToPluginDetail: (String) -> Unit, onNavigateToChannelDetail: (String?, String?) -> Unit, edgeMargin: Dp, agentsViewModel: AgentsViewModel = viewModel(), pluginsViewModel: PluginsViewModel = viewModel(), skillsViewModel: SkillsViewModel = viewModel(), channelsViewModel: ChannelsViewModel = viewModel(), initialTabIndex: Int = 1, modifier: Modifier = Modifier, )</ID>
     <ID>OutdatedDocumentation:DaemonServiceBridge.kt$DaemonServiceBridge</ID>
-    <ID>OutdatedDocumentation:DashboardScreen.kt$@Composable fun DashboardScreen( edgeMargin: Dp, onNavigateToCostDetail: () -> Unit = {}, onNavigateToCronJobs: () -> Unit = {}, onNavigateToHub: (Int) -> Unit = {}, viewModel: DaemonViewModel = viewModel(), modifier: Modifier = Modifier, )</ID>
-    <ID>OutdatedDocumentation:DashboardScreen.kt$@Composable internal fun DashboardContent( state: DashboardState, edgeMargin: Dp, onNavigateToCostDetail: () -> Unit, onNavigateToCronJobs: () -> Unit, onNavigateToHub: (Int) -> Unit, onStartDaemon: () -> Unit, onStopDaemon: () -> Unit, onDismissKeyRejection: () -> Unit, onDismissMemoryHealthWarning: () -> Unit = {}, onEngageEstop: () -> Unit = {}, onResumeEstop: () -> Unit = {}, modifier: Modifier = Modifier, )</ID>
-    <ID>OutdatedDocumentation:DashboardScreen.kt$@Composable private fun MetricCard( label: String, value: String, description: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}, )</ID>
-    <ID>OutdatedDocumentation:DashboardScreen.kt$@Composable private fun MetricCardsRow( enabledAgentCount: Int, installedPluginCount: Int, daemonStatus: DaemonStatus?, serviceState: ServiceState, onNavigateToHub: (Int) -> Unit, )</ID>
     <ID>OutdatedDocumentation:SettingsScreen.kt$@Composable fun SettingsScreen( backupViewModel: BackupViewModel, onNavigate: (SettingsNavAction) -> Unit, onRerunWizard: () -> Unit, edgeMargin: Dp, settingsViewModel: SettingsViewModel = viewModel(), restartRequired: Boolean = false, onRestartDaemon: () -> Unit = {}, modifier: Modifier = Modifier, )</ID>
     <ID>OutdatedDocumentation:SettingsScreen.kt$@Composable internal fun SettingsContent( settings: AppSettings, restartRequired: Boolean, edgeMargin: Dp, onNavigate: (SettingsNavAction) -> Unit, onRerunWizard: () -> Unit, onRestartDaemon: () -> Unit, onThemeSelected: (ThemeMode) -> Unit, backupViewModel: BackupViewModel, modifier: Modifier = Modifier, )</ID>
     <ID>OutdatedDocumentation:SyncRepository.kt$SyncStatus</ID>

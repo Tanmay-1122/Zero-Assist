@@ -14,7 +14,7 @@ package com.zeroclaw.android.model
  *   **Security note:** this field may contain user-supplied JSON from skill definitions.
  *   Display it read-only and never evaluate it as executable code.
  * @property isActive Whether the tool is usable in the current Android session.
- *   Session-available tools (memory, cron, web tools) are active. Tools requiring
+ *   Session-available tools (memory, web tools) are active. Tools requiring
  *   a SecurityPolicy (shell, file I/O, git) are inactive.
  * @property inactiveReason Human-readable reason the tool is inactive, or empty string
  *   when active. Common values: "Requires daemon-channel security policy",

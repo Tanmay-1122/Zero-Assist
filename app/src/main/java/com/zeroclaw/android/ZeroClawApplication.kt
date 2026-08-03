@@ -89,7 +89,6 @@ import com.zeroclaw.android.service.ChannelVoiceTaskHandoff
 import com.zeroclaw.android.service.CompositeAppOwnedToolCatalog
 import com.zeroclaw.android.service.CompositeLocalSpeechOutputDriver
 import com.zeroclaw.android.service.CostBridge
-import com.zeroclaw.android.service.cron.ffi.CronBridge
 import com.zeroclaw.android.service.CustomVoiceSpeechOutputDriver
 import com.zeroclaw.android.service.DaemonServiceBridge
 import com.zeroclaw.android.service.EventBridge
@@ -313,10 +312,6 @@ class ZeroClawApplication :
 
     /** Bridge for daemon event callbacks from the native layer. */
     lateinit var eventBridge: EventBridge
-        private set
-
-    /** Bridge for cron job CRUD FFI calls. */
-    lateinit var cronBridge: CronBridge
         private set
 
     /** Bridge for skills browsing and management FFI calls. */
@@ -622,7 +617,7 @@ class ZeroClawApplication :
      * Event bus for triggering immediate data refresh across ViewModels.
      *
      * The terminal REPL emits commands here after mutating operations
-     * (cron add, skill install, etc.) so that the Dashboard and other
+     * (skill install, etc.) so that the Dashboard and other
      * screens update without waiting for the next poll cycle.
      */
     val refreshCommands: MutableSharedFlow<RefreshCommand> =
@@ -714,7 +709,6 @@ class ZeroClawApplication :
 
         healthBridge = HealthBridge()
         costBridge = CostBridge()
-        cronBridge = CronBridge()
         skillsBridge = SkillsBridge()
         skillsMarketplaceClient = OkHttpSkillsMarketplaceClient(sharedHttpClient)
         skillsMarketplaceInstaller =

@@ -924,7 +924,6 @@ private fun quickStartPromptFor(action: String): String =
         "Learn" -> "Explain "
         "Code" -> "Help me implement "
         "Automate" -> "Automate this workflow: "
-        "Schedule" -> "/cron every "
         else -> ""
     }
 

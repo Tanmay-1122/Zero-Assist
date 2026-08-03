@@ -331,27 +331,6 @@ interface SettingsRepository {
     suspend fun setGatewayIdempotencyTtl(seconds: Int)
 
     /**
-     * Toggles the task scheduler.
-     *
-     * @param enabled Whether the scheduler is active.
-     */
-    suspend fun setSchedulerEnabled(enabled: Boolean)
-
-    /**
-     * Updates the scheduler max tasks.
-     *
-     * @param max Maximum number of scheduled tasks.
-     */
-    suspend fun setSchedulerMaxTasks(max: Int)
-
-    /**
-     * Updates the scheduler max concurrent executions.
-     *
-     * @param max Maximum concurrent task count.
-     */
-    suspend fun setSchedulerMaxConcurrent(max: Int)
-
-    /**
      * Toggles the heartbeat engine.
      *
      * @param enabled Whether heartbeat is active.

@@ -349,12 +349,6 @@ private class TestSettingsRepository : SettingsRepository {
 
     override suspend fun setGatewayIdempotencyTtl(seconds: Int) { /* no-op */ }
 
-    override suspend fun setSchedulerEnabled(enabled: Boolean) { /* no-op */ }
-
-    override suspend fun setSchedulerMaxTasks(max: Int) { /* no-op */ }
-
-    override suspend fun setSchedulerMaxConcurrent(max: Int) { /* no-op */ }
-
     override suspend fun setHeartbeatEnabled(enabled: Boolean) { /* no-op */ }
 
     override suspend fun setHeartbeatIntervalMinutes(minutes: Int) { /* no-op */ }

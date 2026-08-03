@@ -21,7 +21,6 @@ const sectionTitles: Record<string, string> = {
   agents: 'nav.agents',
   tools: 'nav.tools',
   skills: 'nav.skills',
-  cron: 'nav.cron',
   integrations: 'nav.integrations',
   config: 'nav.config',
   setup: 'nav.config',

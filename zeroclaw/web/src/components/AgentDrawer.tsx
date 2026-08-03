@@ -9,7 +9,6 @@ import {
   BookOpen,
   Bot,
   Brain,
-  Clock,
   Database,
   DollarSign,
   MessageSquare,
@@ -113,7 +112,6 @@ export default function AgentDrawer({
   const skillCount = agent.skillBundles.length;
   const knowledgeCount = agent.knowledgeBundles.length;
   const mcpCount = agent.mcpBundles.length;
-  const cronCount = agent.cronJobs.length;
   const peerCount = agent.peerGroups.length;
 
   return (
@@ -325,22 +323,6 @@ export default function AgentDrawer({
                   title={`${t('agent.open_config_prefix')}peer_groups.${pg}${t('agent.open_config_suffix')}`}
                 >
                   {pg}
-                </EntityLink>
-              ))}
-            </DetailGroup>
-          )}
-
-          {cronCount > 0 && (
-            <DetailGroup icon={Clock} label={t('agent.section.cron')}>
-              {agent.cronJobs.map((c) => (
-                <EntityLink
-                  key={c}
-                  kind="cron"
-                  id={c}
-                  className={CHIP_CLASS}
-                  title={`${t('agent.open_config_prefix')}cron.${c}${t('agent.open_config_suffix')}`}
-                >
-                  {c}
                 </EntityLink>
               ))}
             </DetailGroup>

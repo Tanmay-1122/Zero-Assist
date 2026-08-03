@@ -56,9 +56,6 @@ sealed interface SettingsNavAction {
     /** Navigate to the memory advanced settings screen. */
     data object MemoryAdvanced : SettingsNavAction
 
-    /** Navigate to the scheduler and heartbeat screen. */
-    data object Scheduler : SettingsNavAction
-
     /** Navigate to the observability settings screen. */
     data object Observability : SettingsNavAction
 
@@ -70,9 +67,6 @@ sealed interface SettingsNavAction {
 
     /** Navigate to the plugin registry screen. */
     data object PluginRegistry : SettingsNavAction
-
-    /** Navigate to the scheduled tasks (cron jobs) screen. */
-    data object CronJobs : SettingsNavAction
 
     /** Navigate to the memory browser screen. */
     data object MemoryBrowser : SettingsNavAction

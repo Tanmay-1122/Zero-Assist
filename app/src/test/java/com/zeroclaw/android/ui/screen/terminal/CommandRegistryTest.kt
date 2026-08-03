@@ -196,15 +196,6 @@ class CommandRegistryTest {
         }
 
         @Test
-        @DisplayName("cron add with expression and command")
-        fun `cron add with expression and command`() {
-            val result = CommandRegistry.parseAndTranslate("/cron add 0/5 echo test")
-            assertTrue(result is CommandResult.RhaiExpression)
-            val expression = (result as CommandResult.RhaiExpression).expression
-            assertEquals("cron_add(\"0/5\", \"echo test\")", expression)
-        }
-
-        @Test
         @DisplayName("empty input returns empty ChatMessage")
         fun `empty input returns empty ChatMessage`() {
             val result = CommandRegistry.parseAndTranslate("")
@@ -359,28 +350,6 @@ class CommandRegistryTest {
             assertTrue(result is CommandResult.RhaiExpression)
             assertEquals(
                 "auth_remove(\"openai\", \"default\")",
-                (result as CommandResult.RhaiExpression).expression,
-            )
-        }
-
-        @Test
-        @DisplayName("cron at with args generates correct expression")
-        fun `cron at with args generates correct expression`() {
-            val result = CommandRegistry.parseAndTranslate("/cron at 2026-12-31T23:59:59Z echo done")
-            assertTrue(result is CommandResult.RhaiExpression)
-            assertEquals(
-                "cron_add_at(\"2026-12-31T23:59:59Z\", \"echo done\")",
-                (result as CommandResult.RhaiExpression).expression,
-            )
-        }
-
-        @Test
-        @DisplayName("cron every with args generates correct expression")
-        fun `cron every with args generates correct expression`() {
-            val result = CommandRegistry.parseAndTranslate("/cron every 60000 echo tick")
-            assertTrue(result is CommandResult.RhaiExpression)
-            assertEquals(
-                "cron_add_every(60000, \"echo tick\")",
                 (result as CommandResult.RhaiExpression).expression,
             )
         }

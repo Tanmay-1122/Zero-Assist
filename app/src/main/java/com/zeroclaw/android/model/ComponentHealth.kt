@@ -12,7 +12,7 @@ package com.zeroclaw.android.model
  * Unlike [ComponentStatus], this class carries additional diagnostics produced by the new health
  * detail endpoint: the last error message and cumulative restart count.
  *
- * @property name Human-readable component name (e.g. "gateway", "scheduler").
+ * @property name Human-readable component name (e.g. "gateway", "heartbeat").
  * @property status Status string: "ok", "error", or "starting".
  * @property lastError Last error message recorded for this component, or `null` if none.
  * @property restartCount Cumulative number of times this component has been restarted. The

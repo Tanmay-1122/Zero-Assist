@@ -401,21 +401,6 @@ class SettingsViewModel(
         updateDaemonSetting { setGatewayIdempotencyTtl(seconds) }
     }
 
-    /** @see com.zeroclaw.android.data.repository.SettingsRepository.setSchedulerEnabled */
-    fun updateSchedulerEnabled(enabled: Boolean) {
-        updateDaemonSetting { setSchedulerEnabled(enabled) }
-    }
-
-    /** @see com.zeroclaw.android.data.repository.SettingsRepository.setSchedulerMaxTasks */
-    fun updateSchedulerMaxTasks(max: Int) {
-        updateDaemonSetting { setSchedulerMaxTasks(max) }
-    }
-
-    /** @see com.zeroclaw.android.data.repository.SettingsRepository.setSchedulerMaxConcurrent */
-    fun updateSchedulerMaxConcurrent(max: Int) {
-        updateDaemonSetting { setSchedulerMaxConcurrent(max) }
-    }
-
     /** @see com.zeroclaw.android.data.repository.SettingsRepository.setHeartbeatEnabled */
     fun updateHeartbeatEnabled(enabled: Boolean) {
         updateDaemonSetting { setHeartbeatEnabled(enabled) }

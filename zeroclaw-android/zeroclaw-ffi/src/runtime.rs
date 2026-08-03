@@ -95,7 +95,7 @@ static WORKSPACE_DIR: OnceLock<Mutex<Option<std::path::PathBuf>>> = OnceLock::ne
 
 /// Mutable state for a running daemon instance.
 ///
-/// Upstream v0.1.6+ made `cost`, `health`, `heartbeat`, `cron`, and
+/// Upstream v0.1.6+ made `cost`, `health`, `heartbeat`, and
 /// `skills` modules `pub(crate)`, so this struct no longer holds a
 /// `CostTracker`. Cost data is accessed through the gateway REST API.
 struct DaemonState {
@@ -351,9 +351,9 @@ pub(crate) fn get_or_create_runtime() -> Result<Handle, FfiError> {
 /// Parses `config_toml` into a [`Config`], overrides Android-specific paths
 /// with `data_dir`, then spawns the gateway and channel supervisors.
 ///
-/// Upstream v0.1.6 made the `cron`, `cost`, `health`, and `heartbeat`
+/// Upstream v0.1.6 made the `cost`, `health`, and `heartbeat`
 /// modules `pub(crate)`, so we no longer start those components directly.
-/// The gateway handles cron CRUD and cost tracking internally; health is
+/// The gateway handles cost tracking internally; health is
 /// tracked via [`crate::ffi_health`]; heartbeat is skipped on mobile.
 ///
 /// # Errors
@@ -569,11 +569,10 @@ pub(crate) fn start_daemon_inner(
             crate::ffi_health::mark_component_ok("mqtt");
         }
 
-        // NOTE: Heartbeat and cron scheduler are skipped on Android.
+        // NOTE: Heartbeat is skipped on Android.
         // Upstream v0.1.6 made these modules pub(crate), and they are
-        // non-essential for the mobile wrapper. The gateway's internal
-        // cron scheduler handles job execution; cron CRUD and cost data
-        // are accessed through the gateway REST API.
+        // non-essential for the mobile wrapper. Cost data is accessed
+        // through the gateway REST API.
 
         handles
     });

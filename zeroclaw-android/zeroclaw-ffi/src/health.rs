@@ -14,7 +14,7 @@ use crate::error::FfiError;
 /// Per-component health status.
 #[derive(Debug, Clone, serde::Serialize, uniffi::Record)]
 pub struct FfiComponentHealth {
-    /// Component name (e.g. "gateway", "scheduler").
+    /// Component name (e.g. "gateway", "heartbeat").
     pub name: String,
     /// Status string: "ok", "error", or "starting".
     pub status: String,

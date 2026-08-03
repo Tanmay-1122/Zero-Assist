@@ -489,11 +489,11 @@ export function AgentChatInner({
             variant="ghost"
             size="sm"
             onClick={toggleCanvasPanel}
-            aria-label={canvasPanelOpen ? t('canvas.close_panel', 'Close canvas panel') : t('canvas.open_panel', 'Open canvas panel')}
+            aria-label={canvasPanelOpen ? t('canvas.close_panel') : t('canvas.open_panel')}
             aria-pressed={canvasPanelOpen}
           >
             <Monitor className="h-3 w-3" />
-            {t('canvas.toggle_panel', 'Canvas')}
+            {t('canvas.toggle_panel')}
           </Button>
           <Button
             variant="danger"

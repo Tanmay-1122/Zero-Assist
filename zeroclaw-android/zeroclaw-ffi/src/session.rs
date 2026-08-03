@@ -299,7 +299,6 @@ fn fail_result(error: String) -> ToolResult {
 ///
 /// Constructs tools that are available without upstream's `SecurityPolicy`:
 /// - Memory tools (store, recall, forget) via FFI wrappers and upstream
-/// - Cron listing tools via upstream constructors
 /// - Web search via upstream constructor (when enabled in config)
 /// - Web fetch via FFI wrapper (when enabled in config)
 /// - HTTP request via FFI wrapper (when enabled in config)
@@ -391,11 +390,7 @@ fn build_tools_registry(
     shared_folder_enabled: bool,
     workflow_folder_enabled: bool,
 ) -> (Vec<Box<dyn Tool>>, Arc<Mutex<ShellRuntime>>) {
-    let config_arc = Arc::new(config.clone());
-    let mut tools: Vec<Box<dyn Tool>> = vec![
-        Box::new(zeroclaw::tools::CronListTool::new(config_arc.clone())),
-        Box::new(zeroclaw::tools::CronRunsTool::new(config_arc)),
-    ];
+    let mut tools: Vec<Box<dyn Tool>> = Vec::new();
 
     // Create a shared ShellRuntime that mirrors the sandbox's persistent shell
     // state (cwd, env, exit code, jobs, history) into the system prompt.
@@ -2038,7 +2033,7 @@ enum AgentLoopOutcome {
 /// 5. If tool calls: execute tools that exist in the registry and report
 ///    results; tools not in the registry get a fallback "unavailable" message.
 ///
-/// Tools with real implementations (memory, cron, web search) are executed
+/// Tools with real implementations (memory, web search) are executed
 /// directly. Tools that require upstream's `pub(crate)` `SecurityPolicy`
 /// (shell, file I/O, git, browser) are not in the registry and receive
 /// an unavailability response so the LLM can answer without them.
@@ -3417,7 +3412,7 @@ fn clear_cancel_token() {
 /// available in an Android agent session. This is a strict subset of the
 /// tools available via daemon channel routing.
 ///
-/// Session tools include: memory (store/recall/forget), cron (add/list/remove),
+/// Session tools include: memory (store/recall/forget),
 /// and optionally web_fetch, http_request, browser_open, Composio, and delegate.
 ///
 /// Shell and file I/O tools (`shell`, `file_read`, `file_write`) are NOT
@@ -3481,14 +3476,6 @@ fn build_android_tool_descs(
              or explicitly requested for removal. Don't use when: \
              impact is uncertain."
                 .into(),
-        ),
-        (
-            "cron_list".into(),
-            "List all cron jobs with schedule, status, and metadata.".into(),
-        ),
-        (
-            "cron_runs".into(),
-            "List recent run records and statuses for one cron job by job_id.".into(),
         ),
     ];
 

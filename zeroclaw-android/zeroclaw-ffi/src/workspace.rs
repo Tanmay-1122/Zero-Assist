@@ -20,11 +20,11 @@ const DEFAULT_COMM_STYLE: &str = "Be warm, natural, and clear. Use occasional re
      and avoid robotic phrasing.";
 
 /// Subdirectories created inside the workspace.
-const SUBDIRS: [&str; 5] = ["sessions", "memory", "state", "cron", "skills"];
+const SUBDIRS: [&str; 4] = ["sessions", "memory", "state", "skills"];
 
 /// Creates the `ZeroClaw` workspace directory structure and identity files.
 ///
-/// Writes 8 markdown template files and creates 5 subdirectories inside
+/// Writes 8 markdown template files and creates 4 subdirectories inside
 /// `workspace_path`. Existing files are never overwritten (idempotent).
 /// Directories are created with `create_dir_all` so partial state from
 /// a previous failed run is handled cleanly.

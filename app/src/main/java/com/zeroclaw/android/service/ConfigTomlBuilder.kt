@@ -58,7 +58,6 @@ data class AgentTomlEntry(
  * - `[reliability]` provider_retries, provider_backoff_ms, api_keys
  * - `[autonomy]` level, workspace, commands, paths, limits
  * - `[tunnel]` provider + sub-tables (cloudflare/tailscale/ngrok/custom)
- * - `[scheduler]` enabled, max_tasks, max_concurrent
  * - `[heartbeat]` enabled, interval_minutes
  * - `[observability]` backend, otel_endpoint, otel_service_name
  * - `[[model_routes]]` hint, provider, model
@@ -111,9 +110,6 @@ data class AgentTomlEntry(
  * @property gatewayPairRateLimit Pairing rate limit per minute.
  * @property gatewayWebhookRateLimit Webhook rate limit per minute.
  * @property gatewayIdempotencyTtl Idempotency TTL in seconds.
- * @property schedulerEnabled Whether the task scheduler is active.
- * @property schedulerMaxTasks Maximum scheduler tasks.
- * @property schedulerMaxConcurrent Maximum concurrent task executions.
  * @property heartbeatEnabled Whether the heartbeat engine is active.
  * @property heartbeatIntervalMinutes Interval between heartbeat ticks.
  * @property observabilityBackend Observability backend name.
@@ -237,9 +233,6 @@ data class GlobalTomlConfig(
     val gatewayPairRateLimit: Int = DEFAULT_PAIR_RATE,
     val gatewayWebhookRateLimit: Int = DEFAULT_WEBHOOK_RATE,
     val gatewayIdempotencyTtl: Int = DEFAULT_IDEMPOTENCY_TTL,
-    val schedulerEnabled: Boolean = true,
-    val schedulerMaxTasks: Int = DEFAULT_SCHEDULER_TASKS,
-    val schedulerMaxConcurrent: Int = DEFAULT_SCHEDULER_CONCURRENT,
     val heartbeatEnabled: Boolean = false,
     val heartbeatIntervalMinutes: Int = DEFAULT_HEARTBEAT_INTERVAL,
     val observabilityBackend: String = "none",
@@ -372,12 +365,6 @@ data class GlobalTomlConfig(
 
         /** Default idempotency TTL in seconds. */
         const val DEFAULT_IDEMPOTENCY_TTL = 300
-
-        /** Default scheduler max tasks. */
-        const val DEFAULT_SCHEDULER_TASKS = 64
-
-        /** Default scheduler max concurrent. */
-        const val DEFAULT_SCHEDULER_CONCURRENT = 4
 
         /** Default heartbeat interval in minutes. */
         const val DEFAULT_HEARTBEAT_INTERVAL = 30
@@ -622,7 +609,6 @@ object ConfigTomlBuilder {
             appendReliabilitySection(config)
             appendAutonomySection(config)
             appendTunnelSection(config)
-            appendSchedulerSection(config)
             appendHeartbeatSection(config)
             appendObservabilitySection(config)
             appendModelRoutesSection(config)
@@ -836,22 +822,6 @@ object ConfigTomlBuilder {
                 }
             }
         }
-    }
-
-    /**
-     * Appends the `[scheduler]` TOML section.
-     *
-     * Upstream fields: enabled, max_tasks, max_concurrent
-     * (see `.claude/submodule-api-map.md` lines 299-303).
-     *
-     * @param config Configuration to read scheduler values from.
-     */
-    private fun StringBuilder.appendSchedulerSection(config: GlobalTomlConfig) {
-        appendLine()
-        appendLine("[scheduler]")
-        appendLine("enabled = ${config.schedulerEnabled}")
-        appendLine("max_tasks = ${config.schedulerMaxTasks.coerceAtLeast(0)}")
-        appendLine("max_concurrent = ${config.schedulerMaxConcurrent.coerceAtLeast(0)}")
     }
 
     /**

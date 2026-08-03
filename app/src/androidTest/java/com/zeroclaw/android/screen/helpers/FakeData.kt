@@ -14,7 +14,6 @@ import com.zeroclaw.android.model.ApiKey
 import com.zeroclaw.android.model.AppSettings
 import com.zeroclaw.android.model.CheckStatus
 import com.zeroclaw.android.model.CostSummary
-import com.zeroclaw.android.model.CronJob
 import com.zeroclaw.android.model.DaemonStatus
 import com.zeroclaw.android.model.DiagnosticCategory
 import com.zeroclaw.android.model.DiagnosticCheck
@@ -47,7 +46,6 @@ internal fun fakeDashboardState(): DashboardState =
         keyRejection = null,
         healthDetail = null,
         costSummary = null,
-        cronJobs = emptyList(),
         enabledAgentCount = 0,
         installedPluginCount = 0,
         daemonStatus = null,
@@ -86,19 +84,6 @@ internal fun fakeRunningDashboardState(): DashboardState =
                 totalTokens = 50000,
                 requestCount = 25,
                 modelBreakdownJson = "{}",
-            ),
-        cronJobs =
-            listOf(
-                CronJob(
-                    id = "cron-1",
-                    expression = "0 0/5 * * *",
-                    command = "health-check",
-                    nextRunMs = System.currentTimeMillis() + 300000,
-                    lastRunMs = System.currentTimeMillis() - 300000,
-                    lastStatus = "ok",
-                    paused = false,
-                    oneShot = false,
-                ),
             ),
         enabledAgentCount = 2,
         installedPluginCount = 3,

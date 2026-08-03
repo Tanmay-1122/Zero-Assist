@@ -104,12 +104,6 @@ internal class TestSettingsRepository : SettingsRepository {
 
     override suspend fun setGatewayIdempotencyTtl(seconds: Int) = _settings.update { it.copy(gatewayIdempotencyTtl = seconds) }
 
-    override suspend fun setSchedulerEnabled(enabled: Boolean) = _settings.update { it.copy(schedulerEnabled = enabled) }
-
-    override suspend fun setSchedulerMaxTasks(max: Int) = _settings.update { it.copy(schedulerMaxTasks = max) }
-
-    override suspend fun setSchedulerMaxConcurrent(max: Int) = _settings.update { it.copy(schedulerMaxConcurrent = max) }
-
     override suspend fun setHeartbeatEnabled(enabled: Boolean) = _settings.update { it.copy(heartbeatEnabled = enabled) }
 
     override suspend fun setHeartbeatIntervalMinutes(minutes: Int) = _settings.update { it.copy(heartbeatIntervalMinutes = minutes) }

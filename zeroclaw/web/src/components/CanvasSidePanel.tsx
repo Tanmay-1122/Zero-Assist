@@ -199,7 +199,7 @@ export default function CanvasSidePanel({
             <button
               type="button"
               onClick={onClose}
-              aria-label={t('canvas.close_panel', 'Close canvas panel')}
+              aria-label={t('canvas.close_panel')}
               className="h-7 w-7 flex items-center justify-center rounded-[var(--radius-md)] text-pc-text-muted hover:bg-[var(--pc-hover)] hover:text-pc-text transition-colors"
             >
               <X className="h-3.5 w-3.5" />

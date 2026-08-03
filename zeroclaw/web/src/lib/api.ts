@@ -1,8 +1,6 @@
 import type {
   StatusResponse,
   ToolSpec,
-  CronJob,
-  CronRun,
   Integration,
   DiagResult,
   MemoryEntry,
@@ -1698,7 +1696,7 @@ export interface MapKeyMutResponse {
   key: string;
   renamed?: boolean;
   created?: boolean;
-  /** Agent rename only: owned-state cascade warnings — stores (memory / cron /
+  /** Agent rename only: owned-state cascade warnings — stores (memory /
    *  acp / session) that did NOT follow the rename and need operator attention. */
   warnings?: string[];
 }
@@ -1751,7 +1749,7 @@ export interface DeletePlan {
   scrubs: DeletePlanRefSite[];
   /** Agent delete: live ACP sessions (a non-zero count blocks the delete). */
   live_acp_sessions?: number | null;
-  /** Agent delete: owned non-config state (memory/cron/session) is removed. */
+  /** Agent delete: owned non-config state (memory/session) is removed. */
   cascades_owned_state: boolean;
 }
 
@@ -1771,7 +1769,7 @@ export interface AdminResponse {
 
 /**
  * Reload the daemon in place. Same PID — the daemon's main loop tears down
- * every subsystem (gateway/channels/heartbeat/scheduler/mqtt), re-reads
+ * every subsystem (gateway/channels/heartbeat/mqtt), re-reads
  * config from disk, and re-instantiates everything. Brief HTTP downtime
  * while the gateway listener rebinds; clients should poll `/health` to
  * detect when the new instance is ready.
@@ -1792,140 +1790,6 @@ export function getTools(agent?: string): Promise<ToolSpec[]> {
       return Array.isArray(result) ? result : [];
     },
   );
-}
-
-// ---------------------------------------------------------------------------
-// Cron
-// ---------------------------------------------------------------------------
-
-export function getCronJobs(): Promise<CronJob[]> {
-  return apiFetch<CronJob[] | { jobs: CronJob[] }>("/api/cron").then((data) => {
-    const result = unwrapField(data, "jobs");
-    return Array.isArray(result) ? result : [];
-  });
-}
-
-export interface CronDelivery {
-  mode: "none" | "announce";
-  channel?: string;
-  to?: string;
-  best_effort?: boolean;
-}
-
-export function addCronJob(body: {
-  agent: string;
-  name?: string;
-  schedule: string;
-  tz?: string;
-  command?: string;
-  job_type?: string;
-  prompt?: string;
-  model?: string;
-  session_target?: string;
-  allowed_tools?: string[];
-  enabled?: boolean;
-  delivery?: CronDelivery;
-  uses_memory?: boolean;
-}): Promise<CronJob> {
-  return apiFetch<CronJob | { status: string; job: CronJob }>("/api/cron", {
-    method: "POST",
-    body: JSON.stringify(body),
-  }).then((data) =>
-    typeof (data as { job?: CronJob }).job === "object"
-      ? (data as { job: CronJob }).job
-      : (data as CronJob),
-  );
-}
-
-export function deleteCronJob(id: string): Promise<void> {
-  return apiFetch<void>(`/api/cron/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
-}
-
-export interface CronTriggerResult {
-  status: string;
-  job_id: string;
-  success: boolean;
-  output: string;
-  duration_ms: number;
-  started_at: string;
-  finished_at: string;
-}
-
-/** Manually trigger a cron job and wait for the result. */
-export function triggerCronJob(id: string): Promise<CronTriggerResult> {
-  return apiFetch<CronTriggerResult>(
-    `/api/cron/${encodeURIComponent(id)}/run`,
-    {
-      method: "POST",
-    },
-  );
-}
-
-export function patchCronJob(
-  id: string,
-  patch: {
-    /**
-     * The job's configured agent alias. Always send it: the gateway's
-     * CronPatchBody requires `agent` (it gates a shell-command change by the
-     * agent's risk profile), so a patch that omits it fails with
-     * `422 missing field agent` even for a pure schedule/name/enabled change.
-     */
-    agent: string;
-    name?: string;
-    schedule?: string;
-    tz?: string;
-    clear_tz?: boolean;
-    command?: string;
-    prompt?: string;
-    enabled?: boolean;
-    uses_memory?: boolean;
-  },
-): Promise<CronJob> {
-  return apiFetch<CronJob | { status: string; job: CronJob }>(
-    `/api/cron/${encodeURIComponent(id)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(patch),
-    },
-  ).then((data) =>
-    typeof (data as { job?: CronJob }).job === "object"
-      ? (data as { job: CronJob }).job
-      : (data as CronJob),
-  );
-}
-
-export function getCronRuns(
-  jobId: string,
-  limit: number = 20,
-): Promise<CronRun[]> {
-  const params = new URLSearchParams({ limit: String(limit) });
-  return apiFetch<CronRun[] | { runs: CronRun[] }>(
-    `/api/cron/${encodeURIComponent(jobId)}/runs?${params}`,
-  ).then((data) => {
-    const result = unwrapField(data, "runs");
-    return Array.isArray(result) ? result : [];
-  });
-}
-
-export interface CronSettings {
-  enabled: boolean;
-  catch_up_on_startup: boolean;
-  max_run_history: number;
-}
-
-export function getCronSettings(): Promise<CronSettings> {
-  return apiFetch<CronSettings>("/api/cron/settings");
-}
-
-export function patchCronSettings(
-  patch: Partial<CronSettings>,
-): Promise<CronSettings> {
-  return apiFetch<CronSettings & { status: string }>("/api/cron/settings", {
-    method: "PATCH",
-    body: JSON.stringify(patch),
-  });
 }
 
 // ---------------------------------------------------------------------------

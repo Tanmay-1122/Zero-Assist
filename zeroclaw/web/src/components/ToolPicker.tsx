@@ -10,7 +10,6 @@
 //
 // Used by:
 //  * FieldForm — for schema-driven `*.allowed_tools` string-array fields.
-//  * Cron — for the Add/Edit job `allowed_tools` field.
 //
 // i18n: user-facing copy is routed through t() under the `tool_picker.`
 // namespace (plus shared `common.` keys); see @/lib/i18n.
@@ -49,8 +48,8 @@ export interface CatalogEntry {
   param_domains?: Record<string, OptionDomain>;
 }
 
-// Process-wide cache so re-mounting the picker (e.g. reopening the Cron
-// modal, or switching config sections) doesn't re-hit the network. Keyed by
+// Process-wide cache so re-mounting the picker (e.g. switching config
+// sections) doesn't re-hit the network. Keyed by
 // agent alias (`'' `= the gateway's default-agent listing): the agent-tools
 // half is `getTools(agent)`, so a picker bound to a specific agent (e.g. a
 // channel's owning agent) caches that agent's real scoped catalog separately

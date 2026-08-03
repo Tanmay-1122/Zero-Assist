@@ -17,7 +17,6 @@ const TITLE_KEYS: Record<string, string> = {
   tools: 'nav.tools',
   skills: 'nav.skills',
   integrations: 'nav.integrations',
-  cron: 'nav.cron',
   logs: 'nav.logs',
   doctor: 'nav.doctor',
   pairing: 'nav.pairing',

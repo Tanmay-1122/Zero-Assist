@@ -387,7 +387,7 @@ Examples:
         service_command: ServiceCommands,
     },
 
-    /// Run diagnostics for daemon/scheduler/channel freshness
+    /// Run diagnostics for daemon/channel freshness
     Doctor {
         #[command(subcommand)]
         doctor_command: Option<DoctorCommands>,

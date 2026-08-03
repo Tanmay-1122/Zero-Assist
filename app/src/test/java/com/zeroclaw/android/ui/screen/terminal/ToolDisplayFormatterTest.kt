@@ -89,11 +89,6 @@ class ToolDisplayFormatterTest {
     }
 
     @Test
-    fun cronListNoHintReturnsPrefixOnly() {
-        assertEquals("cron", ToolDisplayFormatter.format("cron_list", ""))
-    }
-
-    @Test
     fun termuxRunShowsCommand() {
         assertEquals("termux: pkg install git", ToolDisplayFormatter.format("termux_run", "pkg install git"))
     }
@@ -156,15 +151,5 @@ class ToolDisplayFormatterTest {
     @Test
     fun termuxGetCapabilitiesStaticHint() {
         assertEquals("termux: Checking termux capabilities", ToolDisplayFormatter.format("termux_get_capabilities", "Checking termux capabilities"))
-    }
-
-    @Test
-    fun cronListStaticHint() {
-        assertEquals("cron: Listing all cron jobs", ToolDisplayFormatter.format("cron_list", "Listing all cron jobs"))
-    }
-
-    @Test
-    fun cronRunsPrefix() {
-        assertEquals("cron: abc-123", ToolDisplayFormatter.format("cron_runs", "abc-123"))
     }
 }

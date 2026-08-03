@@ -5,7 +5,6 @@ export const AgentChat = lazy(() => import('../pages/AgentChat'));
 export const AgentsList = lazy(() => import('../pages/AgentsList'));
 export const AgentWorkspaceExplorer = lazy(() => import('../pages/AgentWorkspaceExplorer'));
 export const Tools = lazy(() => import('../pages/Tools'));
-export const Cron = lazy(() => import('../pages/Cron'));
 export const Integrations = lazy(() => import('../pages/Integrations'));
 export const Config = lazy(() => import('../pages/Config'));
 export const Logs = lazy(() => import('../pages/Logs'));

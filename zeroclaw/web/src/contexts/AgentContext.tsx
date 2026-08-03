@@ -383,24 +383,6 @@ export function AgentProvider({ agentAlias, children }: AgentProviderProps) {
         break;
       }
 
-      case 'cron_result': {
-        const cronOutput = msg.output ?? '';
-        if (cronOutput) {
-          localMessageMutationVersionRef.current += 1;
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: generateUUID(),
-              role: 'agent' as const,
-              content: cronOutput,
-              markdown: true,
-              timestamp: new Date(msg.timestamp ?? Date.now()),
-            },
-          ]);
-        }
-        break;
-      }
-
       case 'approval_request': {
         // Supervised-mode tool consent prompt. Backend parks on a oneshot
         // until we send `approval_response`; if the socket closes or the

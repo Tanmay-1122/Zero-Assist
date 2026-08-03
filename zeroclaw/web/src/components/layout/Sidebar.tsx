@@ -3,7 +3,6 @@ import { basePath } from '../../lib/basePath';
 import {
   Activity,
   Bot,
-  Clock,
   LayoutDashboard,
   ListChecks,
   MessageSquare,
@@ -56,7 +55,6 @@ const navGroups: NavGroup[] = [
       { to: '/sops', icon: Workflow, labelKey: 'nav.sops' },
       { to: '/runs', icon: ListChecks, labelKey: 'nav.runs' },
       { to: '/integrations', icon: Puzzle, labelKey: 'nav.integrations' },
-      { to: '/cron', icon: Clock, labelKey: 'nav.cron' },
     ],
   },
   {

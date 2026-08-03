@@ -64,52 +64,6 @@ export interface ToolSpec {
   param_domains?: Record<string, OptionDomain>;
 }
 
-export interface CronDeliveryConfig {
-  mode: string;
-  channel?: string | null;
-  to?: string | null;
-  best_effort?: boolean;
-}
-
-export type CronSchedule =
-  | { kind: "cron"; expr: string; tz?: string | null }
-  | { kind: "at"; at: string }
-  | { kind: "every"; every_ms: number };
-
-export interface CronJob {
-  id: string;
-  name: string | null;
-  expression: string;
-  command: string;
-  prompt: string | null;
-  job_type: string;
-  schedule: CronSchedule;
-  enabled: boolean;
-  delivery: CronDeliveryConfig;
-  delete_after_run: boolean;
-  uses_memory: boolean;
-  session_target: string | null;
-  model: string | null;
-  allowed_tools: string[] | null;
-  source: string | null;
-  agent_alias: string;
-  created_at: string;
-  next_run: string;
-  last_run: string | null;
-  last_status: string | null;
-  last_output: string | null;
-}
-
-export interface CronRun {
-  id: number;
-  job_id: string;
-  started_at: string;
-  finished_at: string;
-  status: string;
-  output: string | null;
-  duration_ms: number | null;
-}
-
 export interface Integration {
   name: string;
   description: string;
@@ -248,7 +202,6 @@ export interface WsMessage {
     | "error"
     | "session_start"
     | "connected"
-    | "cron_result"
     | "approval_request"
     | "aborted";
   content?: string;

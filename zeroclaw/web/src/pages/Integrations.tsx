@@ -31,11 +31,10 @@ function channelSlug(name: string): string | null {
 //
 // MAINTENANCE: keys mirror the descriptor `display_name`s and values mirror the
 // schema `#[prefix]` section keys (crates/zeroclaw-config/src/schema.rs:
-// Browser→`browser`, "Google Workspace"→`google_workspace`; Cron→the /cron
-// page). Renaming either in the schema requires updating this table, or the
-// deep-link silently falls back to /tools.
+// Browser→`browser`, "Google Workspace"→`google_workspace`). Renaming either
+// in the schema requires updating this table, or the deep-link silently falls
+// back to /tools.
 const TOOLS_AUTOMATION_ROUTES: Record<string, string> = {
-  cron: '/cron',
   browser: '/config/browser',
   'google workspace': '/config/google_workspace',
 };
@@ -46,8 +45,8 @@ const TOOLS_AUTOMATION_ROUTES: Record<string, string> = {
  *  set up — so the card renders as an inert status tile instead of dead-ending
  *  on the bare /config root. AI-model providers go to the model-providers
  *  section, chat platforms to channels, built-in tools to the Tools page
- *  (allow/block per risk profile), and Cron (a config-backed automation) to its
- *  own page. */
+ *  (allow/block per risk profile), and config-backed automations to their
+ *  own config section. */
 function configHref(name: string, category: string): string | null {
   const c = category.toLowerCase();
   // Compile-time OS facts (macOS/Linux/Windows) — nothing to configure.
@@ -61,7 +60,7 @@ function configHref(name: string, category: string): string | null {
     return slug ? `/config/channels/${slug}` : '/config/channels';
   }
   if (c.includes('tool') || c.includes('automation')) {
-    // Config-backed automations (Cron, Browser, Google Workspace) deep-link to
+    // Config-backed automations (Browser, Google Workspace) deep-link to
     // their own config; every other entry here is a built-in tool managed on
     // the Tools page.
     return TOOLS_AUTOMATION_ROUTES[name.trim().toLowerCase()] ?? '/tools';

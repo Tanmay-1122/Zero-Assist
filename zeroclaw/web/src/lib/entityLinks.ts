@@ -22,7 +22,6 @@ const ENTITY_SECTION = {
   'knowledge-bundle':  { section: 'knowledge_bundles',shape: 'alias'  },
   'mcp-bundle':        { section: 'mcp_bundles',      shape: 'alias'  },
   'peer-group':        { section: 'peer_groups',      shape: 'alias'  },
-  cron:                { section: 'cron',             shape: 'alias'  },
 } as const satisfies Record<string, { section: string; shape: Shape }>;
 
 export type EntityKind = keyof typeof ENTITY_SECTION;

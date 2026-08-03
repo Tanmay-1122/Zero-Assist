@@ -29,7 +29,6 @@ pub(super) fn truncate_tool_args_hint(tool_name: &str, arguments_json: &str) -> 
 
     // Early returns for tools needing special handling
     match tool_name {
-        "cron_list" => return "Listing all cron jobs".to_string(),
         "termux_get_capabilities" => return "Checking termux capabilities".to_string(),
         "memory_recall" => {
             let q = args
@@ -74,9 +73,6 @@ pub(super) fn truncate_tool_args_hint(tool_name: &str, arguments_json: &str) -> 
         // Web / HTTP
         "web_search_tool" => args.get("query").and_then(|v| v.as_str()),
         "web_fetch" | "http_request" => args.get("url").and_then(|v| v.as_str()),
-
-        // Cron (cron_list handled above)
-        "cron_runs" => args.get("job_id").and_then(|v| v.as_str()),
 
         // Sandbox process management
         "sandbox_manage_process" => args.get("action").and_then(|v| v.as_str()),
@@ -463,18 +459,6 @@ mod tests {
     }
 
     #[test]
-    fn test_truncate_tool_args_hint_cron_runs() {
-        let hint = truncate_tool_args_hint("cron_runs", r#"{"job_id":"abc-123"}"#);
-        assert_eq!(hint, "abc-123");
-    }
-
-    #[test]
-    fn test_truncate_tool_args_hint_cron_list() {
-        let hint = truncate_tool_args_hint("cron_list", "{}");
-        assert_eq!(hint, "Listing all cron jobs");
-    }
-
-    #[test]
     fn test_truncate_tool_args_hint_unknown_tool() {
         let hint = truncate_tool_args_hint("unknown", r#"{"query":"search term"}"#);
         assert_eq!(hint, "search term");
@@ -511,12 +495,6 @@ mod tests {
     fn test_truncate_tool_args_hint_memory_recall_empty() {
         let hint = truncate_tool_args_hint("memory_recall", "{}");
         assert!(hint.is_empty());
-    }
-
-    #[test]
-    fn test_truncate_tool_args_hint_cron_list_static() {
-        let hint = truncate_tool_args_hint("cron_list", "{}");
-        assert_eq!(hint, "Listing all cron jobs");
     }
 
     #[test]

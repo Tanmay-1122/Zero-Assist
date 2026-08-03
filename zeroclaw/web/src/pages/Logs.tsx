@@ -24,7 +24,6 @@ const CATEGORY_OPTIONS = [
   '',
   'agent',
   'channel',
-  'cron',
   'memory',
   'tool',
   'provider',

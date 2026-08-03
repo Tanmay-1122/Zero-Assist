@@ -47,7 +47,7 @@ import com.zeroclaw.android.ui.theme.ZeroAssistSpacing
 import com.zeroclaw.android.ui.theme.ZeroClawTheme
 
 internal val QuickStartActionChipLabels =
-    listOf("Write", "Learn", "Code", "Automate", "Schedule")
+    listOf("Write", "Learn", "Code", "Automate")
 
 @Composable
 internal fun TerminalQuickStartPanel(

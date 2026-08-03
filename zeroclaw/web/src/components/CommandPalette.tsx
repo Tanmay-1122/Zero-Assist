@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Activity,
   Bot,
-  Clock,
   CornerDownLeft,
   FolderTree,
   LayoutDashboard,
@@ -40,7 +39,6 @@ const DESTINATIONS: Destination[] = [
   { to: '/tools', icon: Wrench, labelKey: 'nav.tools', groupKey: 'nav.group.configure' },
   { to: '/skills', icon: Sparkles, labelKey: 'nav.skills', groupKey: 'nav.group.configure' },
   { to: '/integrations', icon: Puzzle, labelKey: 'nav.integrations', groupKey: 'nav.group.configure' },
-  { to: '/cron', icon: Clock, labelKey: 'nav.cron', groupKey: 'nav.group.configure' },
   { to: '/logs', icon: Activity, labelKey: 'nav.logs', groupKey: 'nav.group.operations' },
   { to: '/doctor', icon: Stethoscope, labelKey: 'nav.doctor', groupKey: 'nav.group.operations' },
   { to: '/canvas', icon: Monitor, labelKey: 'nav.canvas', groupKey: 'nav.group.operations' },

@@ -210,13 +210,6 @@ class DataStoreSettingsRepository(
             gatewayIdempotencyTtl =
                 prefs[KEY_GW_IDEMPOTENCY_TTL]
                     ?: AppSettings.DEFAULT_IDEMPOTENCY_TTL,
-            schedulerEnabled = prefs[KEY_SCHEDULER_ENABLED] ?: true,
-            schedulerMaxTasks =
-                prefs[KEY_SCHEDULER_MAX_TASKS]
-                    ?: AppSettings.DEFAULT_SCHEDULER_MAX_TASKS,
-            schedulerMaxConcurrent =
-                prefs[KEY_SCHEDULER_MAX_CONCURRENT]
-                    ?: AppSettings.DEFAULT_SCHEDULER_MAX_CONCURRENT,
             heartbeatEnabled = prefs[KEY_HEARTBEAT_ENABLED] ?: false,
             heartbeatIntervalMinutes =
                 prefs[KEY_HEARTBEAT_INTERVAL]
@@ -504,12 +497,6 @@ class DataStoreSettingsRepository(
 
     override suspend fun setGatewayIdempotencyTtl(seconds: Int) = edit { it[KEY_GW_IDEMPOTENCY_TTL] = seconds }
 
-    override suspend fun setSchedulerEnabled(enabled: Boolean) = edit { it[KEY_SCHEDULER_ENABLED] = enabled }
-
-    override suspend fun setSchedulerMaxTasks(max: Int) = edit { it[KEY_SCHEDULER_MAX_TASKS] = max }
-
-    override suspend fun setSchedulerMaxConcurrent(max: Int) = edit { it[KEY_SCHEDULER_MAX_CONCURRENT] = max }
-
     override suspend fun setHeartbeatEnabled(enabled: Boolean) = edit { it[KEY_HEARTBEAT_ENABLED] = enabled }
 
     override suspend fun setHeartbeatIntervalMinutes(minutes: Int) = edit { it[KEY_HEARTBEAT_INTERVAL] = minutes }
@@ -784,9 +771,6 @@ class DataStoreSettingsRepository(
         val KEY_GW_PAIR_RATE = intPreferencesKey("gw_pair_rate_limit")
         val KEY_GW_WEBHOOK_RATE = intPreferencesKey("gw_webhook_rate_limit")
         val KEY_GW_IDEMPOTENCY_TTL = intPreferencesKey("gw_idempotency_ttl")
-        val KEY_SCHEDULER_ENABLED = booleanPreferencesKey("scheduler_enabled")
-        val KEY_SCHEDULER_MAX_TASKS = intPreferencesKey("scheduler_max_tasks")
-        val KEY_SCHEDULER_MAX_CONCURRENT = intPreferencesKey("scheduler_max_concurrent")
         val KEY_HEARTBEAT_ENABLED = booleanPreferencesKey("heartbeat_enabled")
         val KEY_HEARTBEAT_INTERVAL = intPreferencesKey("heartbeat_interval")
         val KEY_OBS_BACKEND = stringPreferencesKey("observability_backend")

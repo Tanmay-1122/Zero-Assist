@@ -16,7 +16,6 @@ import androidx.lifecycle.viewModelScope
 import com.zeroclaw.android.ZeroClawApplication
 import com.zeroclaw.android.model.ActivityEvent
 import com.zeroclaw.android.model.CostSummary
-import com.zeroclaw.android.model.CronJob
 import com.zeroclaw.android.model.DaemonStatus
 import com.zeroclaw.android.model.KeyRejectionEvent
 import com.zeroclaw.android.model.LiveActivityItem
@@ -24,7 +23,6 @@ import com.zeroclaw.android.model.MemoryConflict
 import com.zeroclaw.android.model.RefreshCommand
 import com.zeroclaw.android.model.ServiceState
 import com.zeroclaw.android.service.CostBridge
-import com.zeroclaw.android.service.cron.ffi.CronBridge
 import com.zeroclaw.android.service.DaemonServiceBridge
 import com.zeroclaw.android.service.LiveActivityGrouper
 import com.zeroclaw.android.service.ZeroClawDaemonService
@@ -104,7 +102,6 @@ class DaemonViewModel(
     private val app = application as ZeroClawApplication
     private val bridge: DaemonServiceBridge = app.daemonBridge
     private val costBridge: CostBridge = app.costBridge
-    private val cronBridge: CronBridge = app.cronBridge
 
     /**
      * Count of enabled agents, derived from the agent repository flow.
@@ -193,17 +190,7 @@ class DaemonViewModel(
      */
     val costSummary: StateFlow<CostSummary?> = _costSummary.asStateFlow()
 
-    private val _cronJobs = MutableStateFlow<List<CronJob>>(emptyList())
-
-    /**
-     * List of cron jobs fetched periodically while the daemon is running.
-     *
-     * Empty when the daemon is not running or no cron poll has completed.
-     */
-    val cronJobs: StateFlow<List<CronJob>> = _cronJobs.asStateFlow()
-
     private var costPollJob: Job? = null
-    private var cronPollJob: Job? = null
     private var webPollJob: Job? = null
 
     private val _webEnabled = MutableStateFlow<Boolean?>(null)
@@ -234,7 +221,6 @@ class DaemonViewModel(
                     ServiceState.RUNNING -> {
                         refreshDashboardMetrics()
                         startCostPolling()
-                        startCronPolling()
                         startWebPolling()
                         refreshLocalIpAddress()
                         _gatewayPort.value = getGatewayPort()
@@ -243,7 +229,6 @@ class DaemonViewModel(
                         stopAllPolling()
                         _statusState.value = DaemonUiState.Idle
                         _costSummary.value = null
-                        _cronJobs.value = emptyList()
                         _webEnabled.value = null
                     }
                     ServiceState.ERROR -> {
@@ -254,7 +239,6 @@ class DaemonViewModel(
                                 retry = { requestStart() },
                             )
                         _costSummary.value = null
-                        _cronJobs.value = emptyList()
                         _webEnabled.value = null
                     }
                     ServiceState.STARTING ->
@@ -359,8 +343,6 @@ class DaemonViewModel(
         viewModelScope.launch {
             try {
                 when (command) {
-                    RefreshCommand.Cron ->
-                        _cronJobs.value = cronBridge.listJobs()
                     RefreshCommand.Cost ->
                         _costSummary.value = costBridge.getCostSummary()
                     RefreshCommand.Health -> {
@@ -389,11 +371,6 @@ class DaemonViewModel(
             } catch (_: Exception) {
                 // cost refresh failure is non-fatal
             }
-            try {
-                _cronJobs.value = cronBridge.listJobs()
-            } catch (_: Exception) {
-                // cron refresh failure is non-fatal
-            }
         }
     }
 
@@ -418,30 +395,8 @@ class DaemonViewModel(
         costPollJob = null
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    private fun startCronPolling() {
-        stopCronPolling()
-        cronPollJob =
-            viewModelScope.launch {
-                while (true) {
-                    delay(CRON_POLL_INTERVAL_MS)
-                    try {
-                        _cronJobs.value = cronBridge.listJobs()
-                    } catch (_: Exception) {
-                        /** Cron poll failure is non-fatal. */
-                    }
-                }
-            }
-    }
-
-    private fun stopCronPolling() {
-        cronPollJob?.cancel()
-        cronPollJob = null
-    }
-
     private fun stopAllPolling() {
         stopCostPolling()
-        stopCronPolling()
         stopWebPolling()
     }
 
@@ -531,7 +486,6 @@ class DaemonViewModel(
     /** Constants for [DaemonViewModel]. */
     companion object {
         private const val COST_POLL_INTERVAL_MS = 30_000L
-        private const val CRON_POLL_INTERVAL_MS = 30_000L
         private const val WEB_POLL_INTERVAL_MS = 10_000L
         private const val STOP_TIMEOUT_MS = 5_000L
 

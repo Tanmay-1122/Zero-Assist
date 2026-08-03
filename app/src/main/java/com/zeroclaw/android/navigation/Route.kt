@@ -147,10 +147,6 @@ data object ModelRoutesRoute
 @Serializable
 data object MemoryAdvancedRoute
 
-/** Scheduler and heartbeat configuration screen. */
-@Serializable
-data object SchedulerRoute
-
 /** Observability backend configuration screen. */
 @Serializable
 data object ObservabilityRoute
@@ -170,10 +166,6 @@ data object QrScannerRoute
 /** Cost tracking detail screen. */
 @Serializable
 data object CostDetailRoute
-
-/** Scheduled cron jobs management screen. */
-@Serializable
-data object CronJobsRoute
 
 /** Memory entries browser screen. */
 @Serializable

@@ -6,12 +6,6 @@ tool-cloud-ops = クラウド変換アドバイザリーツール。IaCプラン
 tool-cloud-patterns = クラウドパターンライブラリ。ワークロード説明を指定すると、適用可能なクラウドネイティブアーキテクチャパターン（コンテナ化、サーバーレス、データベース現代化など）を提案します。
 tool-composio = Composio経由で1000以上のアプリ（Gmail、Notion、GitHub、Slack等）でアクションを実行します。action='list'で利用可能なアクション（パラメータ名を含む）を確認します。action='execute'でaction_name/tool_slugとparamsを指定して実行します。正確なparamsが不確実な場合は、'text'に自然言語の説明を記述してください（Composioが正しいパラメータをNLPで解決します）。action='list_accounts'またはaction='connected_accounts'でOAuth接続アカウントを一覧表示します。action='connect'でapp/auth_config_idを指定するとOAuth URLが取得できます。connected_account_idは省略すると自動解決されます。
 tool-content-search = ワークスペース内のregexパターンでファイルコンテンツを検索します。ripgrep（rg）をサポート、フォールバックとしてgrepを使用。出力モード：'content'（マッチ行とコンテキスト）、'files_with_matches'（ファイルパスのみ）、'count'（ファイルごとのマッチ数）。例：pattern='fn main'、include='*.rs'、output_mode='content'。
-tool-cron-add = cron/at/everyスケジュール付きのスケジュール済みcronジョブ（シェルまたはエージェント）を作成します。job_type='agent'でPromptを使用してAIエージェントをスケジュール実行します。出力をチャネル（Discord、Telegram、Slack、Mattermost、Matrix）に配信するには、delivery={"mode":"announce","channel":"discord","to":"<channel_id_or_chat_id>"}を設定します。これは、チャネル経由でユーザーにスケジュール/遅延メッセージを送信するための推奨ツールです。
-tool-cron-list = すべてのスケジュール済みcronジョブを一覧表示
-tool-cron-remove = IDでcronジョブを削除
-tool-cron-run = cronジョブを即座に強制実行し、実行履歴を記録
-tool-cron-runs = cronジョブの最近の実行履歴を一覧表示
-tool-cron-update = 既存のcronジョブにパッチを適用（スケジュール、コマンド、プロンプト、有効、配信、モデル等）
 tool-data-management = ワークスペースデータ保持、削除、ストレージ統計
 tool-delegate = 特殊なエージェントへの小タスクの委譲。用途：異なるモデルから利益を得られるタスク（例：高速要約、深い推論、コード生成）。サブエージェントはデフォルトで単一のプロンプトを実行します。agentic=trueでは、フィルタ済みツール呼び出しループで反復できます。
 tool-file-edit = 完全一致する文字列を新しいコンテンツに置き換えてファイルを編集
@@ -39,7 +33,6 @@ tool-pdf-read = ワークスペース内のPDFファイルから平文テキス�
 tool-project-intel = プロジェクト配信インテリジェンス：ステータスレポートを生成、リスクを検出、クライアント更新をドラフト、スプリントを要約、作業量を推定。読み取り専用分析ツール。
 tool-proxy-config = ZeroClawプロキシ設定を管理（スコープ：environment | zeroclaw | services）。ランタイムおよびプロセス環境アプリケーション含む
 tool-pushover = Pushover通知をデバイスに送信します。.envファイルにPUSHOVER_TOKENおよびPUSHOVER_USER_KEYが必要。
-tool-schedule = スケジュール済みシェルのみのタスクを管理します。アクション：create/add/once/list/get/cancel/remove/pause/resume。警告：このツールは、出力がログに記録されるのみで、チャネルに配信されないシェルジョブを作成します。Discord/Telegram/Slack/Matrixにスケジュール済みメッセージを送信するには、job_type='agent'とdelivery配信設定（例：{"mode":"announce","channel":"discord","to":"<channel_id>"}）付きのcron_addツールを使用してください。
 tool-screenshot = 現在の画面のスクリーンショットをキャプチャします。ファイルパスと基数64エンコード済みPNGデータを返します。
 tool-security-ops = 管理型サイバーセキュリティサービス向けセキュリティ操作ツール。アクション：triage_alert（アラートの分類/優先順位付け）、run_playbook（インシデント対応ステップの実行）、parse_vulnerability（スキャン結果の解析）、generate_report（セキュリティ態勢レポートの作成）、list_playbooks（利用可能なプレイブックをリスト）、alert_stats（アラートメトリクスを要約）。
 tool-shell = ワークスペースディレクトリ内でシェルコマンドを実行

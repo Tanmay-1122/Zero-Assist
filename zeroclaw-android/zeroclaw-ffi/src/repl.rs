@@ -21,7 +21,7 @@ use rhai::{Array, Dynamic, Engine, EvalAltResult};
 
 use crate::error::FfiError;
 use crate::{
-    agents, auth_profiles, cost, cron, events, group_chat, health, memory_browse, models, runtime,
+    agents, auth_profiles, cost, events, group_chat, health, memory_browse, models, runtime,
     skills, tools_browse, vision,
 };
 
@@ -236,78 +236,6 @@ fn build_engine() -> Engine {
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let result = events::get_recent_events_inner(limit as u32).map_err(ffi_err)?;
             Ok(result)
-        },
-    );
-
-    // ── Cron ─────────────────────────────────────────────────────
-
-    engine.register_fn("cron_list", || -> Result<String, Box<EvalAltResult>> {
-        let jobs = cron::list_cron_jobs_inner().map_err(ffi_err)?;
-        to_json(&jobs)
-    });
-
-    engine.register_fn(
-        "cron_get",
-        |id: String| -> Result<String, Box<EvalAltResult>> {
-            let job = cron::get_cron_job_inner(id).map_err(ffi_err)?;
-            to_json(&job)
-        },
-    );
-
-    engine.register_fn(
-        "cron_add",
-        |expression: String, command: String| -> Result<String, Box<EvalAltResult>> {
-            let job = cron::add_cron_job_inner(expression, command).map_err(ffi_err)?;
-            to_json(&job)
-        },
-    );
-
-    engine.register_fn(
-        "cron_oneshot",
-        |delay: String, command: String| -> Result<String, Box<EvalAltResult>> {
-            let job = cron::add_one_shot_job_inner(delay, command).map_err(ffi_err)?;
-            to_json(&job)
-        },
-    );
-
-    engine.register_fn(
-        "cron_add_at",
-        |timestamp: String, command: String| -> Result<String, Box<EvalAltResult>> {
-            let job = cron::add_cron_job_at_inner(timestamp, command).map_err(ffi_err)?;
-            to_json(&job)
-        },
-    );
-
-    engine.register_fn(
-        "cron_add_every",
-        |ms: i64, command: String| -> Result<String, Box<EvalAltResult>> {
-            #[allow(clippy::cast_sign_loss)]
-            let job = cron::add_cron_job_every_inner(ms as u64, command).map_err(ffi_err)?;
-            to_json(&job)
-        },
-    );
-
-    engine.register_fn(
-        "cron_remove",
-        |id: String| -> Result<String, Box<EvalAltResult>> {
-            cron::remove_cron_job_inner(id).map_err(ffi_err)?;
-            Ok("ok".into())
-        },
-    );
-
-    engine.register_fn(
-        "cron_pause",
-        |id: String| -> Result<String, Box<EvalAltResult>> {
-            cron::pause_cron_job_inner(id).map_err(ffi_err)?;
-            Ok("ok".into())
-        },
-    );
-
-    engine.register_fn(
-        "cron_resume",
-        |id: String| -> Result<String, Box<EvalAltResult>> {
-            cron::resume_cron_job_inner(id).map_err(ffi_err)?;
-            Ok("ok".into())
         },
     );
 
@@ -820,18 +748,6 @@ mod tests {
     #[test]
     fn test_repl_traces_filter_no_daemon() {
         let result = eval_repl_inner(r#"traces_filter("error", 5)"#.into());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_repl_cron_add_at_no_daemon() {
-        let result = eval_repl_inner(r#"cron_add_at("2026-12-31T23:59:59Z", "echo at")"#.into());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_repl_cron_add_every_no_daemon() {
-        let result = eval_repl_inner(r#"cron_add_every(60000, "echo every")"#.into());
         assert!(result.is_err());
     }
 

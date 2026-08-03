@@ -32,7 +32,7 @@ Zero-Assist is a self-hosted personal AI assistant that runs directly on your ph
 - **A PRoot-based Linux sandbox** so the agent can run real Linux tooling on-device.
 - **Termux integration** with streaming execution, command policies, and per-command approval.
 - **On-device AI** — speech recognition, Piper TTS, LiteRT/ONNX models, and ML Kit GenAI utilities.
-- **A persistent daemon** with a native cron scheduler, quick-settings tile, and boot-time startup.
+- **A persistent daemon** with a quick-settings tile, and boot-time startup.
 
 The app targets Android 8.0+ (API 26) through API 35, with split APKs for `armeabi-v7a`, `arm64-v8a`, `x86`, and `x86_64`.
 
@@ -61,8 +61,7 @@ The app targets Android 8.0+ (API 26) through API 35, with split APKs for `armea
 - **PRoot sandbox manager**: Linux rootfs download, persistent sandbox shells, and a sidecar bridge server for agent-orchestrated Linux tooling.
 - **Termux bridge**: capability probing, streaming executor, command policy tiers, approval notifications with audit trail, and auto-connection.
 
-### Scheduler & Daemon
-- Native cron scheduler exposed through the FFI, with scheduling integration in the terminal.
+### Daemon
 - Foreground daemon service, quick-settings tile, boot receiver, and battery-aware settings.
 
 ### On-Device AI
@@ -79,7 +78,7 @@ The app targets Android 8.0+ (API 26) through API 35, with split APKs for `armea
 
 ### Engine Integration
 - Bundles the full ZeroClaw engine with 25+ messaging channels (Telegram, Discord, Slack, Signal, Mattermost, WhatsApp Cloud, email, IRC, DingTalk, QQ, and more).
-- Gateway with a React web dashboard, ACP server support, observability (Prometheus/OTel), memory backends, and cron jobs.
+- Gateway with a React web dashboard, ACP server support, observability (Prometheus/OTel), and memory backends.
 
 ---
 
@@ -98,7 +97,7 @@ The app targets Android 8.0+ (API 26) through API 35, with split APKs for `armea
                            │ cdylib (libzeroclaw.so)
 ┌──────────────────────────▼──────────────────────────────────┐
 │          zeroclaw-android/zeroclaw-ffi (Rust crate)         │
-│  REPL · sessions · agents · cron · skills · workspace ·     │
+│  REPL · sessions · agents · skills · workspace ·             │
 │  device-control dispatch · sandbox/termux bridges · vision  │
 └──────────────────────────┬──────────────────────────────────┘
                            │
@@ -218,7 +217,7 @@ CI runs all of the above on every push/PR, plus `cargo-deny` license/advisory ch
 
 ## Configuration
 
-Runtime engine configuration is built by the app UI (model routes, channels, gateway, memory, cron, etc.) and composed with the additive overlay in [`zeroclaw-config/assets/overlay.toml`](zeroclaw-config/assets/overlay.toml), which is bundled as an app asset and applied before the daemon starts.
+Runtime engine configuration is built by the app UI (model routes, channels, gateway, memory, etc.) and composed with the additive overlay in [`zeroclaw-config/assets/overlay.toml`](zeroclaw-config/assets/overlay.toml), which is bundled as an app asset and applied before the daemon starts.
 
 Upstream sync workflow (keeps project-local changes isolated from upstream):
 

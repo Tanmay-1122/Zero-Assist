@@ -57,7 +57,6 @@ import com.zeroclaw.android.ui.screen.settings.MemoryAdvancedScreen
 import com.zeroclaw.android.ui.screen.settings.ModelRoutesScreen
 import com.zeroclaw.android.ui.screen.settings.ObservabilityScreen
 import com.zeroclaw.android.ui.screen.settings.PluginRegistryScreen
-import com.zeroclaw.android.ui.screen.settings.SchedulerScreen
 import com.zeroclaw.android.ui.screen.settings.SecurityAdvancedScreen
 import com.zeroclaw.android.ui.screen.settings.SecurityOverviewScreen
 import com.zeroclaw.android.ui.screen.settings.ServiceConfigScreen
@@ -73,7 +72,6 @@ import com.zeroclaw.android.ui.screen.settings.apikeys.ApiKeysViewModel
 import com.zeroclaw.android.ui.screen.settings.apikeys.AuthProfilesScreen
 import com.zeroclaw.android.ui.screen.settings.channels.ChannelDetailScreen
 import com.zeroclaw.android.ui.screen.settings.channels.ConnectedChannelsScreen
-import com.zeroclaw.android.ui.screen.settings.cron.CronJobsScreen
 import com.zeroclaw.android.ui.screen.settings.doctor.DoctorScreen
 import com.zeroclaw.android.ui.screen.settings.gateway.QrScannerScreen
 import com.zeroclaw.android.ui.screen.settings.logs.LogViewerScreen
@@ -169,7 +167,6 @@ fun ZeroAssistNavHost(
             DashboardScreen(
                 edgeMargin = edgeMargin,
                 onNavigateToCostDetail = { navController.navigate(CostDetailRoute) },
-                onNavigateToCronJobs = { navController.navigate(CronJobsRoute) },
                 onNavigateToHub = { index -> navController.navigate(ConnectionsHubRoute(tabIndex = index)) },
                 restartRequired = restartRequired,
                 onRestartDaemon = onRestartDaemon,
@@ -459,10 +456,6 @@ fun ZeroAssistNavHost(
             MemoryAdvancedScreen(edgeMargin = edgeMargin)
         }
 
-        composable<SchedulerRoute> {
-            SchedulerScreen(edgeMargin = edgeMargin)
-        }
-
         composable<ObservabilityRoute> {
             ObservabilityScreen(edgeMargin = edgeMargin)
         }
@@ -522,10 +515,6 @@ fun ZeroAssistNavHost(
 
         composable<CostDetailRoute> {
             CostDetailScreen(edgeMargin = edgeMargin)
-        }
-
-        composable<CronJobsRoute> {
-            CronJobsScreen(edgeMargin = edgeMargin)
         }
 
         composable<AuthProfilesRoute> {
@@ -604,12 +593,10 @@ private fun settingsNavRouteFor(action: SettingsNavAction): Any = when (action) 
     SettingsNavAction.Gateway -> GatewayRoute
     SettingsNavAction.ModelRoutes -> ModelRoutesRoute
     SettingsNavAction.MemoryAdvanced -> MemoryAdvancedRoute
-    SettingsNavAction.Scheduler -> SchedulerRoute
     SettingsNavAction.Observability -> ObservabilityRoute
     SettingsNavAction.VoiceAssistant -> VoiceAssistantSettingsRoute
     SettingsNavAction.SecurityOverview -> SecurityOverviewRoute
     SettingsNavAction.PluginRegistry -> PluginRegistryRoute
-    SettingsNavAction.CronJobs -> CronJobsRoute
     SettingsNavAction.MemoryBrowser -> MemoryBrowserRoute
     SettingsNavAction.SecurityAdvanced -> SecurityAdvancedRoute
     SettingsNavAction.EmbeddingRoutes -> EmbeddingRoutesRoute

@@ -5,7 +5,6 @@ use std::path::Path;
 use zeroclaw_config::schema::Config;
 
 const DAEMON_STALE_SECONDS: i64 = 30;
-const SCHEDULER_STALE_SECONDS: i64 = 120;
 const CHANNEL_STALE_SECONDS: i64 = 300;
 const COMMAND_VERSION_PREVIEW_CHARS: usize = 60;
 
@@ -850,35 +849,6 @@ fn check_daemon_state(config: &Config, items: &mut Vec<DiagItem>) {
         .get("components")
         .and_then(serde_json::Value::as_object)
     {
-        // Scheduler
-        if let Some(scheduler) = components.get("scheduler") {
-            let scheduler_ok = scheduler
-                .get("status")
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(|s| s == "ok");
-            let scheduler_age = scheduler
-                .get("last_ok")
-                .and_then(serde_json::Value::as_str)
-                .and_then(parse_rfc3339)
-                .map_or(i64::MAX, |dt| {
-                    Utc::now().signed_duration_since(dt).num_seconds()
-                });
-
-            if scheduler_ok && scheduler_age <= SCHEDULER_STALE_SECONDS {
-                items.push(DiagItem::ok(
-                    cat,
-                    format!("scheduler healthy (last ok {scheduler_age}s ago)"),
-                ));
-            } else {
-                items.push(DiagItem::error(
-                    cat,
-                    format!("scheduler unhealthy (ok={scheduler_ok}, age={scheduler_age}s)"),
-                ));
-            }
-        } else {
-            items.push(DiagItem::warn(cat, "scheduler component not tracked yet"));
-        }
-
         // Channels
         let mut channel_count = 0u32;
         let mut stale = 0u32;
