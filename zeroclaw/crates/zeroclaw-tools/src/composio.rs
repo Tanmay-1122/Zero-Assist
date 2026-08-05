@@ -704,6 +704,7 @@ impl Tool for ComposioTool {
                             success: true,
                             output,
                             error: None,
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -711,6 +712,7 @@ impl Tool for ComposioTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Failed to list actions: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -731,6 +733,7 @@ impl Tool for ComposioTool {
                                     "No connected accounts found{app_hint} for entity '{entity_id}'. Run action='connect' first."
                                 ),
                                 error: None,
+                            blocks: Vec::new(),
                             metadata: None,
                             });
                         }
@@ -757,6 +760,7 @@ impl Tool for ComposioTool {
                             success: true,
                             output,
                             error: None,
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -764,6 +768,7 @@ impl Tool for ComposioTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Failed to list connected accounts: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -778,6 +783,7 @@ impl Tool for ComposioTool {
                         success: false,
                         output: String::new(),
                         error: Some(error),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -806,6 +812,7 @@ impl Tool for ComposioTool {
                             success: true,
                             output,
                             error: None,
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -822,6 +829,7 @@ impl Tool for ComposioTool {
                             success: false,
                             output: String::new(),
                             error: Some(format!("Action execution failed: {e}{schema_hint}")),
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -837,6 +845,7 @@ impl Tool for ComposioTool {
                         success: false,
                         output: String::new(),
                         error: Some(error),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -872,6 +881,7 @@ impl Tool for ComposioTool {
                             success: true,
                             output,
                             error: None,
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -879,6 +889,7 @@ impl Tool for ComposioTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Failed to get connection URL: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -890,6 +901,7 @@ impl Tool for ComposioTool {
                 error: Some(format!(
                     "Unknown action '{action}'. Use 'list', 'list_accounts', 'execute', or 'connect'."
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

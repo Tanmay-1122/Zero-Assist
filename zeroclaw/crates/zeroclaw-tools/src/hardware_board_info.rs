@@ -103,6 +103,7 @@ impl Tool for HardwareBoardInfoTool {
                     "No peripherals configured. Add boards to config.toml [peripherals.boards]."
                         .into(),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -122,6 +123,7 @@ impl Tool for HardwareBoardInfoTool {
                         success: true,
                         output: info,
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -153,6 +155,7 @@ impl Tool for HardwareBoardInfoTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

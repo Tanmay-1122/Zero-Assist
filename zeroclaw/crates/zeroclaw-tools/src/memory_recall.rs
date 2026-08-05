@@ -67,6 +67,7 @@ impl Tool for MemoryRecallTool {
                 error: Some(
                     "Provide at least 'query' (keywords) or time range ('since'/'until')".into(),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -81,6 +82,7 @@ impl Tool for MemoryRecallTool {
                 error: Some(format!(
                     "Invalid 'since' date: {s}. Expected RFC 3339 format, e.g. 2025-03-01T00:00:00Z"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -93,6 +95,7 @@ impl Tool for MemoryRecallTool {
                 error: Some(format!(
                     "Invalid 'until' date: {u}. Expected RFC 3339 format, e.g. 2025-03-01T00:00:00Z"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -107,6 +110,7 @@ impl Tool for MemoryRecallTool {
                 success: false,
                 output: String::new(),
                 error: Some("'since' must be before 'until'".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -122,6 +126,7 @@ impl Tool for MemoryRecallTool {
                 success: true,
                 output: "No memories found.".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(entries) => {
@@ -140,6 +145,7 @@ impl Tool for MemoryRecallTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -147,6 +153,7 @@ impl Tool for MemoryRecallTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Memory recall failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

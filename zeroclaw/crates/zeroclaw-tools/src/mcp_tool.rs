@@ -69,6 +69,7 @@ impl Tool for McpToolWrapper {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -79,6 +80,7 @@ impl Tool for McpToolWrapper {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -188,6 +190,7 @@ mod tests {
             success: true,
             output: "hello".to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         };
     }

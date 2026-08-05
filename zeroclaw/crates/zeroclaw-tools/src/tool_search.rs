@@ -78,6 +78,7 @@ impl Tool for ToolSearchTool {
                 success: false,
                 output: String::new(),
                 error: Some("query parameter is required".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -101,6 +102,7 @@ impl Tool for ToolSearchTool {
                      from the deferred tool list."
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -142,6 +144,7 @@ impl Tool for ToolSearchTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -204,6 +207,7 @@ impl ToolSearchTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

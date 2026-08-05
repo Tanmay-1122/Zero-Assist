@@ -59,6 +59,7 @@ impl Tool for FileReadTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -69,6 +70,7 @@ impl Tool for FileReadTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Path not allowed by security policy: {path}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -81,6 +83,7 @@ impl Tool for FileReadTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -95,6 +98,7 @@ impl Tool for FileReadTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to resolve file path: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -108,6 +112,7 @@ impl Tool for FileReadTool {
                     self.security
                         .resolved_path_violation_message(&resolved_path),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -123,6 +128,7 @@ impl Tool for FileReadTool {
                             "File too large: {} bytes (limit: {MAX_FILE_SIZE_BYTES} bytes)",
                             meta.len()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -132,6 +138,7 @@ impl Tool for FileReadTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to read file metadata: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                 });
             }
@@ -147,6 +154,7 @@ impl Tool for FileReadTool {
                         success: true,
                         output: String::new(),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -175,6 +183,7 @@ impl Tool for FileReadTool {
                         success: true,
                         output: format!("[No lines in range, file has {total} lines]"),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -197,6 +206,7 @@ impl Tool for FileReadTool {
                     success: true,
                     output: format!("{numbered}{summary}"),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -211,6 +221,7 @@ impl Tool for FileReadTool {
                         success: true,
                         output: text,
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -221,6 +232,7 @@ impl Tool for FileReadTool {
                     success: true,
                     output: lossy,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

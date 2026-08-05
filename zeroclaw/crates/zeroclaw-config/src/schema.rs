@@ -984,6 +984,47 @@ pub enum McpTransport {
     LocalhostStdio,
 }
 
+/// Optional transport-level behaviors for HTTP/SSE MCP server connections.
+///
+/// These adapt the HTTP transport when the client cannot reach the server
+/// by its canonical address (LAN IP, gateway, adb reverse, or port forward)
+/// and the upstream validates the Host header or CORS-style Origin header.
+///
+/// Emitted by Android as `[mcp.servers.transport_options]`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
+pub struct McpTransportOptions {
+    /// Rewrite the `Host` header of every request to this value.
+    ///
+    /// Some MCP servers (e.g. Autodesk Fusion 360's local MCP server) only
+    /// accept requests whose `Host` header matches their own address exactly
+    /// (`127.0.0.1:27182`). When the configured `url` points at a gateway,
+    /// LAN IP, or port forward, set this to the value the server expects.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rewrite_host: Option<String>,
+
+    /// Add an `Origin` header matching the configured URL scheme and host
+    /// on every request (useful for upstreams that validate Origin).
+    #[serde(default)]
+    pub rewrite_origin: bool,
+
+    /// Track and echo the `Mcp-Session-Id` header across requests.
+    /// Defaults to `true` (session-preserving, per the MCP spec). Disable
+    /// only for stateless upstreams.
+    #[serde(default = "default_true")]
+    pub preserve_session: bool,
+}
+
+impl Default for McpTransportOptions {
+    fn default() -> Self {
+        Self {
+            rewrite_host: None,
+            rewrite_origin: false,
+            preserve_session: true,
+        }
+    }
+}
+
 /// Configuration for a single external MCP server.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "schema-export", derive(schemars::JsonSchema))]
@@ -1017,6 +1058,9 @@ pub struct McpServerConfig {
     /// Whether this server is enabled (default: true).
     #[serde(default = "default_true")]
     pub enabled: bool,
+    /// Optional transport-level behaviors for HTTP/SSE transports.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transport_options: Option<McpTransportOptions>,
 }
 
 /// External MCP client configuration (`[mcp]` section).
@@ -4413,6 +4457,11 @@ fn validate_mcp_config(config: &McpConfig) -> Result<()> {
                         "mcp.servers[{i}] with transport=stdio requires non-empty command"
                     );
                 }
+                if server.transport_options.is_some() {
+                    anyhow::bail!(
+                        "mcp.servers[{i}].transport_options only applies to http/sse transports"
+                    );
+                }
             }
             McpTransport::LocalhostStdio => {
                 let url = server
@@ -4429,6 +4478,11 @@ fn validate_mcp_config(config: &McpConfig) -> Result<()> {
                     .with_context(|| format!("mcp.servers[{i}].url is not a valid URL"))?;
                 if !matches!(parsed.scheme(), "http" | "https") {
                     anyhow::bail!("mcp.servers[{i}].url must use http/https");
+                }
+                if server.transport_options.is_some() {
+                    anyhow::bail!(
+                        "mcp.servers[{i}].transport_options only applies to http/sse transports"
+                    );
                 }
             }
             McpTransport::Http | McpTransport::Sse => {
@@ -4453,10 +4507,56 @@ fn validate_mcp_config(config: &McpConfig) -> Result<()> {
                 if !matches!(parsed.scheme(), "http" | "https") {
                     anyhow::bail!("mcp.servers[{i}].url must use http/https");
                 }
+
+                if let Some(options) = &server.transport_options {
+                    if let Some(rewrite_host) = options.rewrite_host.as_deref() {
+                        let host = rewrite_host.trim();
+                        if host.is_empty() {
+                            anyhow::bail!(
+                                "mcp.servers[{i}].transport_options.rewrite_host must not be empty"
+                            );
+                        }
+                        if !is_valid_host_header_value(host) {
+                            anyhow::bail!(
+                                "mcp.servers[{i}].transport_options.rewrite_host '{host}' must be a host[:port] value"
+                            );
+                        }
+                    }
+                }
             }
         }
     }
     Ok(())
+}
+
+/// A `Host` header value: an optional IPv6 literal, a hostname or IP, and an
+/// optional `:port` suffix. Blank values are rejected by callers.
+fn is_valid_host_header_value(value: &str) -> bool {
+    let value = value.trim();
+    if value.is_empty() {
+        return false;
+    }
+    // Strip IPv6 brackets first: "[::1]:8080" or "::1"
+    let (host, _port) = if let Some(stripped) = value.strip_prefix('[') {
+        match stripped.split_once(']') {
+            Some((inside, rest)) => {
+                if rest.is_empty() {
+                    (inside, "")
+                } else if let Some(after_bracket) = rest.strip_prefix(':') {
+                    (inside, after_bracket)
+                } else {
+                    return false;
+                }
+            }
+            None => return false,
+        }
+    } else {
+        match value.rsplit_once(':') {
+            Some((h, p)) if p.chars().all(|c| c.is_ascii_digit()) => (h, p),
+            _ => (value, ""),
+        }
+    };
+    !host.is_empty() && host.chars().all(|c| !c.is_whitespace())
 }
 
 fn validate_proxy_url(field: &str, url: &str) -> Result<()> {

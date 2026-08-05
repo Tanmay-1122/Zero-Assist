@@ -48,6 +48,7 @@ impl ModelRoutingConfigTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -57,6 +58,7 @@ impl ModelRoutingConfigTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -330,6 +332,7 @@ impl ModelRoutingConfigTool {
             success: true,
             output: serde_json::to_string_pretty(&Self::snapshot(&cfg))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -380,6 +383,7 @@ impl ModelRoutingConfigTool {
                 }
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -479,6 +483,7 @@ impl ModelRoutingConfigTool {
                         "Model '{model_name}' is not available: {probe_err}. Reverted to '{reverted_model}'.",
                     ),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -497,6 +502,7 @@ impl ModelRoutingConfigTool {
                 "config": Self::snapshot(&cfg),
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -676,6 +682,7 @@ impl ModelRoutingConfigTool {
                 "config": Self::snapshot(&cfg),
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -724,6 +731,7 @@ impl ModelRoutingConfigTool {
                 "config": Self::snapshot(&cfg),
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -839,6 +847,7 @@ impl ModelRoutingConfigTool {
                 "config": Self::snapshot(&cfg),
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -861,6 +870,7 @@ impl ModelRoutingConfigTool {
                 "config": Self::snapshot(&cfg),
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -1019,6 +1029,7 @@ impl Tool for ModelRoutingConfigTool {
                 success: false,
                 output: String::new(),
                 error: Some(error.to_string()),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

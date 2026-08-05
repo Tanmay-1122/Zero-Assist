@@ -111,6 +111,7 @@ impl Tool for ClaudeCodeRunnerTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -124,6 +125,7 @@ impl Tool for ClaudeCodeRunnerTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -148,6 +150,7 @@ impl Tool for ClaudeCodeRunnerTool {
                             "working_directory '{}' does not exist or is not accessible",
                             wd
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -162,6 +165,7 @@ impl Tool for ClaudeCodeRunnerTool {
                             "workspace directory '{}' does not exist or is not accessible",
                             workspace.display()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -175,6 +179,7 @@ impl Tool for ClaudeCodeRunnerTool {
                         wd,
                         workspace.display()
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -194,6 +199,7 @@ impl Tool for ClaudeCodeRunnerTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -251,6 +257,7 @@ impl Tool for ClaudeCodeRunnerTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to create tmux session: {stderr}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -261,6 +268,7 @@ impl Tool for ClaudeCodeRunnerTool {
                     error: Some(format!(
                         "tmux not found or failed to execute: {e}. Install tmux to use claude_code_runner."
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -293,6 +301,7 @@ impl Tool for ClaudeCodeRunnerTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to send command to tmux session: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -335,6 +344,7 @@ impl Tool for ClaudeCodeRunnerTool {
             success: true,
             output: output_parts.join("\n"),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

@@ -71,6 +71,7 @@ impl Tool for WorkspaceTool {
                         success: true,
                         output: "No workspaces configured.".to_string(),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -88,6 +89,7 @@ impl Tool for WorkspaceTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -101,6 +103,7 @@ impl Tool for WorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some(error),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -120,12 +123,14 @@ impl Tool for WorkspaceTool {
                             profile.effective_audit_namespace()
                         ),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                     Err(e) => Ok(ToolResult {
                         success: false,
                         output: String::new(),
                         error: Some(e.to_string()),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -140,6 +145,7 @@ impl Tool for WorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some(error),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -157,6 +163,7 @@ impl Tool for WorkspaceTool {
                             success: true,
                             output: format!("Created workspace '{}' at {}", name, dir.display()),
                             error: None,
+                        blocks: Vec::new(),
                         metadata: None,
                         })
                     }
@@ -164,6 +171,7 @@ impl Tool for WorkspaceTool {
                         success: false,
                         output: String::new(),
                         error: Some(e.to_string()),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -211,6 +219,7 @@ impl Tool for WorkspaceTool {
                                 success: true,
                                 output,
                                 error: None,
+                            blocks: Vec::new(),
                             metadata: None,
                             })
                         }
@@ -218,6 +227,7 @@ impl Tool for WorkspaceTool {
                             success: false,
                             output: String::new(),
                             error: Some(format!("workspace '{}' not found", ws_name)),
+                        blocks: Vec::new(),
                         metadata: None,
                         }),
                     },
@@ -225,6 +235,7 @@ impl Tool for WorkspaceTool {
                         success: true,
                         output: "No workspace is currently active. Use 'workspace switch <name>' to activate one.".to_string(),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -244,12 +255,14 @@ impl Tool for WorkspaceTool {
                             ws_name, toml_str
                         ),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                     Err(e) => Ok(ToolResult {
                         success: false,
                         output: String::new(),
                         error: Some(e.to_string()),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -262,6 +275,7 @@ impl Tool for WorkspaceTool {
                     "unknown workspace action '{}'. Expected: list, switch, create, info, export",
                     other
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

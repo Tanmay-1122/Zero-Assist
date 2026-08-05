@@ -741,6 +741,7 @@ impl BrowserTool {
                 success: true,
                 output: serde_json::to_string_pretty(&output).unwrap_or_default(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -889,6 +890,7 @@ impl BrowserTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -907,6 +909,7 @@ impl BrowserTool {
                 success: false,
                 output: String::new(),
                 error,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -916,6 +919,7 @@ impl BrowserTool {
                 success: true,
                 output: body,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -927,6 +931,7 @@ impl BrowserTool {
                 "computer-use sidecar request failed with status {status}: {}",
                 body.trim()
             )),
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -956,6 +961,7 @@ impl BrowserTool {
                 success: true,
                 output,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         } else {
@@ -963,6 +969,7 @@ impl BrowserTool {
                 success: false,
                 output: String::new(),
                 error: resp.error,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -986,6 +993,7 @@ impl BrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Unknown action: {action_str}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -999,6 +1007,7 @@ impl BrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some(unavailable_action_for_backend_error(action_str, backend)),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1010,6 +1019,7 @@ impl BrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -1155,6 +1165,7 @@ impl Tool for BrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1164,6 +1175,7 @@ impl Tool for BrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1175,6 +1187,7 @@ impl Tool for BrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(error.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }

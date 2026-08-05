@@ -57,6 +57,50 @@ pub trait FfiStreamListener: Send + Sync {
 ///
 /// Reads provider settings from the current `[providers]` config layout,
 /// while still accepting daemon configs migrated from the legacy flat fields.
+use zeroclaw::providers::normalizer::ProviderOutputNormalizer;
+use zeroclaw_api::content::AssistantEvent;
+
+/// Adapter bridging versioned `AssistantEvent`s into legacy UniFFI `FfiStreamListener` calls.
+pub(crate) struct FfiLegacyStreamAdapter {
+    listener: Arc<dyn FfiStreamListener>,
+    full_response: String,
+}
+
+impl FfiLegacyStreamAdapter {
+    pub fn new(listener: Arc<dyn FfiStreamListener>) -> Self {
+        Self {
+            listener,
+            full_response: String::new(),
+        }
+    }
+
+    pub fn handle_events(&mut self, events: Vec<AssistantEvent>) {
+        for event in events {
+            match event {
+                AssistantEvent::ThinkingChunk { delta, .. } => {
+                    self.listener.on_thinking_chunk(delta);
+                }
+                AssistantEvent::TextChunk { delta, .. } => {
+                    self.full_response.push_str(&delta);
+                    self.listener.on_response_chunk(delta);
+                }
+                AssistantEvent::StreamFinished { .. } => {
+                    self.listener.on_complete(self.full_response.clone());
+                }
+                AssistantEvent::StreamError { error_message, .. } => {
+                    self.listener.on_error(error_message);
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+/// Sends a message to the configured provider and streams the response.
+///
+/// Reads the daemon configuration to build a provider, then opens a
+/// streaming chat request. Each chunk is normalized into `AssistantEvent`s
+/// and forwarded via `FfiLegacyStreamAdapter` to the `listener` callback.
 pub(crate) fn send_message_streaming_inner(
     message: String,
     listener: Arc<dyn FfiStreamListener>,
@@ -90,7 +134,8 @@ pub(crate) fn send_message_streaming_inner(
         let mut stream =
             provider.stream_chat_with_system(None, &message, &model, Some(temperature), options);
 
-        let mut full_response = String::new();
+        let mut normalizer = ProviderOutputNormalizer::new("stream_conv", "stream_msg");
+        let mut adapter = FfiLegacyStreamAdapter::new(listener.clone());
 
         while let Some(result) = stream.next().await {
             if CANCEL_FLAG.load(Ordering::SeqCst) {
@@ -100,10 +145,8 @@ pub(crate) fn send_message_streaming_inner(
 
             match result {
                 Ok(chunk) => {
-                    if !chunk.delta.is_empty() {
-                        full_response.push_str(&chunk.delta);
-                        listener.on_response_chunk(chunk.delta);
-                    }
+                    let events = normalizer.normalize_chunk(&chunk);
+                    adapter.handle_events(events);
                     if chunk.is_final {
                         break;
                     }
@@ -115,7 +158,8 @@ pub(crate) fn send_message_streaming_inner(
             }
         }
 
-        listener.on_complete(full_response);
+        let final_events = normalizer.normalize_event(&zeroclaw_api::provider::StreamEvent::Final);
+        adapter.handle_events(final_events);
         Ok(())
     })
 }

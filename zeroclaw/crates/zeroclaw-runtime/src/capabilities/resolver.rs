@@ -259,6 +259,7 @@ mod tests {
                 success: true,
                 output: format!("{} executed: {:?}", self.name, request),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

@@ -959,23 +959,43 @@ object ConfigTomlBuilder {
                         }
                     }
                 }
-                McpTransportType.HTTP, McpTransportType.SSE -> {
-                    if (server.url.isNotBlank()) {
-                        appendLine("url = ${tomlString(server.url)}")
-                    }
-                    if (server.headers.isNotEmpty()) {
-                        appendLine("[mcp.servers.headers]")
-                        for ((key, value) in server.headers) {
-                            appendLine("${tomlKey(key)} = ${tomlString(value)}")
+                    McpTransportType.HTTP, McpTransportType.SSE -> {
+                        if (server.url.isNotBlank()) {
+                            appendLine("url = ${tomlString(server.url)}")
                         }
+                        if (server.headers.isNotEmpty()) {
+                            appendLine("[mcp.servers.headers]")
+                            for ((key, value) in server.headers) {
+                                appendLine("${tomlKey(key)} = ${tomlString(value)}")
+                            }
+                        }
+                        appendTransportOptions(server)
                     }
                 }
-            }
 
-            if (server.toolTimeoutSecs != null) {
-                appendLine("tool_timeout_secs = ${server.toolTimeoutSecs}")
+                if (server.toolTimeoutSecs != null) {
+                    appendLine("tool_timeout_secs = ${server.toolTimeoutSecs}")
+                }
             }
         }
+
+    /**
+     * Emits the optional `[mcp.servers.transport_options]` table for
+     * HTTP/SSE servers that need transport-level adaptions (Host rewriting
+     * for host-locked servers behind a gateway/port-forward, Origin
+     * rewriting, or stateless sessions). Omitted entirely when all fields
+     * are at their defaults.
+     */
+    private fun StringBuilder.appendTransportOptions(server: McpServerEntry) {
+        val opts = server.transportOptions ?: return
+        val rewriteHost = opts.rewriteHost?.trim().takeIf { !it.isNullOrBlank() }
+        if (rewriteHost == null && !opts.rewriteOrigin && opts.preserveSession) return
+        appendLine("[mcp.servers.transport_options]")
+        if (rewriteHost != null) {
+            appendLine("rewrite_host = ${tomlString(rewriteHost)}")
+        }
+        appendLine("rewrite_origin = ${opts.rewriteOrigin}")
+        appendLine("preserve_session = ${opts.preserveSession}")
     }
 
     /**
@@ -1074,6 +1094,7 @@ object ConfigTomlBuilder {
                             appendLine("${tomlKey(key)} = ${tomlString(value)}")
                         }
                     }
+                    appendTransportOptions(server)
                 }
             }
 

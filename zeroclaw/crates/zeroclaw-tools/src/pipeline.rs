@@ -262,6 +262,7 @@ impl Tool for PipelineTool {
                 success: false,
                 output: String::new(),
                 error: Some(e.to_string()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -280,6 +281,7 @@ impl Tool for PipelineTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -287,6 +289,7 @@ impl Tool for PipelineTool {
                 success: false,
                 output: String::new(),
                 error: Some(e.to_string()),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

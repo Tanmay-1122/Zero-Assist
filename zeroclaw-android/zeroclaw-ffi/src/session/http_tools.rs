@@ -239,6 +239,7 @@ impl Tool for FfiWebFetchTool {
             success: true,
             output: self.truncate_response(&text),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -405,6 +406,7 @@ impl FfiHttpRequestTool {
             } else {
                 None
             },
+        blocks: Vec::new(),
         metadata: None,
         }
     }

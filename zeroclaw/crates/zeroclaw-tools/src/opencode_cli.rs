@@ -66,6 +66,7 @@ impl Tool for OpenCodeCliTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -79,6 +80,7 @@ impl Tool for OpenCodeCliTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -106,6 +108,7 @@ impl Tool for OpenCodeCliTool {
                             "working_directory '{}' does not exist or is not accessible",
                             wd
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -120,6 +123,7 @@ impl Tool for OpenCodeCliTool {
                             "workspace directory '{}' does not exist or is not accessible",
                             workspace.display()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -133,6 +137,7 @@ impl Tool for OpenCodeCliTool {
                         wd,
                         workspace.display()
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -147,6 +152,7 @@ impl Tool for OpenCodeCliTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -203,6 +209,7 @@ impl Tool for OpenCodeCliTool {
                     } else {
                         Some(stderr)
                     },
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -220,6 +227,7 @@ impl Tool for OpenCodeCliTool {
                     success: false,
                     output: String::new(),
                     error: Some(msg),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -233,6 +241,7 @@ impl Tool for OpenCodeCliTool {
                         "OpenCode CLI timed out after {}s and was killed",
                         self.config.timeout_secs
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

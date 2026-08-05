@@ -71,6 +71,7 @@ impl CapabilityExecutor for WebExecutor {
                     success: true,
                     output: format!("Web {} operation: {:?} {:?}", req.action, req.url, req.query),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

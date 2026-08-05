@@ -83,7 +83,23 @@ class ProotExecutor(
 
     /** Forcibly kill the current running process (if any). Thread-safe. */
     fun cancelCurrent() {
-        currentProcess?.destroyForcibly()
+        currentProcess?.let { process ->
+            if (process.isAlive) {
+                process.destroyForcibly()
+            }
+        }
+    }
+
+    /**
+     * Records [process] as the cancel target, unless a newer process has
+     * already claimed the slot. Ensures [cancelCurrent] never kills an
+     * unrelated newer execution.
+     */
+    private fun claimCurrentProcess(process: Process) {
+        val existing = currentProcess
+        if (existing == null || !existing.isAlive) {
+            currentProcess = process
+        }
     }
 
     companion object {
@@ -96,6 +112,23 @@ class ProotExecutor(
             val candidates = listOf("/system/bin/linker64", "/system/bin/linker")
             candidates.firstOrNull { File(it).exists() }
         }
+
+        private const val ENV_KEY_MAX_LENGTH = 128
+        private val DENYLISTED_ENV_KEYS =
+            setOf(
+                "LD_PRELOAD",
+                "LD_LIBRARY_PATH",
+                "LD_DEBUG",
+                "LD_AUDIT",
+                "LD_ORIGIN_PATH",
+                "LD_USE_LOAD_BIAS",
+                "LD_BIND_NOT",
+                "LD_PROFILE",
+                "LD_NOWARN",
+                "LD_HELP",
+                "LD_TRACE_LOADED_OBJECTS",
+                "ANDROID_DNS_MODE",
+            )
     }
 
     fun execute(
@@ -112,7 +145,7 @@ class ProotExecutor(
                 buildEnvVars(extraEnv),
                 File(rootfsPath).parentFile,
             )
-            currentProcess = process
+            claimCurrentProcess(process)
 
             // Drain stdout/stderr concurrently to avoid pipe buffer deadlock
             val stdoutFuture = CompletableFuture.supplyAsync {
@@ -210,7 +243,31 @@ class ProotExecutor(
             "PROOT_LOADER=$loaderPath",
             "PROOT_LOADER_32=$loader32Path",
         )
-        return baseEnv + extraEnv.map { (k, v) -> "$k=$v" }.toTypedArray()
+        return baseEnv + sanitizeExtraEnv(extraEnv).map { (k, v) -> "$k=$v" }.toTypedArray()
+    }
+
+    /**
+     * Filters model-controlled environment variables before they reach the
+     * process environment.
+     *
+     * The sandbox bridge accepts an `env` object from the agent; without
+     * filtering, a malicious key like `LD_PRELOAD=/path/to/evil.so` would be
+     * honoured by the Android dynamic linker running proot *inside the app's
+     * host process*, giving the agent code execution in the app's UID.
+     * Keys that could clobber the proot runtime, inject libraries, or smuggle
+     * extra arguments are rejected.
+     */
+    private fun sanitizeExtraEnv(extraEnv: Map<String, String>): Map<String, String> =
+        extraEnv
+            .filterKeys { key -> isEnvKeyAllowed(key) }
+            .filterValues { value -> !value.contains('\u0000') }
+
+    private fun isEnvKeyAllowed(key: String): Boolean {
+        if (key.isEmpty() || key.length > ENV_KEY_MAX_LENGTH) return false
+        if (key.any { it == '=' || it == '\n' || it == '\u0000' || it.isWhitespace() }) return false
+        if (key in DENYLISTED_ENV_KEYS) return false
+        if (key.startsWith("PROOT_")) return false
+        return true
     }
 
     private fun readBounded(reader: BufferedReader): String {

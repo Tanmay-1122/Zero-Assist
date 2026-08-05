@@ -218,6 +218,7 @@ impl Tool for EscalateToHumanTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Action blocked: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -251,6 +252,7 @@ impl Tool for EscalateToHumanTool {
                     urgency,
                     VALID_URGENCY_LEVELS.join(", ")
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -276,6 +278,7 @@ impl Tool for EscalateToHumanTool {
                     success: false,
                     output: String::new(),
                     error: Some("No channels available yet (channels not initialized)".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -294,6 +297,7 @@ impl Tool for EscalateToHumanTool {
                 error: Some(format!(
                     "Failed to send escalation to channel '{channel_name}': {e}"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -319,12 +323,14 @@ impl Tool for EscalateToHumanTool {
                     success: true,
                     output: msg.content,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 }),
                 Ok(None) => Ok(ToolResult {
                     success: false,
                     output: "TIMEOUT".to_string(),
                     error: Some("Channel closed before receiving a response".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 }),
                 Err(_) => Ok(ToolResult {
@@ -333,6 +339,7 @@ impl Tool for EscalateToHumanTool {
                     error: Some(format!(
                         "No response received within {timeout_secs} seconds"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 }),
             }
@@ -347,6 +354,7 @@ impl Tool for EscalateToHumanTool {
                 })
                 .to_string(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

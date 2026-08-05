@@ -209,6 +209,7 @@ impl CapabilityExecutor for SandboxAndroidExecutor {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -216,6 +217,7 @@ impl CapabilityExecutor for SandboxAndroidExecutor {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -253,6 +255,7 @@ impl CapabilityExecutor for SandboxManageProcessExecutor {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -260,6 +263,7 @@ impl CapabilityExecutor for SandboxManageProcessExecutor {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

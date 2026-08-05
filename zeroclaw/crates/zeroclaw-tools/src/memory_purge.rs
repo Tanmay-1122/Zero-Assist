@@ -63,6 +63,7 @@ impl Tool for MemoryPurgeTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -81,6 +82,7 @@ impl Tool for MemoryPurgeTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Failed to purge namespace: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -98,6 +100,7 @@ impl Tool for MemoryPurgeTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Failed to purge session: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -112,6 +115,7 @@ impl Tool for MemoryPurgeTool {
                 output_parts.join("; ")
             },
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

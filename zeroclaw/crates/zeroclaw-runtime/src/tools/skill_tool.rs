@@ -105,6 +105,7 @@ impl Tool for SkillShellTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -118,6 +119,7 @@ impl Tool for SkillShellTool {
                     success: false,
                     output: String::new(),
                     error: Some(reason),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -128,6 +130,7 @@ impl Tool for SkillShellTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Path blocked by security policy: {path}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -137,6 +140,7 @@ impl Tool for SkillShellTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -189,6 +193,7 @@ impl Tool for SkillShellTool {
                     } else {
                         Some(stderr)
                     },
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -196,6 +201,7 @@ impl Tool for SkillShellTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to execute command: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -204,6 +210,7 @@ impl Tool for SkillShellTool {
                 error: Some(format!(
                     "Command timed out after {SKILL_SHELL_TIMEOUT_SECS}s and was killed"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

@@ -71,6 +71,7 @@ impl CapabilityExecutor for MemoryExecutor {
                     success: true,
                     output: format!("Memory {} operation: {}", req.action, req.query),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

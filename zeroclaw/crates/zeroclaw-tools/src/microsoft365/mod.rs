@@ -72,6 +72,7 @@ impl Microsoft365Tool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Unknown action: {action}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -96,6 +97,7 @@ impl Microsoft365Tool {
             success: true,
             output: serde_json::to_string_pretty(&result)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -126,6 +128,7 @@ impl Microsoft365Tool {
             success: true,
             output: serde_json::to_string_pretty(&result)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -162,6 +165,7 @@ impl Microsoft365Tool {
             success: true,
             output: serde_json::to_string_pretty(&result)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -181,6 +185,7 @@ impl Microsoft365Tool {
             success: true,
             output: serde_json::to_string_pretty(&result)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -223,6 +228,7 @@ impl Microsoft365Tool {
                 bytes.len()
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -248,6 +254,7 @@ impl Microsoft365Tool {
             success: true,
             output: serde_json::to_string_pretty(&result)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -292,6 +299,7 @@ impl Microsoft365Tool {
             success: true,
             output: format!("Email sent to: {}", to.join(", ")),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -322,6 +330,7 @@ impl Microsoft365Tool {
             success: true,
             output: "Teams message sent".to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -370,6 +379,7 @@ impl Microsoft365Tool {
             success: true,
             output: format!("Calendar event created (id: {event_id})"),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -394,6 +404,7 @@ impl Microsoft365Tool {
             success: true,
             output: format!("Calendar event {event_id} deleted"),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -505,6 +516,7 @@ impl Tool for Microsoft365Tool {
                     success: false,
                     output: String::new(),
                     error: Some("'action' parameter is required".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -516,6 +528,7 @@ impl Tool for Microsoft365Tool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("microsoft365.{action} failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

@@ -435,6 +435,7 @@ impl Tool for WebSearchTool {
             success: true,
             output: result,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

@@ -100,6 +100,7 @@ impl Tool for LlmTaskTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -112,6 +113,7 @@ impl Tool for LlmTaskTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing or empty required parameter: prompt".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -156,6 +158,7 @@ impl Tool for LlmTaskTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to create provider: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -174,6 +177,7 @@ impl Tool for LlmTaskTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("LLM call failed: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -187,12 +191,14 @@ impl Tool for LlmTaskTool {
                     success: true,
                     output: validated_json,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 }),
                 Err(validation_error) => Ok(ToolResult {
                     success: false,
                     output: response,
                     error: Some(format!("Schema validation failed: {validation_error}")),
+                blocks: Vec::new(),
                 metadata: None,
                 }),
             }
@@ -201,6 +207,7 @@ impl Tool for LlmTaskTool {
                 success: true,
                 output: response,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

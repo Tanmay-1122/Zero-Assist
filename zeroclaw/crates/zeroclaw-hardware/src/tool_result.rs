@@ -13,6 +13,7 @@ pub fn tool_ok(output: impl Into<String>) -> anyhow::Result<ToolResult> {
         success: true,
         output: output.into(),
         error: None,
+        blocks: Vec::new(),
     metadata: None,
     })
 }
@@ -25,6 +26,7 @@ pub fn tool_err(message: impl Into<String>) -> anyhow::Result<ToolResult> {
         success: false,
         output: String::new(),
         error: Some(msg),
+        blocks: Vec::new(),
     metadata: None,
     })
 }

@@ -332,7 +332,7 @@ fun AddMcpServerSheet(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Connection failed: ${err.localizedMessage ?: "Unreachable"}",
+                                        text = "Validation failed: ${err.localizedMessage ?: "Unreachable"}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                     )

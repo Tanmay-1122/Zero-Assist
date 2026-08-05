@@ -61,6 +61,7 @@ impl ImageGenTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: 'prompt'".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -99,6 +100,7 @@ impl ImageGenTool {
                     "Invalid size '{size}'. Valid values: {}",
                     VALID_SIZES.join(", ")
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -125,6 +127,7 @@ impl ImageGenTool {
                     "Invalid model identifier '{model}'. \
                      Must be a fal.ai model path (e.g. 'fal-ai/flux/schnell')."
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -137,6 +140,7 @@ impl ImageGenTool {
                     success: false,
                     output: String::new(),
                     error: Some(msg),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -168,6 +172,7 @@ impl ImageGenTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("fal.ai API error ({status}): {body_text}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -197,6 +202,7 @@ impl ImageGenTool {
                     "Failed to download image from {image_url} ({})",
                     img_resp.status()
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -233,6 +239,7 @@ impl ImageGenTool {
                 prompt,
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -285,6 +292,7 @@ impl Tool for ImageGenTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }

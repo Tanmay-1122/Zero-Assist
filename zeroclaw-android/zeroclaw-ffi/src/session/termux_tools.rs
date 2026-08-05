@@ -43,6 +43,7 @@ impl Tool for FfiTermuxCapabilitiesTool {
                 success: true,
                 output: serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string()),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(error) => Ok(fail_result(error)),
@@ -105,6 +106,7 @@ impl Tool for FfiTermuxRunTool {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

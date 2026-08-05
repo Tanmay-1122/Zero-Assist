@@ -29,6 +29,7 @@ pub mod gemini_cli;
 pub mod kilocli;
 pub mod models_dev;
 pub mod multimodal;
+pub mod normalizer;
 pub mod ollama;
 pub mod openai;
 pub mod openai_codex;

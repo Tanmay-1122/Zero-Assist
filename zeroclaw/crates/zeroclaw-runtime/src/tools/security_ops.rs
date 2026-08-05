@@ -90,6 +90,7 @@ impl SecurityOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -143,6 +144,7 @@ impl SecurityOpsTool {
             } else {
                 None
             },
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -179,6 +181,7 @@ impl SecurityOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -232,6 +235,7 @@ impl SecurityOpsTool {
             success: true,
             output: report,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -243,6 +247,7 @@ impl SecurityOpsTool {
                 success: true,
                 output: "No playbooks available.".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -265,6 +270,7 @@ impl SecurityOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&playbook_list)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -324,6 +330,7 @@ impl SecurityOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -435,6 +442,7 @@ impl Tool for SecurityOpsTool {
                     "Unknown action '{action}'. Valid: triage_alert, run_playbook, \
                      parse_vulnerability, generate_report, list_playbooks, alert_stats"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

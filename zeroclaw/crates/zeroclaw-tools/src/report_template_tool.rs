@@ -101,6 +101,7 @@ impl Tool for ReportTemplateTool {
             success: true,
             output: rendered,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

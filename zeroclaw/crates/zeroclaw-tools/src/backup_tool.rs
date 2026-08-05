@@ -57,6 +57,7 @@ impl BackupTool {
             })
             .to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -122,6 +123,7 @@ impl BackupTool {
             success: true,
             output: serde_json::to_string_pretty(&items)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -133,6 +135,7 @@ impl BackupTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Backup not found: {backup_name}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -171,6 +174,7 @@ impl BackupTool {
             } else {
                 Some("Integrity check failed".into())
             },
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -182,6 +186,7 @@ impl BackupTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Backup not found: {backup_name}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -209,6 +214,7 @@ impl BackupTool {
                 })
                 .to_string(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -226,6 +232,7 @@ impl BackupTool {
             })
             .to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -271,6 +278,7 @@ impl Tool for BackupTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing 'command' parameter".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -301,6 +309,7 @@ impl Tool for BackupTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Unknown command: {other}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

@@ -40,7 +40,10 @@ data class AgentChatMessage(
     val requiresApproval: Boolean = false,
     val approvalState: ApprovalState = ApprovalState.NONE,
     val isStreaming: Boolean = false,
+    val blocks: List<com.zeroclaw.android.model.content.ContentBlock> = emptyList(),
 ) {
+    val effectiveBlocks: List<com.zeroclaw.android.model.content.ContentBlock>
+        get() = if (blocks.isNotEmpty()) blocks else listOf(com.zeroclaw.android.model.content.ContentBlock.Markdown(version = 1, blockId = "${id}_b0", sequenceIndex = 0, markdown = content))
     companion object {
         /**
          * Factory for task assignment messages from the master to a sub-agent.

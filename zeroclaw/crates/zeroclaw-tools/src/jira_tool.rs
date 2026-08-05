@@ -128,6 +128,7 @@ impl JiraTool {
             success: true,
             output: serde_json::to_string_pretty(&shaped).unwrap_or_else(|_| shaped.to_string()),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -203,6 +204,7 @@ impl JiraTool {
             success: true,
             output: serde_json::to_string_pretty(&output).unwrap_or_else(|_| output.to_string()),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -254,6 +256,7 @@ impl JiraTool {
             success: true,
             output: serde_json::to_string_pretty(&shaped).unwrap_or_else(|_| shaped.to_string()),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -383,6 +386,7 @@ impl JiraTool {
             success: true,
             output: serde_json::to_string_pretty(&output).unwrap_or_else(|_| output.to_string()),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -424,6 +428,7 @@ impl JiraTool {
             success: true,
             output: serde_json::to_string_pretty(&shaped).unwrap_or_else(|_| shaped.to_string()),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -511,6 +516,7 @@ impl Tool for JiraTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: action".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -528,6 +534,7 @@ impl Tool for JiraTool {
                 error: Some(format!(
                     "Unknown action: '{action}'. Valid actions: get_ticket, search_tickets, comment_ticket, list_projects, myself"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -541,6 +548,7 @@ impl Tool for JiraTool {
                      Currently allowed: {}",
                     self.allowed_actions.join(", ")
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -556,6 +564,7 @@ impl Tool for JiraTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -569,6 +578,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("get_ticket requires issue_key parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -589,6 +599,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("search_tickets requires jql parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -609,6 +620,7 @@ impl Tool for JiraTool {
                             success: false,
                             output: String::new(),
                             error: Some("comment_ticket requires issue_key parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -622,6 +634,7 @@ impl Tool for JiraTool {
                             error: Some(
                                 "comment_ticket requires a non-empty comment parameter".into(),
                             ),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -637,6 +650,7 @@ impl Tool for JiraTool {
                 success: false,
                 output: String::new(),
                 error: Some(e.to_string()),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

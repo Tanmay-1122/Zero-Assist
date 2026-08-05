@@ -59,6 +59,7 @@ impl Tool for ModelSwitchTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -75,6 +76,7 @@ impl Tool for ModelSwitchTool {
                     "Unknown action: {}. Valid actions: get, set, list_providers, list_models",
                     action
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -93,6 +95,7 @@ impl ModelSwitchTool {
                 "note": "To switch models, use action 'set' with provider and model parameters"
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -107,6 +110,7 @@ impl ModelSwitchTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing 'provider' parameter for 'set' action".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -121,6 +125,7 @@ impl ModelSwitchTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing 'model' parameter for 'set' action".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -150,6 +155,7 @@ impl ModelSwitchTool {
                         "Unknown provider: {}. Use 'list_providers' to see available options, or use 'custom:<url>' for custom endpoints.",
                         provider
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -168,6 +174,7 @@ impl ModelSwitchTool {
                 "note": "The agent will switch to this model on the next turn. Use 'get' to check pending switch."
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -195,6 +202,7 @@ impl ModelSwitchTool {
                 "example": "Use action 'set' with provider and model to switch"
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -211,6 +219,7 @@ impl ModelSwitchTool {
                     error: Some(
                         "Missing 'provider' parameter for 'list_models' action".to_string(),
                     ),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -264,6 +273,7 @@ impl ModelSwitchTool {
                     "note": "No common models listed for this provider. Check provider documentation for available models."
                 }))?,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -276,6 +286,7 @@ impl ModelSwitchTool {
                 "example": "Use action 'set' with this provider and a model ID to switch"
             }))?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

@@ -67,6 +67,7 @@ impl Tool for CloudOpsTool {
                     success: false,
                     output: String::new(),
                     error: Some("'action' parameter is required".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -89,6 +90,7 @@ impl Tool for CloudOpsTool {
                 success: false,
                 output: String::new(),
                 error: Some("'input' parameter is required and cannot be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -101,6 +103,7 @@ impl Tool for CloudOpsTool {
                     "Cloud provider '{}' is not in supported_clouds: {:?}",
                     cloud, self.config.supported_clouds
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -117,6 +120,7 @@ impl Tool for CloudOpsTool {
                     "Unknown action '{}'. Valid: review_iac, assess_migration, cost_analysis, architecture_review",
                     action
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -158,6 +162,7 @@ impl CloudOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -175,6 +180,7 @@ impl CloudOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -194,6 +200,7 @@ impl CloudOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -212,6 +219,7 @@ impl CloudOpsTool {
             success: true,
             output: serde_json::to_string_pretty(&output)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

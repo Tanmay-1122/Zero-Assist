@@ -420,6 +420,7 @@ mod tests {
                     success: true,
                     output: String::new(),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -455,6 +456,7 @@ mod tests {
                     success: true,
                     output: String::new(),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -487,6 +489,7 @@ mod tests {
                     success: true,
                     output: String::new(),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

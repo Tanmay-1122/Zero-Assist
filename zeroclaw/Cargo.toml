@@ -9,7 +9,8 @@ members = [
     "crates/zeroclaw-channels",
     "crates/zeroclaw-tools",
     "crates/zeroclaw-runtime",
-    "crates/zeroclaw-gateway",
+"crates/zeroclaw-gateway",
+    "crates/zeroclaw-mcp-gateway",
     "crates/zeroclaw-hardware",
     "crates/zeroclaw-plugins",
     "crates/zeroclaw-tool-call-parser",
@@ -35,6 +36,7 @@ zeroclaw-channels = { path = "crates/zeroclaw-channels", version = "0.7.3", defa
 zeroclaw-tools = { path = "crates/zeroclaw-tools", version = "0.7.3" }
 zeroclaw-runtime = { path = "crates/zeroclaw-runtime", version = "0.7.3", default-features = false }
 zeroclaw-gateway = { path = "crates/zeroclaw-gateway", version = "0.7.3" }
+zeroclaw-mcp-gateway = { path = "crates/zeroclaw-mcp-gateway", version = "0.7.3" }
 zeroclaw-hardware = { path = "crates/zeroclaw-hardware", version = "0.7.3" }
 zeroclaw-plugins = { path = "crates/zeroclaw-plugins", version = "0.7.3" }
 zeroclaw-tool-call-parser = { path = "crates/zeroclaw-tool-call-parser", version = "0.7.3" }

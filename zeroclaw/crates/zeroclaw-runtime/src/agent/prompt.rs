@@ -339,6 +339,7 @@ mod tests {
                 success: true,
                 output: "ok".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

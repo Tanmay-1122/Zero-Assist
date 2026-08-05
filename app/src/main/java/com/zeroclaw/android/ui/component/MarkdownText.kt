@@ -109,13 +109,14 @@ fun MarkdownText(
     if (markdown.isBlank()) return
 
     val linkColor = MaterialTheme.colorScheme.primary
+    val inlineCodeBg = MaterialTheme.colorScheme.surfaceVariant
     val parser = remember {
         Parser.builder().extensions(listOf(TablesExtension.create())).build()
     }
 
-    val blocks = remember(markdown, linkColor) {
+    val blocks = remember(markdown, linkColor, inlineCodeBg) {
         val document = parser.parse(markdown)
-        parseBlocks(document, linkColor)
+        parseBlocks(document, linkColor, inlineCodeBg)
     }
 
     Column(modifier = modifier) {
@@ -510,18 +511,19 @@ private fun childrenOf(node: Node): List<Node> {
 private fun parseBlocks(
     node: Node,
     linkColor: Color,
+    inlineCodeBg: Color,
 ): List<RenderableBlock> {
     val blocks = mutableListOf<RenderableBlock>()
 
     for (child in childrenOf(node)) {
         when (child) {
             is Paragraph -> {
-                val text = buildInlineAnnotatedString(child, linkColor)
+                val text = buildInlineAnnotatedString(child, linkColor, inlineCodeBg)
                 blocks.add(RenderableBlock.Paragraph(text))
             }
 
             is Heading -> {
-                val text = buildInlineAnnotatedString(child, linkColor)
+                val text = buildInlineAnnotatedString(child, linkColor, inlineCodeBg)
                 blocks.add(RenderableBlock.Heading(child.level, text))
             }
 
@@ -534,7 +536,7 @@ private fun parseBlocks(
             }
 
             is BlockQuote -> {
-                val children = parseBlocks(child, linkColor)
+                val children = parseBlocks(child, linkColor, inlineCodeBg)
                 if (children.isNotEmpty()) {
                     blocks.add(RenderableBlock.BlockQuote(children))
                 }
@@ -544,7 +546,7 @@ private fun parseBlocks(
                 val items = mutableListOf<List<RenderableBlock>>()
                 for (item in childrenOf(child)) {
                     if (item is ListItem) {
-                        items.add(parseBlocks(item, linkColor))
+                        items.add(parseBlocks(item, linkColor, inlineCodeBg))
                     }
                 }
                 if (items.isNotEmpty()) {
@@ -556,7 +558,7 @@ private fun parseBlocks(
                 val items = mutableListOf<List<RenderableBlock>>()
                 for (item in childrenOf(child)) {
                     if (item is ListItem) {
-                        items.add(parseBlocks(item, linkColor))
+                        items.add(parseBlocks(item, linkColor, inlineCodeBg))
                     }
                 }
                 if (items.isNotEmpty()) {
@@ -569,7 +571,7 @@ private fun parseBlocks(
             }
 
             is org.commonmark.ext.gfm.tables.TableBlock -> {
-                val result = parseTableBlock(child, linkColor)
+                val result = parseTableBlock(child, linkColor, inlineCodeBg)
                 if (result != null) {
                     blocks.add(result)
                 }
@@ -583,6 +585,7 @@ private fun parseBlocks(
 private fun parseTableBlock(
     tableBlock: Node,
     linkColor: Color,
+    inlineCodeBg: Color,
 ): RenderableBlock.Table? {
     var headers: List<AnnotatedString>? = null
     val rows = mutableListOf<List<AnnotatedString>>()
@@ -594,7 +597,7 @@ private fun parseTableBlock(
                     if (row is TableRow) {
                         headers = childrenOf(row).mapNotNull { cell ->
                             if (cell is TableCell) {
-                                buildInlineAnnotatedString(cell, linkColor)
+                                buildInlineAnnotatedString(cell, linkColor, inlineCodeBg)
                             } else null
                         }
                     }
@@ -606,7 +609,7 @@ private fun parseTableBlock(
                     if (row is TableRow) {
                         val cells = childrenOf(row).mapNotNull { cell ->
                             if (cell is TableCell) {
-                                buildInlineAnnotatedString(cell, linkColor)
+                                buildInlineAnnotatedString(cell, linkColor, inlineCodeBg)
                             } else null
                         }
                         if (cells.isNotEmpty()) {
@@ -627,26 +630,29 @@ private fun parseTableBlock(
 private fun buildInlineAnnotatedString(
     node: Node,
     linkColor: Color,
+    inlineCodeBg: Color,
     baseStyle: SpanStyle = SpanStyle(),
 ): AnnotatedString {
     return buildAnnotatedString {
-        renderInlineChildren(node, linkColor, baseStyle)
+        renderInlineChildren(node, linkColor, inlineCodeBg, baseStyle)
     }
 }
 
 private fun AnnotatedString.Builder.renderInlineChildren(
     node: Node,
     linkColor: Color,
+    inlineCodeBg: Color,
     baseStyle: SpanStyle,
 ) {
     for (child in childrenOf(node)) {
-        renderInlineNode(child, linkColor, baseStyle)
+        renderInlineNode(child, linkColor, inlineCodeBg, baseStyle)
     }
 }
 
 private fun AnnotatedString.Builder.renderInlineNode(
     node: Node,
     linkColor: Color,
+    inlineCodeBg: Color,
     baseStyle: SpanStyle,
 ) {
     when (node) {
@@ -659,7 +665,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
         is Code -> {
             val codeStyle = baseStyle.merge(
                 SpanStyle(
-                    background = Color(0x22000000),
+                    background = inlineCodeBg,
                     fontSize = 13.sp,
                 ),
             )
@@ -670,12 +676,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         is Emphasis -> {
             val italicStyle = baseStyle.merge(SpanStyle(fontStyle = FontStyle.Italic))
-            renderInlineChildren(node, linkColor, italicStyle)
+            renderInlineChildren(node, linkColor, inlineCodeBg, italicStyle)
         }
 
         is StrongEmphasis -> {
             val boldStyle = baseStyle.merge(SpanStyle(fontWeight = FontWeight.Bold))
-            renderInlineChildren(node, linkColor, boldStyle)
+            renderInlineChildren(node, linkColor, inlineCodeBg, boldStyle)
         }
 
         is Link -> {
@@ -686,13 +692,13 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 ),
             )
             val start = length
-            renderInlineChildren(node, linkColor, linkStyle)
+            renderInlineChildren(node, linkColor, inlineCodeBg, linkStyle)
             addStringAnnotation(URL_TAG, node.destination, start, length)
         }
 
         is Image -> {
             val altText = buildAnnotatedString {
-                renderInlineChildren(node, linkColor, baseStyle)
+                renderInlineChildren(node, linkColor, inlineCodeBg, baseStyle)
             }
             withStyle(baseStyle.copy(color = linkColor.copy(alpha = 0.6f))) {
                 append("[image: ${altText.text}]")

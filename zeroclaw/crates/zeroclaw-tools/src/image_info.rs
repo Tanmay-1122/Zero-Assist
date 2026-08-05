@@ -166,6 +166,7 @@ impl Tool for ImageInfoTool {
                 error: Some(format!(
                     "Path not allowed: {path_str} (must be within workspace)"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -175,6 +176,7 @@ impl Tool for ImageInfoTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("File not found: {path_str}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -192,6 +194,7 @@ impl Tool for ImageInfoTool {
                 error: Some(format!(
                     "Image too large: {file_size} bytes (max {MAX_IMAGE_BYTES} bytes)"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -227,6 +230,7 @@ impl Tool for ImageInfoTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

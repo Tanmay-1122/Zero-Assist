@@ -240,6 +240,7 @@ impl Tool for CanvasTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: action".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -267,6 +268,7 @@ impl Tool for CanvasTool {
                                 "Missing required parameter: content (for render action)"
                                     .to_string(),
                             ),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -280,6 +282,7 @@ impl Tool for CanvasTool {
                             "Content exceeds maximum size of {} bytes",
                             MAX_CONTENT_SIZE
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -292,6 +295,7 @@ impl Tool for CanvasTool {
                             content_type, canvas_id, frame.frame_id
                         ),
                         error: None,
+                        blocks: Vec::new(),
                         metadata: Some(serde_json::json!({
                             "canvas_id": canvas_id,
                             "frame_id": frame.frame_id,
@@ -306,6 +310,7 @@ impl Tool for CanvasTool {
                             "Maximum canvas count ({}) reached. Clear unused canvases first.",
                             MAX_CANVAS_COUNT
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -317,12 +322,14 @@ impl Tool for CanvasTool {
                     output: serde_json::to_string_pretty(&frame)
                         .unwrap_or_else(|_| frame.content.clone()),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 }),
                 None => Ok(ToolResult {
                     success: true,
                     output: format!("Canvas '{}' is empty", canvas_id),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 }),
             },
@@ -337,6 +344,7 @@ impl Tool for CanvasTool {
                         format!("Canvas '{}' was already empty", canvas_id)
                     },
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -354,6 +362,7 @@ impl Tool for CanvasTool {
                                 "Missing required parameter: expression (for eval action)"
                                     .to_string(),
                             ),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -369,6 +378,7 @@ impl Tool for CanvasTool {
                             canvas_id, frame.frame_id
                         ),
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                     None => Ok(ToolResult {
@@ -378,6 +388,7 @@ impl Tool for CanvasTool {
                             "Maximum canvas count ({}) reached. Clear unused canvases first.",
                             MAX_CANVAS_COUNT
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     }),
                 }
@@ -390,6 +401,7 @@ impl Tool for CanvasTool {
                     "Unknown action: '{}'. Valid actions: render, snapshot, clear, eval",
                     other
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

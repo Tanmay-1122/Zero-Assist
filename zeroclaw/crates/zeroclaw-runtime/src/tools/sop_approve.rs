@@ -109,6 +109,7 @@ impl Tool for SopApproveTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -116,6 +117,7 @@ impl Tool for SopApproveTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Approval failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

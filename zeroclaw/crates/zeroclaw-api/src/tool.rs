@@ -7,9 +7,25 @@ pub struct ToolResult {
     pub success: bool,
     pub output: String,
     pub error: Option<String>,
+    /// Structured content blocks produced by this tool execution.
+    #[serde(default)]
+    pub blocks: Vec<crate::content::ContentBlock>,
     /// Optional structured metadata (e.g. canvas frames, file hashes).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<serde_json::Value>,
+}
+
+impl ToolResult {
+    /// Backward compatibility helper to extract concatenated text content from blocks or fallback to output.
+    pub fn output_text(&self) -> &str {
+        if !self.output.is_empty() {
+            &self.output
+        } else if let Some(first_block) = self.blocks.first() {
+            first_block.text_content().unwrap_or("[Rich Content Block]")
+        } else {
+            ""
+        }
+    }
 }
 
 /// Description of a tool for the LLM

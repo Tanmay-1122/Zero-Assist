@@ -9869,6 +9869,7 @@ dependencies = [
  "tracing-subscriber",
  "uniffi",
  "uuid",
+ "zeroclaw-api",
  "zeroclaw-channels",
  "zeroclaw-config",
  "zeroclaw-runtime",
@@ -9966,6 +9967,24 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "zeroclaw-mcp-gateway"
+version = "0.7.3"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "http-body-util",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "toml 1.1.2+spec-1.1.0",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -10129,6 +10148,7 @@ dependencies = [
  "futures-util",
  "glob",
  "hex",
+ "http 1.4.0",
  "nanohtml2text 0.2.1",
  "parking_lot",
  "pdf-extract",

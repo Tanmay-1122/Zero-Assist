@@ -61,6 +61,7 @@ impl SwarmTool {
                 "Failed to create provider '{}' for agent '{agent_name}': {e}",
                 agent_config.provider
             )),
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -125,6 +126,7 @@ impl SwarmTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Swarm references unknown agent '{agent_name}'")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -152,6 +154,7 @@ impl SwarmTool {
                         success: false,
                         output: results.join("\n\n"),
                         error: Some(e),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -166,6 +169,7 @@ impl SwarmTool {
                 results.join("\n\n")
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -192,6 +196,7 @@ impl SwarmTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Swarm references unknown agent '{agent_name}'")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -215,6 +220,7 @@ impl SwarmTool {
                         error: Some(format!(
                             "Failed to create provider for agent '{agent_name}': {e}"
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -276,6 +282,7 @@ impl SwarmTool {
                 results.join("\n\n---\n\n")
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -291,6 +298,7 @@ impl SwarmTool {
                 success: false,
                 output: String::new(),
                 error: Some("Router swarm has no agents to choose from".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -324,6 +332,7 @@ impl SwarmTool {
                     error: Some(format!(
                         "Swarm references unknown agent '{first_agent_name}'"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -365,6 +374,7 @@ impl SwarmTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Router LLM call failed: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -373,6 +383,7 @@ impl SwarmTool {
                     success: false,
                     output: String::new(),
                     error: Some("Router LLM call timed out".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -393,6 +404,7 @@ impl SwarmTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Router selected unknown agent '{matched_name}'")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -420,12 +432,14 @@ impl SwarmTool {
                     agent_config.provider, agent_config.model
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -487,6 +501,7 @@ impl Tool for SwarmTool {
                 success: false,
                 output: String::new(),
                 error: Some("'swarm' parameter must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -502,6 +517,7 @@ impl Tool for SwarmTool {
                 success: false,
                 output: String::new(),
                 error: Some("'prompt' parameter must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -527,6 +543,7 @@ impl Tool for SwarmTool {
                             available.join(", ")
                         }
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -537,6 +554,7 @@ impl Tool for SwarmTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Swarm '{swarm_name}' has no agents configured")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -549,6 +567,7 @@ impl Tool for SwarmTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }

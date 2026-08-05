@@ -53,6 +53,9 @@ class AndroidPcmAudioPlayer : CustomVoiceAudioPlayer {
     @Volatile
     private var activeTrack: AudioTrack? = null
 
+    @Volatile
+    private var stopped = false
+
     override suspend fun play(audio: CustomVoicePcmAudio): SpeechSynthesisResult =
         playStream(flowOf(audio), VoiceTurnTrace.noop())
 
@@ -61,12 +64,16 @@ class AndroidPcmAudioPlayer : CustomVoiceAudioPlayer {
         trace: VoiceTurnTrace,
     ): SpeechSynthesisResult =
         withContext(Dispatchers.IO) {
+            stopped = false
             var track: AudioTrack? = null
             var sampleRateHz = 0
             var framesWritten = 0
             var chunksWritten = 0
             try {
                 chunks.collect { audio ->
+                    if (stopped) {
+                        throw PlaybackCancelled()
+                    }
                     if (audio.sampleRateHz <= 0 || audio.pcm16Mono.isEmpty()) {
                         throw PcmPlaybackException("Custom voice runtime produced empty audio.")
                     }
@@ -111,20 +118,32 @@ class AndroidPcmAudioPlayer : CustomVoiceAudioPlayer {
                         "Custom voice runtime produced no audio.",
                     )
                 }
-                waitForPlaybackDrain(active, framesWritten, sampleRateHz)
-                SpeechSynthesisResult.Completed
+                if (stopped) {
+                    SpeechSynthesisResult.Cancelled
+                } else {
+                    waitForPlaybackDrain(active, framesWritten, sampleRateHz)
+                    if (stopped) {
+                        SpeechSynthesisResult.Cancelled
+                    } else {
+                        SpeechSynthesisResult.Completed
+                    }
+                }
             } catch (error: PcmPlaybackException) {
                 SpeechSynthesisResult.Failed(error.message ?: "Custom voice playback failed.")
+            } catch (_: PlaybackCancelled) {
+                SpeechSynthesisResult.Cancelled
             } finally {
                 activeTrack = null
                 track?.let { active ->
                     runCatching { active.stop() }
                     active.release()
                 }
+                stopped = false
             }
         }
 
     override fun stop() {
+        stopped = true
         activeTrack?.stop()
     }
 
@@ -239,6 +258,9 @@ class AndroidPcmAudioPlayer : CustomVoiceAudioPlayer {
         }
 
     private class PcmPlaybackException(message: String) : RuntimeException(message)
+
+    /** Internal signal thrown to interrupt playback collection when stop() is called. */
+    private class PlaybackCancelled : RuntimeException()
 
     private companion object {
         private const val TAG = "AndroidPcmAudioPlayer"

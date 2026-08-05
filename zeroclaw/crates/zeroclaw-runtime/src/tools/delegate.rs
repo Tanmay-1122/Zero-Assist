@@ -327,6 +327,7 @@ impl Tool for DelegateTool {
                     error: Some(format!(
                         "Unknown action '{other}'. Use delegate/check_result/list_results/cancel_task."
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -349,6 +350,7 @@ impl Tool for DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some("'agent' parameter must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -364,6 +366,7 @@ impl Tool for DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some("'prompt' parameter must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -413,6 +416,7 @@ impl DelegateTool {
                             available.join(", ")
                         }
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -429,6 +433,7 @@ impl DelegateTool {
                     depth = self.depth,
                     max = agent_config.max_depth
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -441,6 +446,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -467,6 +473,7 @@ impl DelegateTool {
                         "Failed to create provider '{}' for agent '{agent_name}': {e}",
                         agent_config.provider
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -523,6 +530,7 @@ impl DelegateTool {
                     error: Some(format!(
                         "Agent '{agent_name}' timed out after {timeout_secs}s"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -543,6 +551,7 @@ impl DelegateTool {
                         model = agent_config.model
                     ),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -550,6 +559,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Agent '{agent_name}' failed: {e}",)),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -584,6 +594,7 @@ impl DelegateTool {
                             available.join(", ")
                         }
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -598,6 +609,7 @@ impl DelegateTool {
                     depth = self.depth,
                     max = agent_config.max_depth
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -610,6 +622,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -742,6 +755,7 @@ impl DelegateTool {
                  Use action='check_result' with task_id='{task_id}' to retrieve the result."
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -765,6 +779,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some("'prompt' parameter must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -780,6 +795,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some("'parallel' array must contain at least one agent name".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -800,6 +816,7 @@ impl DelegateTool {
                             available.join(", ")
                         }
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -884,6 +901,7 @@ impl DelegateTool {
             } else {
                 Some("One or more parallel agents failed".into())
             },
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -902,6 +920,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -912,6 +931,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("No result found for task_id '{task_id}'")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -927,6 +947,7 @@ impl DelegateTool {
             } else {
                 result.error
             },
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -939,6 +960,7 @@ impl DelegateTool {
                 success: true,
                 output: "No background delegate results found.".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -967,6 +989,7 @@ impl DelegateTool {
                 success: true,
                 output: "No background delegate results found.".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -975,6 +998,7 @@ impl DelegateTool {
             success: true,
             output: serde_json::to_string_pretty(&results)?,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -991,6 +1015,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1001,6 +1026,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("No task found for task_id '{task_id}'")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1017,6 +1043,7 @@ impl DelegateTool {
                     "Task '{task_id}' is not running (status: {:?})",
                     result.status
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1036,6 +1063,7 @@ impl DelegateTool {
             success: true,
             output: format!("Task '{task_id}' cancellation requested."),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -1136,6 +1164,7 @@ impl DelegateTool {
                 error: Some(format!(
                     "Agent '{agent_name}' has agentic=true but allowed_tools is empty"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1165,6 +1194,7 @@ impl DelegateTool {
                     "Agent '{agent_name}' has no executable tools after filtering allowlist ({})",
                     agent_config.allowed_tools.join(", ")
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -1234,6 +1264,7 @@ impl DelegateTool {
                         model = agent_config.model
                     ),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -1241,6 +1272,7 @@ impl DelegateTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Agent '{agent_name}' failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -1249,6 +1281,7 @@ impl DelegateTool {
                 error: Some(format!(
                     "Agent '{agent_name}' timed out after {agentic_timeout_secs}s"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -1388,6 +1421,7 @@ mod tests {
                 success: true,
                 output: format!("echo:{value}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -1980,6 +2014,7 @@ mod tests {
                 success: true,
                 output: "mcp_fake_output".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -2142,6 +2177,7 @@ mod tests {
                     success: true,
                     output: String::new(),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

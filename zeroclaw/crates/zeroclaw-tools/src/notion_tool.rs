@@ -222,6 +222,7 @@ impl Tool for NotionTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: action".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -238,6 +239,7 @@ impl Tool for NotionTool {
                     error: Some(format!(
                         "Unknown action: {action}. Valid actions: query_database, read_page, create_page, update_page, search"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -248,6 +250,7 @@ impl Tool for NotionTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -261,6 +264,7 @@ impl Tool for NotionTool {
                             success: false,
                             output: String::new(),
                             error: Some("query_database requires database_id parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -276,6 +280,7 @@ impl Tool for NotionTool {
                             success: false,
                             output: String::new(),
                             error: Some("read_page requires page_id parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -290,6 +295,7 @@ impl Tool for NotionTool {
                             success: false,
                             output: String::new(),
                             error: Some("create_page requires properties parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -305,6 +311,7 @@ impl Tool for NotionTool {
                             success: false,
                             output: String::new(),
                             error: Some("update_page requires page_id parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -316,6 +323,7 @@ impl Tool for NotionTool {
                             success: false,
                             output: String::new(),
                             error: Some("update_page requires properties parameter".into()),
+                        blocks: Vec::new(),
                         metadata: None,
                         });
                     }
@@ -334,12 +342,14 @@ impl Tool for NotionTool {
                 success: true,
                 output: serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string()),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(e.to_string()),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

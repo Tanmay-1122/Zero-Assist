@@ -223,11 +223,13 @@ fun AgentMessageBubble(
                     )
                 }
 
-                LinkifiedText(
-                    text = streamingText(message.content, message.isStreaming),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = bubbleContentColor(message, isMasterMessage),
-                )
+                message.effectiveBlocks.forEach { block ->
+                    RenderContentBlock(
+                        block = block,
+                        textColor = bubbleContentColor(message, isMasterMessage),
+                        isStreaming = message.isStreaming,
+                    )
+                }
 
                 Text(
                     text = formatMessageTime(message.timestamp),
@@ -279,11 +281,13 @@ private fun OnDeviceResultMessage(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                LinkifiedText(
-                    text = streamingText(message.content, message.isStreaming),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                message.effectiveBlocks.forEach { block ->
+                    RenderContentBlock(
+                        block = block,
+                        textColor = MaterialTheme.colorScheme.onSurface,
+                        isStreaming = message.isStreaming,
+                    )
+                }
                 Text(
                     text = formatMessageTime(message.timestamp),
                     style = MaterialTheme.typography.labelSmall,

@@ -132,7 +132,7 @@ import com.zeroclaw.android.data.local.SeedData
         // Greeting history for dynamic welcome messages
         GreetingHistoryEntity::class,
     ],
-    version = 27,
+    version = 28,
     exportSchema = true,
 )
 abstract class ZeroClawDatabase : RoomDatabase() {
@@ -1221,6 +1221,17 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 }
             }
 
+        /**
+         * Adds nullable content_blocks_json column to agent_chat_messages
+         * for rich content block persistence.
+         */
+        private val MIGRATION_27_28 =
+            object : Migration(27, 28) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE `agent_chat_messages` ADD COLUMN `content_blocks_json` TEXT DEFAULT NULL")
+                }
+            }
+
         val MIGRATIONS: Array<Migration> =
             arrayOf(
                 MIGRATION_1_2,
@@ -1249,6 +1260,7 @@ abstract class ZeroClawDatabase : RoomDatabase() {
                 MIGRATION_24_25,
                 MIGRATION_25_26,
                 MIGRATION_26_27,
+                MIGRATION_27_28,
             )
 
         /**

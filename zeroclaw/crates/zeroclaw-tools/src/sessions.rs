@@ -39,6 +39,7 @@ impl SessionValidationError {
             success: false,
             output: String::new(),
             error: Some(self.message().into()),
+        blocks: Vec::new(),
         metadata: None,
         }
     }
@@ -104,6 +105,7 @@ impl Tool for SessionsListTool {
                 success: true,
                 output: "No active sessions found.".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -124,6 +126,7 @@ impl Tool for SessionsListTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -179,6 +182,7 @@ impl Tool for SessionsHistoryTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -205,6 +209,7 @@ impl Tool for SessionsHistoryTool {
                 success: true,
                 output: format!("No messages found for session '{session_id}'."),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -227,6 +232,7 @@ impl Tool for SessionsHistoryTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -282,6 +288,7 @@ impl Tool for SessionsSendTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -305,6 +312,7 @@ impl Tool for SessionsSendTool {
                 success: false,
                 output: String::new(),
                 error: Some("Message content must not be empty.".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -316,12 +324,14 @@ impl Tool for SessionsSendTool {
                 success: true,
                 output: format!("Message sent to session '{session_id}'."),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to send message: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -373,6 +383,7 @@ impl Tool for SessionsCurrentTool {
                 error: Some(
                     "No active session context. This tool is only available during a gateway session.".into(),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         };
@@ -391,6 +402,7 @@ impl Tool for SessionsCurrentTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -444,6 +456,7 @@ impl Tool for SessionResetTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -465,6 +478,7 @@ impl Tool for SessionResetTool {
                 success: true,
                 output: format!("Session '{session_id}' is already empty."),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -477,6 +491,7 @@ impl Tool for SessionResetTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to reset session: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -486,6 +501,7 @@ impl Tool for SessionResetTool {
             success: true,
             output: format!("Session '{session_id}' reset ({msg_count} messages cleared)."),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -538,6 +554,7 @@ impl Tool for SessionDeleteTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -558,6 +575,7 @@ impl Tool for SessionDeleteTool {
                 success: true,
                 output: format!("Session '{session_id}' deleted."),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(false) if !existed => Ok(ToolResult {
@@ -566,6 +584,7 @@ impl Tool for SessionDeleteTool {
                     "Session '{session_id}' not found (may have already been deleted)."
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(false) => Ok(ToolResult {
@@ -575,12 +594,14 @@ impl Tool for SessionDeleteTool {
                     "Session '{session_id}' exists but could not be deleted \
                      — the storage backend may not support this operation."
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to delete session: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

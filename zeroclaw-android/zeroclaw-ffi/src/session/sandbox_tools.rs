@@ -138,6 +138,7 @@ impl Tool for FfiSandboxExecuteTool {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -215,6 +216,7 @@ impl Tool for FfiSandboxManageProcessTool {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

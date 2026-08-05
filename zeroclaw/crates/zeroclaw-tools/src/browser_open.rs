@@ -87,6 +87,7 @@ impl Tool for BrowserOpenTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -96,6 +97,7 @@ impl Tool for BrowserOpenTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -107,6 +109,7 @@ impl Tool for BrowserOpenTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -117,12 +120,14 @@ impl Tool for BrowserOpenTool {
                 success: true,
                 output: format!("Opened in system browser: {url}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to open system browser: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

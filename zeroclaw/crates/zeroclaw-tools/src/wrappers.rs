@@ -68,6 +68,7 @@ impl<T: Tool> Tool for RateLimitedTool<T> {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -77,6 +78,7 @@ impl<T: Tool> Tool for RateLimitedTool<T> {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -170,6 +172,7 @@ impl<T: Tool> Tool for PathGuardedTool<T> {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Path blocked by security policy: {path}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -233,6 +236,7 @@ mod tests {
                 success: true,
                 output: "ok".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

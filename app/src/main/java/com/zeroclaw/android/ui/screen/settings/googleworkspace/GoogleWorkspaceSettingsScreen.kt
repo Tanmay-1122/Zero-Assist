@@ -30,10 +30,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Security
@@ -129,7 +129,7 @@ fun GoogleWorkspaceSettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Icon(Icons.Outlined.Logout, null, Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Outlined.Logout, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Sign Out")
                     }

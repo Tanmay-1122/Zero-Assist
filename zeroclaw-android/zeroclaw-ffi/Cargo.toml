@@ -19,6 +19,7 @@ thiserror = "2.0"
 # surfaces explicitly plus WebAuthn routes used by the security UI.
 zeroclaw = { package = "zeroclawlabs", path = "../../zeroclaw", default-features = false, features = ["agent-runtime", "gateway", "webauthn"] }
 zeroclaw-runtime = { path = "../../zeroclaw/crates/zeroclaw-runtime", default-features = false }
+zeroclaw-api = { path = "../../zeroclaw/crates/zeroclaw-api", default-features = false }
 zeroclaw-channels = { path = "../../zeroclaw/crates/zeroclaw-channels", default-features = false, features = [
     "channel-telegram",
     "channel-discord",

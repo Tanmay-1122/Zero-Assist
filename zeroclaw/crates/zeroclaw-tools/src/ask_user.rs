@@ -115,6 +115,7 @@ impl Tool for AskUserTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Action blocked: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -156,6 +157,7 @@ impl Tool for AskUserTool {
                     success: false,
                     output: String::new(),
                     error: Some("No channels available yet (channels not initialized)".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -187,6 +189,7 @@ impl Tool for AskUserTool {
                 error: Some(format!(
                     "Failed to send question to channel '{channel_name}': {e}"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -209,12 +212,14 @@ impl Tool for AskUserTool {
                 success: true,
                 output: msg.content,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(None) => Ok(ToolResult {
                 success: false,
                 output: "TIMEOUT".to_string(),
                 error: Some("Channel closed before receiving a response".to_string()),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -223,6 +228,7 @@ impl Tool for AskUserTool {
                 error: Some(format!(
                     "No response received within {timeout_secs} seconds"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

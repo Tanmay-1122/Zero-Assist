@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
@@ -77,7 +77,7 @@ fun McpServerCard(
                     imageVector = when (status) {
                         ServerStatus.CONNECTED -> Icons.Default.CheckCircle
                         ServerStatus.ERROR -> Icons.Default.Error
-                        ServerStatus.DISCONNECTED, ServerStatus.UNKNOWN -> Icons.Default.HelpOutline
+                        ServerStatus.DISCONNECTED, ServerStatus.UNKNOWN -> Icons.AutoMirrored.Filled.HelpOutline
                     },
                     contentDescription = null,
                     tint = when (status) {

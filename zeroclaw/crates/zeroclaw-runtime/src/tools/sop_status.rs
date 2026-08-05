@@ -118,6 +118,7 @@ impl Tool for SopStatusTool {
                         success: true,
                         output,
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     })
                 }
@@ -125,6 +126,7 @@ impl Tool for SopStatusTool {
                     success: true,
                     output: format!("No run found with ID '{run_id}'."),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 }),
             };
@@ -195,6 +197,7 @@ impl Tool for SopStatusTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

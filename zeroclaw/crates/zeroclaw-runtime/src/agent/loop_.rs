@@ -1778,6 +1778,7 @@ pub async fn run_tool_call_loop(
                     success: outcome.success,
                     output: outcome.output.clone(),
                     error: None,
+                    blocks: Vec::new(),
                     metadata: outcome.metadata.clone(),
                 };
                 hooks
@@ -4332,6 +4333,7 @@ mod tests {
                 success: true,
                 output: format!("counted:{value}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -4364,6 +4366,7 @@ mod tests {
                 success: true,
                 output: String::new(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -4433,6 +4436,7 @@ mod tests {
                 success: true,
                 output: format!("ok:{value}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -4481,6 +4485,7 @@ mod tests {
                 success: false,
                 output: String::new(),
                 error: Some(self.error_reason.clone()),
+            blocks: Vec::new(),
             metadata: None,
             })
         }

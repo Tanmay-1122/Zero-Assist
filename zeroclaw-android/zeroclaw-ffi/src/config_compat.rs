@@ -181,6 +181,7 @@ pub(crate) fn composio_mcp_server_from_config(
         tool_timeout_secs: Some(120),
         enabled: true,
         description: None,
+        transport_options: None,
     })
 }
 

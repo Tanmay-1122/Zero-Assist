@@ -84,6 +84,7 @@ impl Tool for ClaudeCodeTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -97,6 +98,7 @@ impl Tool for ClaudeCodeTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -145,6 +147,7 @@ impl Tool for ClaudeCodeTool {
                             "working_directory '{}' does not exist or is not accessible",
                             wd
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -159,6 +162,7 @@ impl Tool for ClaudeCodeTool {
                             "workspace directory '{}' does not exist or is not accessible",
                             workspace.display()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -172,6 +176,7 @@ impl Tool for ClaudeCodeTool {
                         wd,
                         workspace.display()
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -186,6 +191,7 @@ impl Tool for ClaudeCodeTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -291,6 +297,7 @@ impl Tool for ClaudeCodeTool {
                         } else {
                             Some(stderr)
                         },
+                    blocks: Vec::new(),
                     metadata: None,
                     })
                 } else {
@@ -303,6 +310,7 @@ impl Tool for ClaudeCodeTool {
                         } else {
                             Some(stderr)
                         },
+                    blocks: Vec::new(),
                     metadata: None,
                     })
                 }
@@ -321,6 +329,7 @@ impl Tool for ClaudeCodeTool {
                     success: false,
                     output: String::new(),
                     error: Some(msg),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -334,6 +343,7 @@ impl Tool for ClaudeCodeTool {
                         "Claude Code timed out after {}s and was killed",
                         self.config.timeout_secs
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

@@ -160,6 +160,7 @@ impl Tool for PollTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Action blocked: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -180,6 +181,7 @@ impl Tool for PollTool {
                     success: false,
                     output: String::new(),
                     error: Some(msg),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -245,6 +247,7 @@ impl Tool for PollTool {
                 error: Some(format!(
                     "Failed to send poll to channel '{channel_name}': {e}"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -265,6 +268,7 @@ impl Tool for PollTool {
                 options.join(", ")
             ),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

@@ -108,6 +108,7 @@ impl Tool for DeviceControlTool {
                              The app must call register_device_control_handler."
                         .into(),
                     error: Some("No device_control handler registered.".into()),
+                    blocks: Vec::new(),
                     metadata: None,
                 });
             }
@@ -147,6 +148,7 @@ impl Tool for DeviceControlTool {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                    blocks: Vec::new(),
                     metadata: None,
                 })
             }
@@ -162,6 +164,7 @@ impl Tool for DeviceControlTool {
                     success: false,
                     output: error.clone(),
                     error: Some(error.clone()),
+                    blocks: Vec::new(),
                     metadata: None,
                 })
             }

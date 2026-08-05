@@ -88,6 +88,7 @@ impl Tool for SubprocessTool {
                     success: true,
                     output: stdout,
                     error: None,
+                    blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -100,6 +101,7 @@ impl Tool for SubprocessTool {
                         "Plugin exited with code {}: {stderr}",
                         output.status.code().unwrap_or(-1)
                     )),
+                    blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -107,6 +109,7 @@ impl Tool for SubprocessTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to spawn plugin: {e}")),
+                blocks: Vec::new(),
             metadata: None,
             }),
         }

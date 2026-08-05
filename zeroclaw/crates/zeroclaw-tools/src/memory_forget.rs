@@ -55,6 +55,7 @@ impl Tool for MemoryForgetTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -64,18 +65,21 @@ impl Tool for MemoryForgetTool {
                 success: true,
                 output: format!("Forgot memory: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(false) => Ok(ToolResult {
                 success: true,
                 output: format!("No memory found with key: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to forget memory: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

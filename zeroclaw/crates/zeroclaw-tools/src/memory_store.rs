@@ -75,6 +75,7 @@ impl Tool for MemoryStoreTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -84,12 +85,14 @@ impl Tool for MemoryStoreTool {
                 success: true,
                 output: format!("Stored memory: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to store memory: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

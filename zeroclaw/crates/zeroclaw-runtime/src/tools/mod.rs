@@ -1176,6 +1176,7 @@ mod tests {
             success: true,
             output: "hello".into(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         };
         let json = serde_json::to_string(&result).unwrap();
@@ -1191,6 +1192,7 @@ mod tests {
             success: false,
             output: String::new(),
             error: Some("boom".into()),
+        blocks: Vec::new(),
         metadata: None,
         };
         let json = serde_json::to_string(&result).unwrap();

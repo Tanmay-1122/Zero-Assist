@@ -222,6 +222,7 @@ impl Tool for TextBrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -231,6 +232,7 @@ impl Tool for TextBrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -242,6 +244,7 @@ impl Tool for TextBrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -256,6 +259,7 @@ impl Tool for TextBrowserTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -317,6 +321,7 @@ impl Tool for TextBrowserTool {
                         success: true,
                         output: text,
                         error: None,
+                    blocks: Vec::new(),
                     metadata: None,
                     })
                 } else {
@@ -329,6 +334,7 @@ impl Tool for TextBrowserTool {
                             output.status,
                             stderr.trim()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     })
                 }
@@ -337,6 +343,7 @@ impl Tool for TextBrowserTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to execute {browser}: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -346,6 +353,7 @@ impl Tool for TextBrowserTool {
                     "{browser} timed out after {} seconds",
                     timeout.as_secs()
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

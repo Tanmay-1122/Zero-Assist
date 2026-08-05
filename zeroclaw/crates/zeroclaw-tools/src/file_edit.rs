@@ -73,6 +73,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("old_string must not be empty".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -83,6 +84,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -93,6 +95,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -103,6 +106,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Path not allowed by security policy: {path}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -115,6 +119,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("Invalid path: missing parent directory".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         };
@@ -126,6 +131,7 @@ impl Tool for FileEditTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to resolve file path: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -140,6 +146,7 @@ impl Tool for FileEditTool {
                     self.security
                         .resolved_path_violation_message(&resolved_parent),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -149,6 +156,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("Invalid path: missing file name".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         };
@@ -163,6 +171,7 @@ impl Tool for FileEditTool {
                     self.security
                         .runtime_config_violation_message(&resolved_target),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -178,6 +187,7 @@ impl Tool for FileEditTool {
                     "Refusing to edit through symlink: {}",
                     resolved_target.display()
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -188,6 +198,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -200,6 +211,7 @@ impl Tool for FileEditTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to read file: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -212,6 +224,7 @@ impl Tool for FileEditTool {
                 success: false,
                 output: String::new(),
                 error: Some("old_string not found in file".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -223,6 +236,7 @@ impl Tool for FileEditTool {
                 error: Some(format!(
                     "old_string matches {match_count} times; must match exactly once"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -237,12 +251,14 @@ impl Tool for FileEditTool {
                     new_content.len()
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to write file: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

@@ -93,6 +93,7 @@ impl Tool for MemoryExportTool {
                     success: true,
                     output: json_output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -100,6 +101,7 @@ impl Tool for MemoryExportTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Export failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

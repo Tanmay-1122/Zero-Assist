@@ -98,6 +98,7 @@ impl Tool for SkillHttpTool {
                 error: Some(format!(
                     "Only http:// and https:// URLs are allowed, got: {url}"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -114,6 +115,7 @@ impl Tool for SkillHttpTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("HTTP request failed: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -138,6 +140,7 @@ impl Tool for SkillHttpTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to read response body: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -151,6 +154,7 @@ impl Tool for SkillHttpTool {
             } else {
                 Some(format!("HTTP {}", status))
             },
+        blocks: Vec::new(),
         metadata: None,
         })
     }

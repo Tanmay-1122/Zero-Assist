@@ -1005,6 +1005,7 @@ mod tests {
             headers: std::collections::HashMap::default(),
             enabled: true,
             description: None,
+            transport_options: None,
         };
         let result = McpServer::connect(config).await;
         assert!(result.is_err());
@@ -1026,6 +1027,7 @@ mod tests {
             headers: std::collections::HashMap::default(),
             enabled: true,
             description: None,
+            transport_options: None,
         }];
         let registry = McpRegistry::connect_all(&configs).await
             .expect("connect_all should not fail");

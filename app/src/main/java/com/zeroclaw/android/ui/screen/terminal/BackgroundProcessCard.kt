@@ -41,7 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -179,7 +179,7 @@ fun BackgroundProcessCard(
                 }
             }
 
-            Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
             AnimatedVisibility(
                 visible = state.isExpanded,
@@ -198,10 +198,10 @@ fun BackgroundProcessCard(
                         key = { index, process -> backgroundProcessRenderKey(process, index) },
                         contentType = { _, _ -> "process" },
                     ) { _, process ->
-                        Box(modifier = Modifier.animateItemPlacement(tween(250))) {
+                        Box(modifier = Modifier.animateItem(tween(250))) {
                             BackgroundProcessRow(process)
                         }
-                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                     }
                 }
             }

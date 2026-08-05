@@ -89,6 +89,7 @@ impl Tool for NodeTool {
                         "Capability '{}' requires approval. Set approved=true to proceed.",
                         self.capability_name
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -111,6 +112,7 @@ impl Tool for NodeTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Node '{}' is not connected", self.node_id)),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -134,6 +136,7 @@ impl Tool for NodeTool {
                     "Failed to send invocation to node '{}'",
                     self.node_id
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -145,6 +148,7 @@ impl Tool for NodeTool {
                 success: result.success,
                 output: result.output,
                 error: result.error,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(Err(_)) => Ok(ToolResult {
@@ -154,6 +158,7 @@ impl Tool for NodeTool {
                     "Node '{}' dropped the invocation channel",
                     self.node_id
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -163,6 +168,7 @@ impl Tool for NodeTool {
                     "Node '{}' invocation timed out after {NODE_INVOKE_TIMEOUT_SECS}s",
                     self.node_id
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

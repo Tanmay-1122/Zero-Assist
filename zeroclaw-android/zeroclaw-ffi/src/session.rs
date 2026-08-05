@@ -291,6 +291,7 @@ fn fail_result(error: String) -> ToolResult {
         success: false,
         output: String::new(),
         error: Some(error),
+    blocks: Vec::new(),
     metadata: None,
     }
 }
@@ -3769,6 +3770,7 @@ mod tests {
                 success: true,
                 output: String::new(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -3894,6 +3896,7 @@ mod tests {
                     .unwrap_or_default()
                     .to_string(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -3964,6 +3967,7 @@ mod tests {
                     "MCP tool `composio__GMAIL_UPLOAD_ATTACHMENT` error -32602: Tool GMAIL_UPLOAD_ATTACHMENT not found"
                         .to_string(),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -4064,6 +4068,7 @@ mod tests {
                 success: true,
                 output: format!("sent to {recipient}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

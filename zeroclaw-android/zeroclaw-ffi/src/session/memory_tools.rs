@@ -92,12 +92,14 @@ impl Tool for FfiMemoryStoreTool {
                 success: true,
                 output: format!("Stored memory: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to store memory: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -153,18 +155,21 @@ impl Tool for FfiMemoryForgetTool {
                 success: true,
                 output: format!("Forgot memory: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Ok(false) => Ok(ToolResult {
                 success: true,
                 output: format!("No memory found with key: {key}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to forget memory: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

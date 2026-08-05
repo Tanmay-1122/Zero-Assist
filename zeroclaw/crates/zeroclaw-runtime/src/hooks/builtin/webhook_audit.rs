@@ -494,6 +494,7 @@ mod tests {
             success: true,
             output: "ok".into(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         };
         // Call with a non-matching tool — should not panic or do anything.
@@ -518,6 +519,7 @@ mod tests {
             success: true,
             output: "ok".into(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         };
         // Should return immediately without spawning any HTTP request.

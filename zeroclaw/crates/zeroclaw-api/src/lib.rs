@@ -16,6 +16,7 @@
 
 pub mod agent;
 pub mod channel;
+pub mod content;
 pub mod media;
 pub mod memory_traits;
 pub mod observability_traits;

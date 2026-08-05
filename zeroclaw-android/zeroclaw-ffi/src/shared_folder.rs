@@ -75,6 +75,7 @@ fn shared_folder_result(output: String) -> ToolResult {
             success: false,
             output: String::new(),
             error: Some(error.to_string()),
+        blocks: Vec::new(),
         metadata: None,
         };
     }
@@ -83,6 +84,7 @@ fn shared_folder_result(output: String) -> ToolResult {
         success: true,
         output,
         error: None,
+    blocks: Vec::new(),
     metadata: None,
     }
 }
@@ -126,6 +128,7 @@ impl Tool for SharedFolderListTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -167,6 +170,7 @@ impl Tool for SharedFolderReadTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -222,6 +226,7 @@ impl Tool for SharedFolderWriteTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -263,6 +268,7 @@ impl Tool for WorkflowFolderListTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -304,6 +310,7 @@ impl Tool for WorkflowFolderReadTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -359,6 +366,7 @@ impl Tool for WorkflowFolderWriteTool {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

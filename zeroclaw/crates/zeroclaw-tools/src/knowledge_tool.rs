@@ -110,6 +110,7 @@ impl Tool for KnowledgeTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("unknown action: {other}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -153,12 +154,14 @@ impl KnowledgeTool {
                 success: true,
                 output: json!({ "node_id": id }).to_string(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("capture failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -240,6 +243,7 @@ impl KnowledgeTool {
             success: true,
             output: json!({ "results": results, "count": results.len() }).to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -265,12 +269,14 @@ impl KnowledgeTool {
                 success: true,
                 output: "relationship created".to_string(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("relate failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -302,6 +308,7 @@ impl KnowledgeTool {
             success: true,
             output: json!({ "suggestions": suggestions, "count": suggestions.len() }).to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -322,6 +329,7 @@ impl KnowledgeTool {
                 success: false,
                 output: String::new(),
                 error: Some("missing 'tags' for expert_find".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -343,6 +351,7 @@ impl KnowledgeTool {
             success: true,
             output: json!({ "experts": output, "count": output.len() }).to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -402,6 +411,7 @@ impl KnowledgeTool {
             success: true,
             output: json!({ "lessons": lessons, "count": lessons.len() }).to_string(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -412,12 +422,14 @@ impl KnowledgeTool {
                 success: true,
                 output: serde_json::to_string(&stats).unwrap_or_default(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("failed to get stats: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

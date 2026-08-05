@@ -80,6 +80,7 @@ impl Tool for PdfReadTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -89,6 +90,7 @@ impl Tool for PdfReadTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Path not allowed by security policy: {path}")),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -99,6 +101,7 @@ impl Tool for PdfReadTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -112,6 +115,7 @@ impl Tool for PdfReadTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to resolve file path: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -125,6 +129,7 @@ impl Tool for PdfReadTool {
                     self.security
                         .resolved_path_violation_message(&resolved_path),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -141,6 +146,7 @@ impl Tool for PdfReadTool {
                             "PDF too large: {} bytes (limit: {MAX_PDF_BYTES} bytes)",
                             meta.len()
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -150,6 +156,7 @@ impl Tool for PdfReadTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to read file metadata: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                 });
             }
@@ -162,6 +169,7 @@ impl Tool for PdfReadTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to read PDF file: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -181,6 +189,7 @@ impl Tool for PdfReadTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("PDF extraction failed: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -189,6 +198,7 @@ impl Tool for PdfReadTool {
                         success: false,
                         output: String::new(),
                         error: Some(format!("PDF extraction task panicked: {e}")),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -202,6 +212,7 @@ impl Tool for PdfReadTool {
                     output: "PDF contains no extractable text (may be image-only or encrypted)"
                         .into(),
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -219,6 +230,7 @@ impl Tool for PdfReadTool {
                 success: true,
                 output,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -235,6 +247,7 @@ impl Tool for PdfReadTool {
                      Rebuild with: cargo build --features rag-pdf"
                         .into(),
                 ),
+            blocks: Vec::new(),
             metadata: None,
             })
         }

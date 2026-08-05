@@ -218,6 +218,7 @@ impl Tool for HttpRequestTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -227,6 +228,7 @@ impl Tool for HttpRequestTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -238,6 +240,7 @@ impl Tool for HttpRequestTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -250,6 +253,7 @@ impl Tool for HttpRequestTool {
                     success: false,
                     output: String::new(),
                     error: Some(e.to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -301,6 +305,7 @@ impl Tool for HttpRequestTool {
                     } else {
                         None
                     },
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -308,6 +313,7 @@ impl Tool for HttpRequestTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("HTTP request failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

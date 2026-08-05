@@ -134,6 +134,7 @@ impl Tool for SopExecuteTool {
                     success: true,
                     output,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -141,6 +142,7 @@ impl Tool for SopExecuteTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to start SOP: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

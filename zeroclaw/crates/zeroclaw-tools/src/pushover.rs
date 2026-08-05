@@ -117,6 +117,7 @@ impl Tool for PushoverTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: autonomy is read-only".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -126,6 +127,7 @@ impl Tool for PushoverTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -149,6 +151,7 @@ impl Tool for PushoverTool {
                     error: Some(format!(
                         "Invalid 'priority': {value}. Expected integer in range -2..=2"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -191,6 +194,7 @@ impl Tool for PushoverTool {
                 success: false,
                 output: body,
                 error: Some(format!("Pushover API returned status {}", status)),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -207,6 +211,7 @@ impl Tool for PushoverTool {
                     body
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         } else {
@@ -214,6 +219,7 @@ impl Tool for PushoverTool {
                 success: false,
                 output: body,
                 error: Some("Pushover API returned an application-level error".into()),
+            blocks: Vec::new(),
             metadata: None,
             })
         }

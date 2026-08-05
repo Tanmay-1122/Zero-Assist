@@ -108,6 +108,7 @@ impl Tool for CloudPatternsTool {
                     success: true,
                     output: serde_json::to_string_pretty(&output)?,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -117,6 +118,7 @@ impl Tool for CloudPatternsTool {
                         success: false,
                         output: String::new(),
                         error: Some("'workload' parameter is required for 'match' action".into()),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -133,6 +135,7 @@ impl Tool for CloudPatternsTool {
                     success: true,
                     output: serde_json::to_string_pretty(&output)?,
                     error: None,
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -140,6 +143,7 @@ impl Tool for CloudPatternsTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Unknown action '{}'. Valid: match, list", action)),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

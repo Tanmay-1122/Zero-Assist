@@ -248,6 +248,14 @@ pub struct HttpTransport {
     server_name: String,
     client: reqwest::Client,
     headers: std::collections::HashMap<String, String>,
+    /// Optional Host header rewrite (for host-locked servers behind a gateway,
+    /// adb reverse, or port forward). See `McpTransportOptions::rewrite_host`.
+    rewrite_host: Option<String>,
+    /// Add an Origin header matching the configured URL (CORS-style checks).
+    /// See `McpTransportOptions::rewrite_origin`.
+    rewrite_origin: bool,
+    /// Track and echo the Mcp-Session-Id header. See `McpTransportOptions::preserve_session`.
+    preserve_session: bool,
     session_id: Option<String>,
     /// Pending JSON-RPC requests awaiting delivery over the GET SSE stream.
     shared: std::sync::Arc<Mutex<HttpStreamShared>>,
@@ -285,11 +293,21 @@ impl HttpTransport {
             .build()
             .context("failed to build HTTP client")?;
 
+        let options = config.transport_options.clone().unwrap_or_default();
+
         Ok(Self {
             url: url.clone(),
             server_name: config.name.clone(),
             client,
             headers: config.headers.clone(),
+            rewrite_host: options
+                .rewrite_host
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string),
+            rewrite_origin: options.rewrite_origin,
+            preserve_session: options.preserve_session,
             session_id: None,
             shared: std::sync::Arc::new(Mutex::new(HttpStreamShared::default())),
             shutdown_tx: None,
@@ -300,14 +318,36 @@ impl HttpTransport {
     }
 
     fn apply_session_header(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        if let Some(session_id) = self.session_id.as_deref() {
-            req.header(MCP_SESSION_ID_HEADER, session_id)
-        } else {
-            req
+        if self.preserve_session {
+            if let Some(session_id) = self.session_id.as_deref() {
+                return req.header(MCP_SESSION_ID_HEADER, session_id);
+            }
         }
+        req
+    }
+
+    /// Apply transport-level adaptions: Host header rewrite and/or a matching
+    /// Origin header. See `McpTransportOptions`.
+    fn apply_transport_headers(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        let mut req = req;
+        if let Some(host) = self.rewrite_host.as_deref() {
+            req = req.header(reqwest::header::HOST, host);
+        }
+        if self.rewrite_origin {
+            if let Ok(parsed) = reqwest::Url::parse(&self.url) {
+                let origin = parsed.origin().ascii_serialization();
+                if !origin.is_empty() {
+                    req = req.header(reqwest::header::ORIGIN, origin);
+                }
+            }
+        }
+        req
     }
 
     fn update_session_id_from_headers(&mut self, headers: &reqwest::header::HeaderMap) {
+        if !self.preserve_session {
+            return;
+        }
         if let Some(session_id) = headers
             .get(MCP_SESSION_ID_HEADER)
             .and_then(|v| v.to_str().ok())
@@ -347,10 +387,106 @@ impl HttpTransport {
         if !has_accept {
             req = req.header("Accept", MCP_STREAMABLE_ACCEPT);
         }
+        req = self.apply_transport_headers(req);
 
         req.send()
             .await
             .with_context(|| format!("HTTP request to MCP server `{}` failed", self.url))
+    }
+
+    /// POST a JSON-RPC message with automatic session-loss recovery.
+    ///
+    /// If the request fails with a session error (HTTP 400/404 mentioning a
+    /// session) while we hold a session id, the transport transparently
+    /// re-initializes a fresh session and retries the request once. This
+    /// recovers from servers that expire sessions (e.g. after idle timeouts)
+    /// without surfacing a hard failure to the caller.
+    async fn post_with_session_recovery(
+        &mut self,
+        body: &str,
+        method: &str,
+    ) -> Result<reqwest::Response> {
+        let first = self.post(body).await?;
+        let status = first.status();
+        if status.is_success() {
+            return Ok(first);
+        }
+        if !self.preserve_session || self.session_id.is_none() || method == "initialize" {
+            return Ok(first);
+        }
+        if status != reqwest::StatusCode::BAD_REQUEST && status != reqwest::StatusCode::NOT_FOUND {
+            return Ok(first);
+        }
+        let headers = first.headers().clone();
+        let body_text = first.text().await.unwrap_or_default();
+        if !Self::is_session_loss_response(status, body_text.as_str()) {
+            let mut builder = http::Response::builder().status(status);
+            *builder.headers_mut().expect("builder has headers") = headers;
+            let rebuilt = builder
+                .body(reqwest::Body::from(body_text))
+                .expect("rebuilt response from already-validated parts");
+            return Ok(reqwest::Response::from(rebuilt));
+        }
+        tracing::warn!(
+            server = %self.server_name,
+            http_status = %status,
+            body = %body_text.trim(),
+            "MCP HTTP: session lost; re-initializing and retrying once"
+        );
+        self.reinitialize().await?;
+        let retry = self.post(body).await?;
+        Ok(retry)
+    }
+
+    /// Whether a failed response indicates an unknown/expired session per the
+    /// streamable HTTP spec (404 "Session not found") or a common 400 variant
+    /// ("Missing MCP-Session-Id header", "Invalid session").
+    fn is_session_loss_response(status: reqwest::StatusCode, body: &str) -> bool {
+        if !(status == reqwest::StatusCode::BAD_REQUEST
+            || status == reqwest::StatusCode::NOT_FOUND)
+        {
+            return false;
+        }
+        let lower = body.to_ascii_lowercase();
+        lower.contains("session")
+    }
+
+    /// Re-establish a session after session loss: POST `initialize` (without a
+    /// session id), capture the fresh `Mcp-Session-Id`, and verify the result.
+    async fn reinitialize(&mut self) -> Result<()> {
+        let init_body = format!(
+            r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{MCP_PROTOCOL_VERSION}","capabilities":{{}},"clientInfo":{{"name":"zeroclaw","version":"{}"}}}}}}"#,
+            env!("CARGO_PKG_VERSION")
+        );
+        self.session_id = None;
+        let resp = self.post(&init_body).await?;
+        let status = resp.status();
+        if !status.is_success() {
+            bail!(
+                "MCP server `{}` rejected re-initialize: HTTP {}",
+                self.url,
+                status
+            );
+        }
+        self.update_session_id_from_headers(resp.headers());
+        let resp_text = resp
+            .text()
+            .await
+            .context("failed to read re-initialize response")?;
+        let parsed = parse_jsonrpc_response_text(&resp_text)?;
+        if let Some(err) = parsed.error {
+            bail!(
+                "MCP server `{}` re-initialize failed: {} ({})",
+                self.server_name,
+                err.message,
+                err.code
+            );
+        }
+        tracing::info!(
+            server = %self.server_name,
+            "MCP HTTP: session re-initialized"
+        );
+        Ok(())
     }
 
     /// Open the background GET SSE stream if it is not already running and the
@@ -380,6 +516,7 @@ impl HttpTransport {
             req = req.header(key, value);
         }
         req = self.apply_session_header(req);
+        req = self.apply_transport_headers(req);
 
         let resp = match req.send().await {
             Ok(r) => r,
@@ -572,7 +709,7 @@ impl McpTransportConn for HttpTransport {
 
         let post_outcome = match timeout(
             deadline.saturating_duration_since(std::time::Instant::now()),
-            self.post(&body),
+            self.post_with_session_recovery(&body, request.method.as_str()),
         )
         .await
         {
@@ -593,9 +730,15 @@ impl McpTransportConn for HttpTransport {
 
         let status = post_outcome.status();
         if !status.is_success() {
-            tracing::error!(url = %self.url, http_status = %status, "MCP HTTP transport error");
+            let hint = post_outcome.text().await.unwrap_or_default();
+            let hint = hint.trim();
+            tracing::error!(url = %self.url, http_status = %status, body = %hint, "MCP HTTP transport error");
             self.shared.lock().await.pending.remove(&id);
-            bail!("MCP server `{}` returned HTTP {}", self.url, status);
+            if hint.is_empty() {
+                bail!("MCP server `{}` returned HTTP {}", self.url, status);
+            } else {
+                bail!("MCP server `{}` returned HTTP {}: {}", self.url, status, hint);
+            }
         }
         self.update_session_id_from_headers(post_outcome.headers());
 
@@ -702,6 +845,36 @@ impl McpTransportConn for HttpTransport {
                     data: None,
                 }),
             });
+        }
+        // Best-effort session termination (streamable HTTP spec): DELETE the
+        // endpoint with the session id so the server can release its state.
+        if self.preserve_session {
+            if let Some(session_id) = self.session_id.take() {
+                let mut req = self
+                    .client
+                    .delete(&self.url)
+                    .header(MCP_SESSION_ID_HEADER, session_id);
+                for (key, value) in &self.headers {
+                    req = req.header(key, value);
+                }
+                req = req.header(MCP_PROTOCOL_VERSION_HEADER, MCP_PROTOCOL_VERSION);
+                match timeout(Duration::from_secs(5), req.send()).await {
+                    Ok(Ok(resp)) => tracing::debug!(
+                        server = %self.server_name,
+                        http_status = %resp.status(),
+                        "MCP HTTP: session terminated via DELETE"
+                    ),
+                    Ok(Err(error)) => tracing::debug!(
+                        server = %self.server_name,
+                        %error,
+                        "MCP HTTP: session DELETE failed"
+                    ),
+                    Err(_) => tracing::debug!(
+                        server = %self.server_name,
+                        "MCP HTTP: session DELETE timed out"
+                    ),
+                }
+            }
         }
         Ok(())
     }

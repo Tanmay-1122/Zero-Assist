@@ -166,6 +166,7 @@ impl GitOperationsTool {
             success: true,
             output: serde_json::to_string_pretty(&result).unwrap_or_default(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -250,6 +251,7 @@ impl GitOperationsTool {
             success: true,
             output: serde_json::to_string_pretty(&result).unwrap_or_default(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -295,6 +297,7 @@ impl GitOperationsTool {
             output: serde_json::to_string_pretty(&json!({ "commits": commits }))
                 .unwrap_or_default(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -335,6 +338,7 @@ impl GitOperationsTool {
             }))
             .unwrap_or_default(),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -381,12 +385,14 @@ impl GitOperationsTool {
                 success: true,
                 output: format!("Committed: {message}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Commit failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -414,12 +420,14 @@ impl GitOperationsTool {
                 success: true,
                 output: format!("Staged: {paths}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Add failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -458,12 +466,14 @@ impl GitOperationsTool {
                 success: true,
                 output: format!("Switched to branch: {branch_name}"),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Checkout failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -504,12 +514,14 @@ impl GitOperationsTool {
                 success: true,
                 output: out,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Stash {action} failed: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -585,6 +597,7 @@ impl Tool for GitOperationsTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing 'operation' parameter".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -598,6 +611,7 @@ impl Tool for GitOperationsTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Invalid path: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -621,6 +635,7 @@ impl Tool for GitOperationsTool {
                     success: false,
                     output: String::new(),
                     error: Some("Not in a git repository".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -635,6 +650,7 @@ impl Tool for GitOperationsTool {
                     error: Some(
                         "Action blocked: git write operations require higher autonomy level".into(),
                     ),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -645,6 +661,7 @@ impl Tool for GitOperationsTool {
                         success: false,
                         output: String::new(),
                         error: Some("Action blocked: read-only mode".into()),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -658,6 +675,7 @@ impl Tool for GitOperationsTool {
                 success: false,
                 output: String::new(),
                 error: Some("Action blocked: rate limit exceeded".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -676,6 +694,7 @@ impl Tool for GitOperationsTool {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Unknown operation: {operation}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

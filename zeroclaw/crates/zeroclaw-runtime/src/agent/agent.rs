@@ -796,6 +796,7 @@ impl Agent {
                 success,
                 output: result.clone(),
                 error: None,
+                blocks: Vec::new(),
                 metadata: meta.clone(),
             };
             hooks
@@ -1597,6 +1598,7 @@ mod tests {
                 success: true,
                 output: "tool-out".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }
@@ -2607,6 +2609,7 @@ mod tests {
                 success: true,
                 output: "ok".into(),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             })
         }

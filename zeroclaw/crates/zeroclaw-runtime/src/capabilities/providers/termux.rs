@@ -109,6 +109,7 @@ impl CapabilityExecutor for TermuxExecutor {
                         success: false,
                         output: String::new(),
                         error: Some("Termux is not available on this platform".to_string()),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -117,6 +118,7 @@ impl CapabilityExecutor for TermuxExecutor {
                     success: false,
                     output: String::new(),
                     error: Some("Termux execution not yet implemented".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

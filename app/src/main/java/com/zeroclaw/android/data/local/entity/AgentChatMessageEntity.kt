@@ -88,6 +88,9 @@ data class AgentChatMessageEntity(
 
     @ColumnInfo(name = "is_streaming")
     val isStreaming: Boolean = false,
+
+    @ColumnInfo(name = "content_blocks_json")
+    val contentBlocksJson: String? = null,
 )
 
 /**

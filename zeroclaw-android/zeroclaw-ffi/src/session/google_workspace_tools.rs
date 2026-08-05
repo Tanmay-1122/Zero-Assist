@@ -178,6 +178,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                     error: Some(format!(
                         "Invalid characters in '{label}': only lowercase alphanumeric, underscore, and hyphen are allowed"
                     )),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -194,6 +195,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                         "Invalid characters in 'sub_resource': only lowercase alphanumeric, underscore, and hyphen are allowed"
                             .into(),
                     ),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -207,6 +209,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                     "Service '{service}' is not in the allowed services list. Allowed: {}",
                     self.allowed_services.join(", ")
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -222,6 +225,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                 error: Some(format!(
                     "Operation '{op_path}' is not in the allowed operations list"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -239,6 +243,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                     success: false,
                     output: String::new(),
                     error: Some("'params' must be an object".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -252,6 +257,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                     success: false,
                     output: String::new(),
                     error: Some("'body' must be an object".into()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -272,6 +278,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                         error: Some(format!(
                             "Invalid format '{format_val}': must be json, table, yaml, or csv"
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -327,6 +334,7 @@ impl Tool for FfiGoogleWorkspaceTool {
                     success,
                     output: output.clone(),
                     error: if success { None } else { Some(output) },
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }

@@ -14,12 +14,28 @@ import com.zeroclaw.android.model.AgentRole
 import com.zeroclaw.android.model.ApprovalState
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+private val contentBlockJson = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+}
 
 /**
  * Convert AgentChatMessageEntity to AgentChatMessage model.
  */
 fun AgentChatMessageEntity.toModel(): AgentChatMessage {
+    val parsedBlocks = if (!contentBlocksJson.isNullOrBlank()) {
+        try {
+            contentBlockJson.decodeFromString<List<com.zeroclaw.android.model.content.ContentBlock>>(contentBlocksJson)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    } else {
+        emptyList()
+    }
+
     return AgentChatMessage(
         id = id,
         senderId = senderId,
@@ -34,6 +50,7 @@ fun AgentChatMessageEntity.toModel(): AgentChatMessage {
         requiresApproval = requiresApproval,
         approvalState = ApprovalState.valueOf(approvalStateEnum),
         isStreaming = isStreaming,
+        blocks = parsedBlocks,
     )
 }
 
@@ -41,6 +58,16 @@ fun AgentChatMessageEntity.toModel(): AgentChatMessage {
  * Convert AgentChatMessage model to AgentChatMessageEntity.
  */
 fun AgentChatMessage.toEntity(familyId: String): AgentChatMessageEntity {
+    val serializedBlocks = if (blocks.isNotEmpty()) {
+        try {
+            contentBlockJson.encodeToString(blocks)
+        } catch (e: Exception) {
+            null
+        }
+    } else {
+        null
+    }
+
     return AgentChatMessageEntity(
         id = id,
         familyId = familyId,
@@ -56,6 +83,7 @@ fun AgentChatMessage.toEntity(familyId: String): AgentChatMessageEntity {
         requiresApproval = requiresApproval,
         approvalStateEnum = approvalState.name,
         isStreaming = isStreaming,
+        contentBlocksJson = serializedBlocks,
     )
 }
 

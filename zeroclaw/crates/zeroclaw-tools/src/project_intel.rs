@@ -93,6 +93,7 @@ impl ProjectIntelTool {
             success: true,
             output: rendered,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -201,6 +202,7 @@ impl ProjectIntelTool {
             success: true,
             output: tpl.render(&vars),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -255,6 +257,7 @@ impl ProjectIntelTool {
             success: true,
             output: body,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -297,6 +300,7 @@ impl ProjectIntelTool {
             success: true,
             output: tpl.render(&vars),
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -309,6 +313,7 @@ impl ProjectIntelTool {
                 success: false,
                 output: String::new(),
                 error: Some("No task descriptions provided".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -332,6 +337,7 @@ impl ProjectIntelTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }
@@ -520,6 +526,7 @@ impl Tool for ProjectIntelTool {
                 error: Some(format!(
                     "Unknown action '{other}'. Valid actions: status_report, risk_scan, draft_update, sprint_summary, effort_estimate"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

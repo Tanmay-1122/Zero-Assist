@@ -195,6 +195,7 @@ impl CapabilityExecutor for TermuxAndroidExecutor {
                     success,
                     output: output.clone(),
                     error: (!success).then_some(output),
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -202,6 +203,7 @@ impl CapabilityExecutor for TermuxAndroidExecutor {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }
@@ -231,12 +233,14 @@ impl CapabilityExecutor for TermuxCapabilitiesExecutor {
                 success: true,
                 output: serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string()),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(e),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

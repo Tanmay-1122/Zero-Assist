@@ -100,6 +100,7 @@ impl Tool for CalculatorTool {
                     success: false,
                     output: String::new(),
                     error: Some("Missing required parameter: function".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -140,12 +141,14 @@ impl Tool for CalculatorTool {
                 success: true,
                 output,
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(err) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(err),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

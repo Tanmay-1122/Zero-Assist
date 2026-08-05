@@ -58,6 +58,7 @@ impl Tool for FfiMcpStatusTool {
                 success: true,
                 output: "No MCP servers are configured.".to_string(),
                 error: None,
+                blocks: Vec::new(),
                 metadata: None,
             });
         }
@@ -110,6 +111,7 @@ impl Tool for FfiMcpStatusTool {
             success: true,
             output,
             error: None,
+            blocks: Vec::new(),
             metadata: None,
         })
     }

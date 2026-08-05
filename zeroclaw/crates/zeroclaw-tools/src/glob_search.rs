@@ -54,6 +54,7 @@ impl Tool for GlobSearchTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: too many actions in the last hour".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -66,6 +67,7 @@ impl Tool for GlobSearchTool {
                 success: false,
                 output: String::new(),
                 error: Some("Absolute paths are not allowed. Use a relative glob pattern.".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -76,6 +78,7 @@ impl Tool for GlobSearchTool {
                 success: false,
                 output: String::new(),
                 error: Some("Path traversal ('..') is not allowed in glob patterns.".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -86,6 +89,7 @@ impl Tool for GlobSearchTool {
                 success: false,
                 output: String::new(),
                 error: Some("Rate limit exceeded: action budget exhausted".into()),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -105,6 +109,7 @@ impl Tool for GlobSearchTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Invalid glob pattern: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -118,6 +123,7 @@ impl Tool for GlobSearchTool {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Cannot resolve workspace directory: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -179,6 +185,7 @@ impl Tool for GlobSearchTool {
             success: true,
             output,
             error: None,
+        blocks: Vec::new(),
         metadata: None,
         })
     }

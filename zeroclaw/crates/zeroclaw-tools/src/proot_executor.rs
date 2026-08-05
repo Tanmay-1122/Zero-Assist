@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Stdio;
 use tokio::process::Command;
-use tracing::{debug, warn, error};
+use tracing::{debug, warn};
 
 /// Configuration for PRoot execution environment.
 ///

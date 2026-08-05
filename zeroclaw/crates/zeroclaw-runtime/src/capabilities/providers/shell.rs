@@ -168,6 +168,7 @@ impl ShellExecutor {
                     success: false,
                     output: String::new(),
                     error: Some(reason),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -203,6 +204,7 @@ impl ShellExecutor {
                             } else {
                                 Some(stderr.to_string())
                             },
+                            blocks: Vec::new(),
                             metadata: None,
                         })
                     }
@@ -210,6 +212,7 @@ impl ShellExecutor {
                         success: false,
                         output: String::new(),
                         error: Some(format!("Sandbox bridge execution failed: {e}")),
+                        blocks: Vec::new(),
                         metadata: None,
                     }),
                 };
@@ -230,6 +233,7 @@ impl ShellExecutor {
                     success: false,
                     output: String::new(),
                     error: Some(format!("Failed to build runtime command: {e}")),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -279,6 +283,7 @@ impl ShellExecutor {
                     success: output.status.success(),
                     output: stdout,
                     error: if stderr.is_empty() { None } else { Some(stderr) },
+                blocks: Vec::new(),
                 metadata: None,
                 })
             }
@@ -286,6 +291,7 @@ impl ShellExecutor {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to execute command: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(_) => Ok(ToolResult {
@@ -295,6 +301,7 @@ impl ShellExecutor {
                     "Command timed out after {}s and was killed",
                     self.timeout_secs
                 )),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

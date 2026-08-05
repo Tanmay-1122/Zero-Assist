@@ -97,6 +97,7 @@ impl Tool for ReactionTool {
                 success: false,
                 output: String::new(),
                 error: Some(error),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -130,6 +131,7 @@ impl Tool for ReactionTool {
                 error: Some(format!(
                     "Invalid action '{action}': must be 'add' or 'remove'"
                 )),
+            blocks: Vec::new(),
             metadata: None,
             });
         }
@@ -142,6 +144,7 @@ impl Tool for ReactionTool {
                     success: false,
                     output: String::new(),
                     error: Some("No channels available yet (channels not initialized)".to_string()),
+                blocks: Vec::new(),
                 metadata: None,
                 });
             }
@@ -156,6 +159,7 @@ impl Tool for ReactionTool {
                             "Channel '{channel_name}' not found. Available channels: {}",
                             available.join(", ")
                         )),
+                    blocks: Vec::new(),
                     metadata: None,
                     });
                 }
@@ -181,12 +185,14 @@ impl Tool for ReactionTool {
                     "Reaction {past_tense}: {emoji} on message {message_id} in {channel_name}"
                 ),
                 error: None,
+            blocks: Vec::new(),
             metadata: None,
             }),
             Err(e) => Ok(ToolResult {
                 success: false,
                 output: String::new(),
                 error: Some(format!("Failed to {action} reaction: {e}")),
+            blocks: Vec::new(),
             metadata: None,
             }),
         }

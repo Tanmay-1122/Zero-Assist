@@ -153,8 +153,8 @@ fun Modifier.premiumBounceIn(totalDurationMillis: Int = 700): Modifier {
         targetValue = if (isVisible.value) 1f else 0f,
         animationSpec = keyframes {
             durationMillis = totalDurationMillis
-            0.0f at 0 with FastOutSlowInEasing
-            1.1f at (totalDurationMillis * 0.75f).toInt() with FastOutSlowInEasing
+            0.0f at 0 using FastOutSlowInEasing
+            1.1f at (totalDurationMillis * 0.75f).toInt() using FastOutSlowInEasing
             1f at totalDurationMillis
         },
         label = "BounceInScale"

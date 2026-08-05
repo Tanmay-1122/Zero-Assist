@@ -10,9 +10,11 @@ import android.util.Log
 import com.zeroclaw.android.google.GoogleWorkspaceAuditLogger
 import com.zeroclaw.android.google.GoogleWorkspaceValidator
 import fi.iki.elonen.NanoHTTPD
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
@@ -43,9 +45,18 @@ class SandboxBridgeServer(
     private val maxTimeoutSecs: Long = DEFAULT_MAX_TIMEOUT_SECS,
 ) : NanoHTTPD("127.0.0.1", port) {
 
+    // Cap concurrent proot executions to avoid unbounded process spawning.
+    // Kept separate from [execSemaphore] so /manage_process (kill/list) is
+    // never starved while a long-running command holds a permit.
+    private val executeSemaphore = Semaphore(4)
+
     // Cap concurrent sandbox operations to avoid unbounded proot process spawning.
     private val execSemaphore = Semaphore(4)
-    
+
+    // Dedicated scope for in-flight commands. Lives as long as the server
+    // (which itself lives for the process lifetime via ZeroClawApplication).
+    private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     // Track in-flight long-running commands to prevent duplicate concurrent executions
     // Map: command -> Deferred<Map<String, Any>>
     private val inflightCommands = mutableMapOf<String, Deferred<Map<String, Any>>>()
@@ -130,7 +141,8 @@ class SandboxBridgeServer(
             else -> 30L
         }
 
-        val timeoutSeconds = json.optLong("timeout", suggestedTimeout).coerceIn(1L, maxTimeoutSecs)
+        val timeoutSeconds = json.optLong("timeout", suggestedTimeout)
+            .coerceIn(1L, maxTimeoutSecs.coerceAtLeast(1L))
 
         // Log diagnostic info when we auto-extend timeout
         if (isLongRunningCommand && !json.has("timeout")) {
@@ -163,7 +175,7 @@ class SandboxBridgeServer(
 
         // Create async job for long-running commands
         val resultDeferred = if (isLongRunningCommand && !background) {
-            val deferred = kotlinx.coroutines.GlobalScope.async(Dispatchers.IO) {
+            val deferred = bridgeScope.async {
                 executeCommand(command, background, fresh, sessionId, timeoutSeconds, workingDir, envMap)
             }
             synchronized(inflightLock) {
@@ -218,30 +230,34 @@ class SandboxBridgeServer(
         workingDir: String?,
         envMap: Map<String, String>
     ): Map<String, Any> {
-        return when {
-            background -> sandboxManager.processManager.startBackground(
-                command = command,
-                timeoutSeconds = timeoutSeconds,
-                workingDir = workingDir ?: "/root",
-                env = envMap,
-            )
-            fresh -> sandboxManager.createProotExecutor()
-                .execute(command, timeoutSeconds, workingDir ?: "/root", envMap)
-            else -> {
-                val prefix = buildString {
-                    if (workingDir != null) {
-                        append("cd ").append(shellQuote(workingDir)).append(" && ")
-                    }
-                    envMap.forEach { (k, v) ->
-                        append(shellQuote(k)).append('=').append(shellQuote(v)).append(' ')
-                    }
-                }
-                val wrapped = if (prefix.isEmpty()) command else "$prefix$command"
-                sandboxManager.shellFor(sessionId).run(
-                    command = wrapped,
+        // Bound concurrent proot executions — a burst of /execute calls must
+        // not spawn unbounded processes.
+        return executeSemaphore.withPermit {
+            when {
+                background -> sandboxManager.processManager.startBackground(
+                    command = command,
                     timeoutSeconds = timeoutSeconds,
-                    displayCommand = command,
+                    workingDir = workingDir ?: "/root",
+                    env = envMap,
                 )
+                fresh -> sandboxManager.createProotExecutor()
+                    .execute(command, timeoutSeconds, workingDir ?: "/root", envMap)
+                else -> {
+                    val prefix = buildString {
+                        if (workingDir != null) {
+                            append("cd ").append(shellQuote(workingDir)).append(" && ")
+                        }
+                        envMap.forEach { (k, v) ->
+                            append(shellQuote(k)).append('=').append(shellQuote(v)).append(' ')
+                        }
+                    }
+                    val wrapped = if (prefix.isEmpty()) command else "$prefix$command"
+                    sandboxManager.shellFor(sessionId).run(
+                        command = wrapped,
+                        timeoutSeconds = timeoutSeconds,
+                        displayCommand = command,
+                    )
+                }
             }
         }
     }
@@ -354,10 +370,41 @@ class SandboxBridgeServer(
     /** Reads and parses the POST body as JSON, returning null on parse failure. */
     private fun readJson(session: IHTTPSession): JSONObject? {
         return try {
-            val contentLength = session.headers["content-length"]?.toIntOrNull() ?: 0
-            val buffer = ByteArray(contentLength)
-            session.inputStream.read(buffer, 0, contentLength)
-            JSONObject(String(buffer, Charsets.UTF_8))
+            val contentLength =
+                session.headers["content-length"]?.toIntOrNull() ?: 0
+            val expected = contentLength.coerceIn(0, MAX_REQUEST_BODY_BYTES)
+            val body = if (expected == 0) {
+                // No content-length header (chunked/unknown) — read to EOF.
+                ByteArrayOutputStream().use { out ->
+                    val buf = ByteArray(8192)
+                    var read: Int
+                    var total = 0
+                    while (total < MAX_REQUEST_BODY_BYTES) {
+                        read = session.inputStream.read(buf)
+                        if (read < 0) break
+                        if (read == 0) continue
+                        out.write(buf, 0, read)
+                        total += read
+                    }
+                    out.toByteArray()
+                }
+            } else {
+                // Loop until the full declared body is read — a single read()
+                // may return fewer bytes than requested.
+                ByteArrayOutputStream(expected).use { out ->
+                    val buf = ByteArray(8192)
+                    var remaining = expected
+                    while (remaining > 0) {
+                        val read = session.inputStream.read(buf, 0, minOf(buf.size, remaining))
+                        if (read < 0) break
+                        if (read == 0) continue
+                        out.write(buf, 0, read)
+                        remaining -= read
+                    }
+                    out.toByteArray()
+                }
+            }
+            JSONObject(String(body, Charsets.UTF_8))
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read JSON body: ${e.message}")
             null
@@ -533,5 +580,8 @@ class SandboxBridgeServer(
 
         /** Default maximum timeout in seconds for execute commands (3 hours). */
         const val DEFAULT_MAX_TIMEOUT_SECS = 10800L
+
+        /** Maximum accepted request body size (1 MiB) to bound memory usage. */
+        private const val MAX_REQUEST_BODY_BYTES = 1 * 1024 * 1024
     }
 }

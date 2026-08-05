@@ -105,7 +105,10 @@ class VoiceWakeupForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        runBlocking {
+        // Do not block the main thread during teardown: the detector shutdown
+        // may wait on recognizer cleanup. Runs on a background dispatcher,
+        // still bounded by STOP_DETECTOR_TIMEOUT_MS.
+        runBlocking(Dispatchers.Default) {
             wakeEventJob?.cancel()
             wakeEventJob = null
             withTimeoutOrNull(STOP_DETECTOR_TIMEOUT_MS) {
