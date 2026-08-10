@@ -47,6 +47,9 @@ pub trait FfiStreamListener: Send + Sync {
 
     /// Called when an error occurs during streaming.
     fn on_error(&self, error: String);
+
+    /// Called with structured versioned assistant stream events (JSON serialized).
+    fn on_assistant_event(&self, _event_json: String) {}
 }
 
 /// Sends a message to the configured provider and streams the response.
@@ -76,19 +79,30 @@ impl FfiLegacyStreamAdapter {
 
     pub fn handle_events(&mut self, events: Vec<AssistantEvent>) {
         for event in events {
-            match event {
+            if let Ok(event_json) = serde_json::to_string(&event) {
+                self.listener.on_assistant_event(event_json);
+            }
+
+            match &event {
                 AssistantEvent::ThinkingChunk { delta, .. } => {
-                    self.listener.on_thinking_chunk(delta);
+                    self.listener.on_thinking_chunk(delta.clone());
                 }
                 AssistantEvent::TextChunk { delta, .. } => {
-                    self.full_response.push_str(&delta);
-                    self.listener.on_response_chunk(delta);
+                    self.full_response.push_str(delta);
+                    self.listener.on_response_chunk(delta.clone());
+                }
+                AssistantEvent::BlockDelta { delta, .. } => {
+                    self.full_response.push_str(delta);
+                    self.listener.on_response_chunk(delta.clone());
                 }
                 AssistantEvent::StreamFinished { .. } => {
                     self.listener.on_complete(self.full_response.clone());
                 }
                 AssistantEvent::StreamError { error_message, .. } => {
-                    self.listener.on_error(error_message);
+                    self.listener.on_error(error_message.clone());
+                }
+                AssistantEvent::StreamCancelled { reason, .. } => {
+                    self.listener.on_error(format!("Cancelled: {reason}"));
                 }
                 _ => {}
             }

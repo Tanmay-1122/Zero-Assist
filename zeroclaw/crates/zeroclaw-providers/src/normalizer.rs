@@ -42,6 +42,7 @@ impl ProviderOutputNormalizer {
                 let block = ContentBlock::ToolCard {
                     version: 1,
                     block_id: block_id.clone(),
+                    parent_block_id: None,
                     sequence_index: self.current_block_index,
                     tool_call_id: tool_call.id.clone(),
                     tool_name: tool_call.name.clone(),
@@ -49,6 +50,7 @@ impl ProviderOutputNormalizer {
                     input_json: tool_call.arguments.clone(),
                     result_blocks: Vec::new(),
                     execution_duration_ms: None,
+                    state: zeroclaw_api::content::BlockState::Streaming,
                 };
 
                 events.push(AssistantEvent::BlockStarted {
@@ -65,6 +67,7 @@ impl ProviderOutputNormalizer {
                 let block = ContentBlock::ToolCard {
                     version: 1,
                     block_id,
+                    parent_block_id: None,
                     sequence_index: self.current_block_index,
                     tool_call_id: format!("pre_exec_{name}"),
                     tool_name: name.clone(),
@@ -72,6 +75,7 @@ impl ProviderOutputNormalizer {
                     input_json: args.clone(),
                     result_blocks: Vec::new(),
                     execution_duration_ms: None,
+                    state: zeroclaw_api::content::BlockState::Streaming,
                 };
 
                 events.push(AssistantEvent::BlockStarted {
@@ -88,8 +92,10 @@ impl ProviderOutputNormalizer {
                 let block = ContentBlock::Markdown {
                     version: 1,
                     block_id,
+                    parent_block_id: None,
                     sequence_index: self.current_block_index,
                     markdown: output.clone(),
+                    state: zeroclaw_api::content::BlockState::Ready,
                 };
 
                 events.push(AssistantEvent::BlockStarted {

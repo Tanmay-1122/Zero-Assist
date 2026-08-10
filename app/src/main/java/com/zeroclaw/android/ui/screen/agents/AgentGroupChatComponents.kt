@@ -224,11 +224,13 @@ fun AgentMessageBubble(
                 }
 
                 message.effectiveBlocks.forEach { block ->
-                    RenderContentBlock(
-                        block = block,
-                        textColor = bubbleContentColor(message, isMasterMessage),
-                        isStreaming = message.isStreaming,
-                    )
+                    androidx.compose.runtime.key(block.blockId) {
+                        RenderContentBlock(
+                            block = block,
+                            textColor = bubbleContentColor(message, isMasterMessage),
+                            isStreaming = message.isStreaming,
+                        )
+                    }
                 }
 
                 Text(
@@ -282,11 +284,13 @@ private fun OnDeviceResultMessage(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 message.effectiveBlocks.forEach { block ->
-                    RenderContentBlock(
-                        block = block,
-                        textColor = MaterialTheme.colorScheme.onSurface,
-                        isStreaming = message.isStreaming,
-                    )
+                    androidx.compose.runtime.key(block.blockId) {
+                        RenderContentBlock(
+                            block = block,
+                            textColor = MaterialTheme.colorScheme.onSurface,
+                            isStreaming = message.isStreaming,
+                        )
+                    }
                 }
                 Text(
                     text = formatMessageTime(message.timestamp),

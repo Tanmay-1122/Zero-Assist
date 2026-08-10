@@ -34,6 +34,8 @@ import com.zeroclaw.android.model.RefreshCommand
 import com.zeroclaw.android.model.ServiceState
 import com.zeroclaw.android.model.TerminalEntry
 import com.zeroclaw.android.model.ToolSpec
+import com.zeroclaw.android.media.MediaIntentClassifier
+import com.zeroclaw.android.media.NativeImageSearch
 import com.zeroclaw.android.service.BackgroundProcessLogger
 import com.zeroclaw.android.service.ConversationSeedMessage
 import com.zeroclaw.android.model.McpServerEntry
@@ -119,6 +121,19 @@ class TerminalViewModel(
     private val pendingImagesState = MutableStateFlow<List<ProcessedImage>>(emptyList())
     private val processingImagesState = MutableStateFlow(false)
     private val _streamingState = MutableStateFlow(StreamingState.idle())
+    /**
+     * Monotonically increasing turn identifier. Bumped at the start of every
+     * agent turn; each [KotlinSessionListener] captures the value current at
+     * its creation and every callback checks it against the live counter
+     * before mutating [_streamingState]. This guards against a callback from
+     * an abandoned/overlapping native session_send call landing after a
+     * newer turn has already started or finished, which otherwise reopens
+     * (or permanently stalls) the "Responding..." card after a reply has
+     * already rendered.
+     */
+    private val turnGeneration = java.util.concurrent.atomic.AtomicLong(0L)
+    /** Watchdog job that force-resolves a turn if no terminal callback arrives in time. */
+    private var turnWatchdogJob: Job? = null
     private val _history = MutableStateFlow<List<String>>(emptyList())
     private val _historyIndex = MutableStateFlow(NO_HISTORY_SELECTION)
     private val _isSessionReady = MutableStateFlow(false)
@@ -631,7 +646,9 @@ class TerminalViewModel(
         images: List<ProcessedImage> = emptyList(),
     ) {
         agentTurnMutex.withLock {
+            val myGeneration = turnGeneration.incrementAndGet()
             _streamingState.update { StreamingState(phase = StreamingPhase.THINKING) }
+            startTurnWatchdog(myGeneration)
 
             val logger = getBackgroundProcessLogger()
             val processId = logger.logOperation(
@@ -645,20 +662,60 @@ class TerminalViewModel(
                     sendAgentTurnWithRetry(
                         message = message,
                         images = images,
-                        listener = KotlinSessionListener(),
+                        listener = KotlinSessionListener(myGeneration),
                     )
                 }
                 logger.completeProcess(processId)
             } catch (e: Exception) {
                 val sanitized = ErrorSanitizer.sanitizeForUi(e)
                 logger.failProcess(processId, e.message ?: "Unknown error")
-                _streamingState.update {
-                    StreamingState(phase = StreamingPhase.ERROR, errorMessage = sanitized)
+                if (myGeneration == turnGeneration.get()) {
+                    _streamingState.update {
+                        StreamingState(phase = StreamingPhase.ERROR, errorMessage = sanitized)
+                    }
                 }
                 logRepository.append(LogSeverity.ERROR, TAG, "Agent turn failed: $sanitized")
                 repository.append(content = sanitized, entryType = ENTRY_TYPE_ERROR)
+            } finally {
+                stopTurnWatchdog()
             }
         }
+    }
+
+    /**
+     * Starts a watchdog that force-resolves the streaming state if no
+     * terminal callback ([StreamingPhase.COMPLETE], [StreamingPhase.ERROR],
+     * or [StreamingPhase.CANCELLED]) arrives within [TURN_WATCHDOG_TIMEOUT_MS].
+     *
+     * Without this, a hung provider call or a callback dropped/misrouted on
+     * the native side leaves the "Responding..." card visible forever with
+     * no way for the user to recover short of restarting the app.
+     */
+    private fun startTurnWatchdog(generation: Long) {
+        turnWatchdogJob?.cancel()
+        turnWatchdogJob = viewModelScope.launch {
+            delay(TURN_WATCHDOG_TIMEOUT_MS)
+            if (generation != turnGeneration.get()) return@launch
+            if (!_streamingState.value.phase.isActive) return@launch
+            logRepository.append(
+                LogSeverity.WARN,
+                TAG,
+                "Agent turn $generation exceeded ${TURN_WATCHDOG_TIMEOUT_MS}ms with no terminal " +
+                    "callback; force-resolving so the UI does not stay stuck.",
+            )
+            _streamingState.update {
+                StreamingState(
+                    phase = StreamingPhase.ERROR,
+                    errorMessage = "This request took too long and did not respond. " +
+                        "It may still finish in the background \u2014 try again if needed.",
+                )
+            }
+        }
+    }
+
+    private fun stopTurnWatchdog() {
+        turnWatchdogJob?.cancel()
+        turnWatchdogJob = null
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -689,13 +746,33 @@ class TerminalViewModel(
         images: List<ProcessedImage>,
         listener: KotlinSessionListener,
     ) {
+        val isImageDisplayRequest = images.isEmpty() && MediaIntentClassifier.isImageDisplayRequest(message)
+        // Handle explicit image-display requests in the client so the result is
+        // rendered as native Markdown images instead of opening a browser or
+        // delegating the request to device control.
+        if (isImageDisplayRequest) {
+            listener.onThinking("Finding images…")
+            val nativeResponse = NativeImageSearch.search(message).getOrNull()
+            if (!nativeResponse.isNullOrBlank()) {
+                listener.onResponseChunk(nativeResponse)
+                listener.onComplete(nativeResponse)
+                return
+            }
+        }
+
+        val modelMessage = if (isImageDisplayRequest) {
+            IMAGE_DISPLAY_MODEL_DIRECTIVE + message
+        } else {
+            message
+        }
+
         if (isOnDevicePrimaryAgent()) {
-            sendOnDeviceTurn(message, listener)
+            sendOnDeviceTurn(modelMessage, listener)
             return
         }
         prepareAgentSession(message)
         sessionBridge.send(
-            message = message,
+            message = modelMessage,
             imageData = images.map { it.base64Data },
             mimeTypes = images.map { it.mimeType },
             listener = listener,
@@ -1948,7 +2025,9 @@ class TerminalViewModel(
             }
         }.trimEnd()
 
-    private inner class KotlinSessionListener : ConversationSessionListener {
+    private inner class KotlinSessionListener(
+        private val generation: Long,
+    ) : ConversationSessionListener {
         private val logger = getBackgroundProcessLogger()
         private var mainProcessId: String? = null
         private val toolProcessIds = mutableMapOf<String, ArrayDeque<String>>()
@@ -1964,7 +2043,19 @@ class TerminalViewModel(
             )
         }
 
+        /**
+         * True while this listener still belongs to the live turn.
+         *
+         * A stray callback from an abandoned/overlapping native session_send
+         * call (e.g. after an automatic retry, or an overlapping call from
+         * another entry point sharing the same native session) must never
+         * mutate [_streamingState] on behalf of a turn the UI has already
+         * moved on from.
+         */
+        private fun isCurrentTurn(): Boolean = generation == turnGeneration.get()
+
         override fun onThinking(text: String) {
+            if (!isCurrentTurn()) return
             val trimmed = text.trim()
             val match = THINKING_PHASE_REGEX.matchEntire(trimmed)
             if (match != null) {
@@ -1996,6 +2087,7 @@ class TerminalViewModel(
         }
 
         override fun onResponseChunk(text: String) {
+            if (!isCurrentTurn()) return
             _streamingState.update { current ->
                 current.copy(
                     phase = StreamingPhase.RESPONDING,
@@ -2008,6 +2100,7 @@ class TerminalViewModel(
             name: String,
             argumentsHint: String,
         ) {
+            if (!isCurrentTurn()) return
             // Log tool execution
             val toolProcessId = logger.logOperation(
                 ProcessType.TOOL_EXEC,
@@ -2030,6 +2123,7 @@ class TerminalViewModel(
             success: Boolean,
             durationSecs: ULong,
         ) {
+            if (!isCurrentTurn()) return
             val processId = popToolProcessId(name)
             if (processId != null) {
                 pendingToolCompletions.getOrPut(name) { ArrayDeque() }.addLast(
@@ -2071,6 +2165,7 @@ class TerminalViewModel(
             name: String,
             output: String,
         ) {
+            if (!isCurrentTurn()) return
             val details = compactToolOutput(output)
             handleTermuxApprovalToolOutput(name, output)
             popPendingToolCompletion(name)?.let { completion ->
@@ -2145,6 +2240,7 @@ class TerminalViewModel(
         }
 
         override fun onProgress(message: String) {
+            if (!isCurrentTurn()) return
             // Update main process with current progress
             mainProcessId?.let {
                 logger.updateProcess(it, "Progress: ${message.take(50)}" + if (message.length > 50) "..." else "")
@@ -2155,6 +2251,7 @@ class TerminalViewModel(
         }
 
         override fun onCompaction(summary: String) {
+            if (!isCurrentTurn()) return
             // Update process for memory compaction operation
             mainProcessId?.let {
                 logger.updateProcess(it, "Compacting memory: ${summary.take(45)}" + if (summary.length > 45) "..." else "")
@@ -2184,8 +2281,15 @@ class TerminalViewModel(
                     repository.append(content = display, entryType = ENTRY_TYPE_RESPONSE)
                 }
             } finally {
-                _streamingState.update { StreamingState(phase = StreamingPhase.COMPLETE) }
-                app.refreshCommands.tryEmit(RefreshCommand.Cost)
+                // Only the turn the UI still considers "live" is allowed to
+                // clear/replace the streaming phase. A stale generation's
+                // completion still gets its response appended above (no
+                // answer is silently dropped) but must not touch the phase
+                // a newer turn (or the watchdog) may already own.
+                if (isCurrentTurn()) {
+                    _streamingState.update { StreamingState(phase = StreamingPhase.COMPLETE) }
+                    app.refreshCommands.tryEmit(RefreshCommand.Cost)
+                }
             }
         }
 
@@ -2197,8 +2301,10 @@ class TerminalViewModel(
                 logRepository.append(LogSeverity.ERROR, TAG, "Agent session error: $sanitized")
             }
 
-            _streamingState.update {
-                StreamingState(phase = StreamingPhase.ERROR, errorMessage = sanitized)
+            if (isCurrentTurn()) {
+                _streamingState.update {
+                    StreamingState(phase = StreamingPhase.ERROR, errorMessage = sanitized)
+                }
             }
         }
 
@@ -2210,8 +2316,10 @@ class TerminalViewModel(
                 )
             }
 
-            _streamingState.update {
-                StreamingState(phase = StreamingPhase.CANCELLED)
+            if (isCurrentTurn()) {
+                _streamingState.update {
+                    StreamingState(phase = StreamingPhase.CANCELLED)
+                }
             }
         }
     }
@@ -2219,9 +2327,21 @@ class TerminalViewModel(
     /** Constants for [TerminalViewModel]. */
     companion object {
         private const val TAG = "Terminal"
+        private const val IMAGE_DISPLAY_MODEL_DIRECTIVE =
+            "The client renders images natively. For this image-display request, do not use device control, " +
+                "browser navigation, or page links. If you must answer through the model, return direct HTTP(S) " +
+                "image URLs only as Markdown image blocks (`![description](url)`), one per image.\n\nUser request: "
 
         /** Timeout in milliseconds before upstream Flow collection stops. */
         private const val STOP_TIMEOUT_MS = 5_000L
+
+        /**
+         * Maximum time an agent turn may sit in an active [StreamingPhase]
+         * with no terminal callback before the watchdog force-resolves it.
+         * Generous enough to cover slow tool loops / multi-round provider
+         * calls, but bounded so the UI can never be stuck indefinitely.
+         */
+        private const val TURN_WATCHDOG_TIMEOUT_MS = 120_000L
 
         /** Small grace period for the Termux bridge process to bind localhost after launch. */
         private const val TERMUX_SETUP_BRIDGE_WAIT_MS = 2_000L

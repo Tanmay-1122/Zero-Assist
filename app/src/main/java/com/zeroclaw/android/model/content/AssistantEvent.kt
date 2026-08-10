@@ -67,12 +67,42 @@ sealed interface AssistantEvent {
     ) : AssistantEvent
 
     @Serializable
+    @SerialName("block_delta")
+    data class BlockDelta(
+        override val version: Int = 1,
+        override val messageId: String,
+        override val conversationId: String,
+        val blockId: String,
+        val delta: String,
+    ) : AssistantEvent
+
+    @Serializable
+    @SerialName("block_updated")
+    data class BlockUpdated(
+        override val version: Int = 1,
+        override val messageId: String,
+        override val conversationId: String,
+        val block: ContentBlock,
+    ) : AssistantEvent
+
+    @Serializable
     @SerialName("block_finished")
     data class BlockFinished(
         override val version: Int = 1,
         override val messageId: String,
         override val conversationId: String,
         val blockId: String,
+    ) : AssistantEvent
+
+    @Serializable
+    @SerialName("block_error")
+    data class BlockError(
+        override val version: Int = 1,
+        override val messageId: String,
+        override val conversationId: String,
+        val blockId: String,
+        val errorCode: String,
+        val errorMessage: String,
     ) : AssistantEvent
 
     @Serializable
@@ -93,5 +123,14 @@ sealed interface AssistantEvent {
         override val conversationId: String,
         val errorCode: String,
         val errorMessage: String,
+    ) : AssistantEvent
+
+    @Serializable
+    @SerialName("stream_cancelled")
+    data class StreamCancelled(
+        override val version: Int = 1,
+        override val messageId: String,
+        override val conversationId: String,
+        val reason: String,
     ) : AssistantEvent
 }

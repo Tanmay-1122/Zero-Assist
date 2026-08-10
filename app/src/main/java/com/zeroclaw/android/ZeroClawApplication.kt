@@ -26,6 +26,7 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.zeroclaw.android.backup.DriveBackupManager
 import com.zeroclaw.android.backup.SyncRepository
@@ -1129,6 +1130,12 @@ class ZeroClawApplication :
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader.Builder(context)
+            .components {
+                // Coil 3 does not install the OkHttp network fetcher when a custom
+                // ImageLoader is supplied. Register it explicitly so remote chat
+                // images (including extension-less CDN URLs) can be decoded.
+                add(OkHttpNetworkFetcherFactory(callFactory = { sharedHttpClient }))
+            }
             .memoryCache { MemoryCache.Builder().maxSizePercent(context, MEMORY_CACHE_PERCENT).build() }
             .diskCache {
                 DiskCache.Builder()

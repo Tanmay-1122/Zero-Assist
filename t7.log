@@ -1,0 +1,195 @@
+> Task :lib:preBuild UP-TO-DATE
+> Task :lib:preDebugBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:writeDebugAarMetadata UP-TO-DATE
+> Task :app:ensureProotBinaries
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :lib:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :lib:generateDebugResources UP-TO-DATE
+> Task :lib:packageDebugResources UP-TO-DATE
+> Task :lib:extractDeepLinksDebug UP-TO-DATE
+> Task :lib:processDebugManifest UP-TO-DATE
+> Task :lib:compileDebugLibraryResources UP-TO-DATE
+> Task :lib:parseDebugLocalResources UP-TO-DATE
+> Task :lib:generateDebugRFile UP-TO-DATE
+> Task :lib:rustUpTargetAddAndroidArmV7 UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :lib:cargoBuildAndroidArmV7Debug UP-TO-DATE
+> Task :lib:installUniffiBindgen UP-TO-DATE
+> Task :lib:mergeUniffiConfig UP-TO-DATE
+> Task :lib:buildUniffiBindings UP-TO-DATE
+> Task :lib:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:compileDebugKotlin UP-TO-DATE
+> Task :lib:javaPreCompileDebug UP-TO-DATE
+> Task :lib:compileDebugJavaWithJavac NO-SOURCE
+> Task :lib:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :lib:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :lib:processDebugJavaRes UP-TO-DATE
+> Task :app:kspDebugKotlin
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:8:8 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:9:8 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:10:8 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:36:16 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:45:27 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:87:9 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:100:39 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:101:9 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:101:37 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:149:13 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:11:8 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:12:8 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:130:39 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:131:23 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:132:20 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:139:43 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/DriveBackupManager.kt:145:13 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:12:8 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:13:8 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:14:8 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:43:32 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:44:17 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:44:45 'class GoogleSignInOptions : AbstractSafeParcelable, Api.ApiOptions.Optional, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:51:27 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:52:35 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:59:9 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:62:9 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:66:27 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:78:9 'class GoogleSignIn : Any' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:89:52 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/google/GoogleWorkspaceAuthManager.kt:115:42 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/PiperOnnxPackageDownloader.kt:133:29 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:121:32 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:146:32 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:172:80 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:215:73 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:223:66 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:244:73 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:261:51 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:265:80 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:271:68 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:276:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:280:21 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:298:27 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:305:101 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:309:79 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:321:35 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:339:26 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:343:61 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:346:75 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:384:96 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/devicecontrol/DeviceControlAccessibilityService.kt:432:65 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/service/sandbox/SandboxBridgeServer.kt:359:23 Check for instance is always 'true'.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/ui/component/CameraPreview.kt:144:26 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/ui/screen/webdashboard/WebDashboardScreen.kt:102:29 'var databaseEnabled: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:117:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:128:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:139:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:154:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:kspDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestKotlin
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/DebugHangTest.kt:52:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalRuntimeBridgeTest.kt:55:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalRuntimeBridgeTest.kt:91:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:68:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:91:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:110:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:140:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:155:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:158:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:176:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:194:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:210:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:220:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:239:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:259:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:282:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSecurityTest.kt:105:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:53:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:69:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:91:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PersistenceTest.kt:152:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:72:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:94:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:139:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:169:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:211:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:244:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:249:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:268:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/VerificationTest.kt:118:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/VerificationTest.kt:160:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/AgentConversationEngineTest.kt:132:34 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'kotlin.Any?'.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/devicecontrol/DeviceControlExecutorTest.kt:244:20 Check for instance is always 'true'.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/devicecontrol/DeviceControlExecutorTest.kt:400:20 Check for instance is always 'true'.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest
+
+GoalRuntimeBridgeTest > bridge renders a task tree container on progress FAILED
+    java.lang.AssertionError at GoalRuntimeBridgeTest.kt:74
+
+GoalSchedulerTest > cancellation cancels running and pending tasks FAILED
+    java.lang.AssertionError at GoalSchedulerTest.kt:148
+
+GoalSchedulerTest > executes parallel roots concurrently FAILED
+    java.lang.AssertionError at GoalSchedulerTest.kt:80
+
+GoalSchedulerTest > dynamic graph update while running is picked up FAILED
+    java.lang.NullPointerException at GoalSchedulerTest.kt:202
+
+GoalSchedulerTest > executes sequential chain in dependency order FAILED
+    java.lang.AssertionError at GoalSchedulerTest.kt:59
+
+GoalSchedulerTest > fails all tasks when root capability unknown FAILED
+    java.lang.AssertionError at GoalSchedulerTest.kt:230
+
+PerformanceTest > executes 1000 parallel tasks capped at concurrency limit FAILED
+    java.lang.AssertionError at PerformanceTest.kt:63
+
+PersistenceTest > resume restarts an interrupted execution FAILED
+    java.lang.AssertionError at PersistenceTest.kt:120
+
+55 tests completed, 8 failed
+
+> Task :app:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///C:/Users/tanma/Downloads/Zero-Assist/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 24m 10s
+44 actionable tasks: 8 executed, 36 up-to-date

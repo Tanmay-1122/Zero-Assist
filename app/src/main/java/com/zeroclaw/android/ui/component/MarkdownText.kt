@@ -9,6 +9,7 @@
 package com.zeroclaw.android.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -47,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.zeroclaw.android.ui.theme.JetBrainsMonoFamily
 import com.zeroclaw.android.util.MessageUrlDetector
 import org.commonmark.ext.gfm.tables.TableBody
@@ -84,6 +88,9 @@ private const val TABLE_CELL_HPAD_DP = 8
 private const val TABLE_CELL_VPAD_DP = 4
 private const val URL_TAG = "url"
 
+/** Cap on rendered image height so a huge photo doesn't dominate the scrollback. */
+private const val IMAGE_MAX_HEIGHT_DP = 280
+
 private sealed interface RenderableBlock {
     data class Paragraph(val text: AnnotatedString) : RenderableBlock
     data class Heading(val level: Int, val text: AnnotatedString) : RenderableBlock
@@ -96,6 +103,9 @@ private sealed interface RenderableBlock {
         val headers: List<AnnotatedString>,
         val rows: List<List<AnnotatedString>>,
     ) : RenderableBlock
+
+    /** An image to render inline — from markdown `![]()` syntax or a bare image URL in text. */
+    data class ImageBlock(val url: String, val alt: String) : RenderableBlock
 }
 
 @Composable
@@ -156,6 +166,7 @@ private fun RenderBlocks(
             is RenderableBlock.Table -> {
                 TableBlock(block.headers, block.rows, style, color, linkColor, onLongClick)
             }
+            is RenderableBlock.ImageBlock -> ImageBlockView(block.url, block.alt)
         }
         Spacer(modifier = Modifier.height(BLOCK_GAP_DP.dp))
     }
@@ -349,6 +360,36 @@ private fun ThematicBreakBlock() {
     )
 }
 
+/**
+ * Renders an inline image loaded from [url] via Coil.
+ *
+ * Tapping the image opens the full-resolution URL in the system browser.
+ * Coil resolves loading/decode failures silently (no broken-image UI) so a
+ * bad URL never disrupts the surrounding chat message.
+ *
+ * @param url The image URL to load.
+ * @param alt Alt text used as the accessibility content description.
+ */
+@Composable
+private fun ImageBlockView(
+    url: String,
+    alt: String,
+) {
+    val uriHandler = LocalUriHandler.current
+
+    AsyncImage(
+        model = url,
+        contentDescription = alt.ifBlank { "Image" },
+        contentScale = ContentScale.Fit,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = IMAGE_MAX_HEIGHT_DP.dp)
+                .clip(RoundedCornerShape(CODE_CORNER_DP.dp))
+                .clickable { runCatching { uriHandler.openUri(url) } },
+    )
+}
+
 @Composable
 private fun TableBlock(
     headers: List<AnnotatedString>,
@@ -508,6 +549,103 @@ private fun childrenOf(node: Node): List<Node> {
     return list
 }
 
+/** File extensions that mark a URL as an image, regardless of host. */
+private val IMAGE_EXTENSION_REGEX = Regex(
+    """\.(jpe?g|png|gif|webp|avif|bmp|heic)(?:[?#].*)?$""",
+    RegexOption.IGNORE_CASE,
+)
+
+/**
+ * Hosts known to serve images from extension-less paths (placeholder/stock-photo
+ * services the model commonly reaches for, e.g. `https://picsum.photos/id/0/1920/1080`).
+ */
+private val IMAGE_URL_HOST_HINTS = listOf(
+    "picsum.photos",
+    "source.unsplash.com",
+    "images.unsplash.com",
+    "i.imgur.com",
+    "images.pexels.com",
+    "cdn.pixabay.com",
+    "placehold.co",
+    "placekitten.com",
+    "loremflickr.com",
+    "dummyimage.com",
+    "fal.media",
+    "replicate.delivery",
+    "oaidalleapiprodscus.blob.core.windows.net",
+    "generativelanguage.googleapis.com",
+)
+
+/** Matches a bare `http(s)://...` URL embedded in plain text. */
+private val BARE_URL_REGEX = Regex("""https?://[^\s<>()\[\]{}"']+""")
+
+/**
+ * Heuristically decides whether [url] points at an image, so the renderer
+ * can show it inline instead of as plain clickable text.
+ *
+ * Matches on file extension first (cheap, unambiguous), then falls back to
+ * a short list of known image-serving hosts for extension-less URLs.
+ */
+private fun isLikelyImageUrl(url: String): Boolean {
+    val trimmed = url.trim()
+    if (!isHttpUrl(trimmed)) {
+        return false
+    }
+    if (IMAGE_EXTENSION_REGEX.containsMatchIn(trimmed)) return true
+    return IMAGE_URL_HOST_HINTS.any { host -> trimmed.contains(host, ignoreCase = true) }
+}
+
+private fun isHttpUrl(url: String): Boolean =
+    url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)
+
+/**
+ * Walks [node]'s subtree collecting `(url, alt)` pairs for every image URL
+ * found — whether from markdown `![]()` syntax, a `[text](url)` link whose
+ * destination is an image, or a bare URL sitting in plain text.
+ */
+private fun collectImageUrls(
+    node: Node,
+    into: MutableList<Pair<String, String>>,
+) {
+    when (node) {
+        is Image -> {
+            if (isHttpUrl(node.destination)) {
+                val alt =
+                    buildString {
+                        var c: Node? = node.firstChild
+                        while (c != null) {
+                            if (c is Text) append(c.literal)
+                            c = c.next
+                        }
+                    }
+                into.add(node.destination to alt)
+            }
+        }
+
+        is Link -> {
+            if (isLikelyImageUrl(node.destination)) {
+                into.add(node.destination to "")
+            }
+        }
+
+        is Text -> {
+            for (match in BARE_URL_REGEX.findAll(node.literal)) {
+                val url = match.value.trimEnd('.', ',', ')', ']', '>')
+                if (isLikelyImageUrl(url)) {
+                    into.add(url to "")
+                }
+            }
+        }
+
+        else -> Unit
+    }
+    var child: Node? = node.firstChild
+    while (child != null) {
+        collectImageUrls(child, into)
+        child = child.next
+    }
+}
+
 private fun parseBlocks(
     node: Node,
     linkColor: Color,
@@ -519,7 +657,17 @@ private fun parseBlocks(
         when (child) {
             is Paragraph -> {
                 val text = buildInlineAnnotatedString(child, linkColor, inlineCodeBg)
-                blocks.add(RenderableBlock.Paragraph(text))
+                if (text.text.isNotBlank()) {
+                    blocks.add(RenderableBlock.Paragraph(text))
+                }
+                val imageUrls = mutableListOf<Pair<String, String>>()
+                collectImageUrls(child, imageUrls)
+                val seenImageUrls = mutableSetOf<String>()
+                for ((url, alt) in imageUrls) {
+                    if (seenImageUrls.add(url)) {
+                        blocks.add(RenderableBlock.ImageBlock(url, alt))
+                    }
+                }
             }
 
             is Heading -> {
@@ -657,9 +805,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
 ) {
     when (node) {
         is Text -> {
-            withStyle(baseStyle) {
-                append(node.literal)
-            }
+            appendTextWithoutImageUrls(node.literal, baseStyle)
         }
 
         is Code -> {
@@ -685,6 +831,9 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is Link -> {
+            if (isLikelyImageUrl(node.destination)) {
+                return
+            }
             val linkStyle = baseStyle.merge(
                 SpanStyle(
                     color = linkColor,
@@ -697,11 +846,13 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is Image -> {
-            val altText = buildAnnotatedString {
-                renderInlineChildren(node, linkColor, inlineCodeBg, baseStyle)
-            }
-            withStyle(baseStyle.copy(color = linkColor.copy(alpha = 0.6f))) {
-                append("[image: ${altText.text}]")
+            if (!isHttpUrl(node.destination)) {
+                val altText = buildAnnotatedString {
+                    renderInlineChildren(node, linkColor, inlineCodeBg, baseStyle)
+                }
+                withStyle(baseStyle.copy(color = linkColor.copy(alpha = 0.6f))) {
+                    append("[image: ${altText.text}]")
+                }
             }
         }
 
@@ -715,3 +866,33 @@ private fun AnnotatedString.Builder.renderInlineNode(
     }
 }
 
+/**
+ * Appends normal text while omitting bare image URLs. The omitted URL is
+ * emitted as an [RenderableBlock.ImageBlock] by [parseBlocks], so it must not
+ * remain as a duplicate clickable link in the paragraph.
+ */
+private fun AnnotatedString.Builder.appendTextWithoutImageUrls(
+    literal: String,
+    style: SpanStyle,
+) {
+    var cursor = 0
+    for (match in BARE_URL_REGEX.findAll(literal)) {
+        val candidate = match.value.trimEnd('.', ',', ')', ']', '>')
+        if (!isLikelyImageUrl(candidate)) continue
+
+        val candidateStart = match.range.first
+        val candidateEnd = candidateStart + candidate.length
+        withStyle(style) {
+            append(literal.substring(cursor, candidateStart))
+            // Preserve sentence punctuation that was excluded from the URL.
+            append(literal.substring(candidateEnd, match.range.last + 1))
+        }
+        cursor = match.range.last + 1
+    }
+
+    if (cursor < literal.length) {
+        withStyle(style) {
+            append(literal.substring(cursor))
+        }
+    }
+}

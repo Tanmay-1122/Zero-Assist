@@ -19,112 +19,29 @@ import androidx.compose.ui.unit.dp
 import com.zeroclaw.android.model.content.ContentBlock
 import com.zeroclaw.android.ui.component.LinkifiedText
 
+import com.zeroclaw.android.ui.renderer.BlockInteraction
+import com.zeroclaw.android.ui.renderer.ContentBlockRendererRegistry
+import com.zeroclaw.android.ui.renderer.RenderContext
+
 /**
  * Type-safe composable dispatcher for rendering [ContentBlock] variants.
+ * Delegates to [ContentBlockRendererRegistry] for extensible block rendering.
  */
 @Composable
 fun RenderContentBlock(
     block: ContentBlock,
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     isStreaming: Boolean = false,
+    onInteraction: ((BlockInteraction) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    when (block) {
-        is ContentBlock.Text -> {
-            LinkifiedText(
-                text = if (isStreaming) "${block.text} █" else block.text,
-                style = MaterialTheme.typography.bodyMedium,
-                color = textColor,
-                modifier = modifier,
-            )
-        }
-
-        is ContentBlock.Markdown -> {
-            LinkifiedText(
-                text = if (isStreaming) "${block.markdown} █" else block.markdown,
-                style = MaterialTheme.typography.bodyMedium,
-                color = textColor,
-                modifier = modifier,
-            )
-        }
-
-        is ContentBlock.Reasoning -> {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = MaterialTheme.shapes.small,
-                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
-            ) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(
-                        text = "Thinking",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = block.reasoningText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = textColor.copy(alpha = 0.8f),
-                    )
-                }
-            }
-        }
-
-        is ContentBlock.ToolCard -> {
-            Surface(
-                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                shape = MaterialTheme.shapes.small,
-                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
-            ) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(
-                        text = "Tool: ${block.toolName} (${block.status})",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                    if (block.inputJson.isNotBlank()) {
-                        Text(
-                            text = block.inputJson,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = textColor.copy(alpha = 0.7f),
-                        )
-                    }
-                    block.resultBlocks.forEach { subBlock ->
-                        RenderContentBlock(
-                            block = subBlock,
-                            textColor = textColor,
-                            isStreaming = false,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
-                }
-            }
-        }
-
-        is ContentBlock.Image -> {
-            Text(
-                text = "[Image: ${block.altText ?: block.url ?: "attachment"}]",
-                style = MaterialTheme.typography.bodySmall,
-                color = textColor.copy(alpha = 0.7f),
-                modifier = modifier,
-            )
-        }
-
-        is ContentBlock.File -> {
-            Text(
-                text = "[File: ${block.fileName} (${block.sizeBytes} bytes)]",
-                style = MaterialTheme.typography.bodySmall,
-                color = textColor.copy(alpha = 0.7f),
-                modifier = modifier,
-            )
-        }
-
-        is ContentBlock.Unknown -> {
-            Text(
-                text = "[Unsupported Block: ${block.typeId}]",
-                style = MaterialTheme.typography.bodySmall,
-                color = textColor.copy(alpha = 0.5f),
-                modifier = modifier,
-            )
-        }
-    }
+    ContentBlockRendererRegistry.Render(
+        block = block,
+        context = RenderContext(
+            textColor = textColor,
+            isStreaming = isStreaming,
+            onInteraction = onInteraction,
+        ),
+        modifier = modifier,
+    )
 }

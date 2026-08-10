@@ -57,6 +57,15 @@ sealed class StreamEvent {
     data class Error(
         val message: String,
     ) : StreamEvent()
+
+    /**
+     * A structured assistant event payload.
+     *
+     * @property event The deserialized AssistantEvent instance.
+     */
+    data class AssistantEventReceived(
+        val event: com.zeroclaw.android.model.content.AssistantEvent,
+    ) : StreamEvent()
 }
 
 /**
@@ -70,6 +79,11 @@ sealed class StreamEvent {
  * capacity of 256 events to avoid back-pressure blocking the native callback thread.
  */
 class StreamingBridge : FfiStreamListener {
+    private val jsonSerializer = kotlinx.serialization.json.Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
     private val _events =
         MutableSharedFlow<StreamEvent>(
             extraBufferCapacity = BUFFER_CAPACITY,
@@ -124,6 +138,22 @@ class StreamingBridge : FfiStreamListener {
     override fun onError(error: String) {
         Log.e(TAG, "Streaming error: ${LogSanitizer.sanitizeLogMessage(error)}")
         _events.tryEmit(StreamEvent.Error(error))
+    }
+
+    /**
+     * Called by the native layer with structured AssistantEvents encoded as JSON.
+     *
+     * @param eventJson JSON string representing an AssistantEvent.
+     */
+    override fun onAssistantEvent(eventJson: String) {
+        try {
+            val assistantEvent = jsonSerializer.decodeFromString<com.zeroclaw.android.model.content.AssistantEvent>(eventJson)
+            if (!_events.tryEmit(StreamEvent.AssistantEventReceived(assistantEvent))) {
+                Log.w(TAG, "Assistant event dropped — buffer full")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to decode assistant event: ${e.message}")
+        }
     }
 
     /** Constants for [StreamingBridge]. */

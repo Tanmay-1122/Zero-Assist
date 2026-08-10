@@ -9,6 +9,8 @@ package com.zeroclaw.android.service
 import android.util.Log
 import com.zeroclaw.android.data.ProviderRegistry
 import com.zeroclaw.android.data.repository.ApiKeyRepository
+import com.zeroclaw.android.media.MediaIntentClassifier
+import com.zeroclaw.android.media.NativeImageSearch
 import com.zeroclaw.android.model.Agent
 import com.zeroclaw.android.model.ProviderAuthType
 import com.zeroclaw.android.model.ThinkingLevel
@@ -162,6 +164,30 @@ class AgentConversationEngine(
         sessionMutex.withLock {
             initAgent(agent)
 
+            // Handle explicit image-display requests in the client so the result is
+            // rendered inline instead of sending the model to browser/device tools.
+            val isImageDisplayRequest = MediaIntentClassifier.isImageDisplayRequest(messageForModel)
+            if (isImageDisplayRequest) {
+                onTypingStarted()
+                val nativeResponse = NativeImageSearch.search(messageForModel).getOrNull()
+                if (!nativeResponse.isNullOrBlank()) {
+                    histories[agent.id] = (
+                        histories.getValue(agent.id) +
+                            ConversationMessage(role = ROLE_USER, content = messageForModel) +
+                            ConversationMessage(role = ROLE_ASSISTANT, content = nativeResponse)
+                        ).toMutableList()
+                    onChunk(nativeResponse)
+                    onComplete(nativeResponse)
+                    return@withLock
+                }
+            }
+
+            val modelMessage = if (isImageDisplayRequest) {
+                IMAGE_DISPLAY_MODEL_DIRECTIVE + messageForModel
+            } else {
+                messageForModel
+            }
+
             val providerInfo = ProviderRegistry.findById(agent.provider)
             val keyRecord = apiKeyRepository.getByProviderFresh(agent.provider)
             val credentials = resolveCredentials(agent, providerInfo?.authType, keyRecord)
@@ -175,7 +201,7 @@ class AgentConversationEngine(
 
             // Route on-device agents through the local inference engine.
             if (agent.provider == "on-device" && onDeviceEngine != null) {
-                sendOnDeviceMessage(agent, messageForModel, existingHistory, sessionPrompt, onChunk, onComplete, onError, onTypingStarted)
+                sendOnDeviceMessage(agent, modelMessage, existingHistory, sessionPrompt, onChunk, onComplete, onError, onTypingStarted)
                 return@withLock
             }
 
@@ -195,7 +221,7 @@ class AgentConversationEngine(
                         async(Dispatchers.IO) {
                             try {
                                 sessionBridge.send(
-                                    message = messageForModel,
+                                    message = modelMessage,
                                     imageData = emptyList(),
                                     mimeTypes = emptyList(),
                                     listener = eventChannel.asSessionListener(),
@@ -821,6 +847,10 @@ class AgentConversationEngine(
         private const val CANCELLED_MESSAGE = "Request cancelled."
         private const val EMPTY_RESPONSE_MESSAGE = "The model did not generate a text response."
         private const val UNKNOWN_ERROR_MESSAGE = "The request failed."
+        private const val IMAGE_DISPLAY_MODEL_DIRECTIVE =
+            "The client renders images natively. For this image-display request, do not use device control, " +
+                "browser navigation, or page links. If you must answer through the model, return direct HTTP(S) " +
+                "image URLs only as Markdown image blocks (`![description](url)`), one per image.\n\nUser request: "
 
         // Cache validity periods
         private const val TOOL_CACHE_VALIDITY_MS = 30_000L // 30 seconds

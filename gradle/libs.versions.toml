@@ -12,6 +12,7 @@ coil = "3.0.4"
 jna = "5.15.0"
 gobley = "0.3.7"
 junit5 = "5.11.4"
+junit4 = "4.13.2"
 json = "20231013"
 mockk = "1.13.14"
 turbine = "1.2.0"
@@ -73,6 +74,8 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 junit5-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
 junit5-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit5" }
+junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
+junit5-vintage = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junit5" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
