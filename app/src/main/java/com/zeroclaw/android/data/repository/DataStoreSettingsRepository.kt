@@ -169,6 +169,7 @@ class DataStoreSettingsRepository(
                 prefs[KEY_MEMORY_BACKEND]
                     ?: AppSettings.DEFAULT_MEMORY_BACKEND,
             memoryAutoSave = prefs[KEY_MEMORY_AUTO_SAVE] ?: true,
+            offlineModeMemoryEnabled = prefs[KEY_OFFLINE_MODE_MEMORY] ?: false,
             identityJson = prefs[KEY_IDENTITY_JSON] ?: "",
             autonomyLevel =
                 prefs[KEY_AUTONOMY_LEVEL]
@@ -446,6 +447,9 @@ class DataStoreSettingsRepository(
     override suspend fun setMemoryBackend(backend: String) = edit { it[KEY_MEMORY_BACKEND] = backend }
 
     override suspend fun setMemoryAutoSave(enabled: Boolean) = edit { it[KEY_MEMORY_AUTO_SAVE] = enabled }
+
+    override suspend fun setOfflineModeMemoryEnabled(enabled: Boolean) =
+        edit { it[KEY_OFFLINE_MODE_MEMORY] = enabled }
 
     override suspend fun setIdentityJson(json: String) = edit { it[KEY_IDENTITY_JSON] = json }
 
@@ -748,6 +752,7 @@ class DataStoreSettingsRepository(
             stringPreferencesKey("fallback_provider_configs_json")
         val KEY_MEMORY_BACKEND = stringPreferencesKey("memory_backend")
         val KEY_MEMORY_AUTO_SAVE = booleanPreferencesKey("memory_auto_save")
+        val KEY_OFFLINE_MODE_MEMORY = booleanPreferencesKey("offline_mode_memory")
         val KEY_IDENTITY_JSON = stringPreferencesKey("identity_json")
         val KEY_AUTONOMY_LEVEL = stringPreferencesKey("autonomy_level")
         val KEY_WORKSPACE_ONLY = booleanPreferencesKey("workspace_only")

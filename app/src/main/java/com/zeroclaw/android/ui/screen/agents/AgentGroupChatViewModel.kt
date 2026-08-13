@@ -33,6 +33,7 @@ import com.zeroclaw.android.service.AgentStatusRepository
 import com.zeroclaw.android.service.ConversationSessionListener
 import com.zeroclaw.android.service.DaemonServiceBridge
 import com.zeroclaw.android.service.ConversationSessionManager
+import com.zeroclaw.android.service.SettingsBackedOfflineMemoryContextProvider
 import com.zeroclaw.android.service.RepositoryChannelStatusBridge
 import com.zeroclaw.android.service.ThinkingLevelManager
 import com.zeroclaw.android.util.ErrorSanitizer
@@ -101,6 +102,11 @@ class AgentGroupChatViewModel(
             toolCatalogBridge = app.toolsBridge,
             channelStatusBridge = RepositoryChannelStatusBridge(app.channelConfigRepository),
             onDeviceEngine = app.liteRtInferenceEngine,
+            offlineMemoryContextProvider =
+                SettingsBackedOfflineMemoryContextProvider(
+                    settingsRepository = app.settingsRepository,
+                    memoryBridge = app.memoryBridge,
+                ),
         )
     private val delegationGate =
         MasterDelegationGate(

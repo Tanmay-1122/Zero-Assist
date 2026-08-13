@@ -49,6 +49,8 @@ class AgentConversationEngine(
     private val toolCatalogBridge: ToolCatalogBridge = ToolsBridge(),
     private val channelStatusBridge: ChannelStatusBridge = EmptyChannelStatusBridge,
     private val onDeviceEngine: LocalInferenceEngine? = null,
+    private val offlineMemoryContextProvider: OfflineMemoryContextProvider =
+        OfflineMemoryContextProvider { null },
 ) {
     private val histories = linkedMapOf<String, MutableList<ConversationMessage>>()
     private val sessionMutex = Mutex()
@@ -196,14 +198,30 @@ class AgentConversationEngine(
                 return
             }
 
-            val existingHistory = histories.getValue(agent.id).toList()
-            val sessionPrompt = buildSessionPrompt(agent, effectiveThinkingLevel)
-
             // Route on-device agents through the local inference engine.
             if (agent.provider == "on-device" && onDeviceEngine != null) {
-                sendOnDeviceMessage(agent, modelMessage, existingHistory, sessionPrompt, onChunk, onComplete, onError, onTypingStarted)
+                val existingHistory = histories.getValue(agent.id).toList()
+                val sessionPrompt =
+                    buildOfflineSessionPrompt(
+                        agent = agent,
+                        thinkingLevel = effectiveThinkingLevel,
+                        query = modelMessage,
+                    )
+                sendOnDeviceMessage(
+                    agent,
+                    modelMessage,
+                    existingHistory,
+                    sessionPrompt,
+                    onChunk,
+                    onComplete,
+                    onError,
+                    onTypingStarted,
+                )
                 return@withLock
             }
+
+            val existingHistory = histories.getValue(agent.id).toList()
+            val sessionPrompt = buildSessionPrompt(agent, effectiveThinkingLevel)
 
             var reportedError: String? = null
             var completionText = ""
@@ -349,6 +367,7 @@ class AgentConversationEngine(
             onTypingStarted()
             val messages = existingHistory
                 .filter { it.role == ROLE_USER || it.role == ROLE_ASSISTANT }
+                .takeLast(MAX_OFFLINE_HISTORY_MESSAGES)
                 .map { InferenceMessage(role = it.role, content = it.content) } +
                 InferenceMessage(role = "user", content = message)
             val response = engine.chat(
@@ -367,6 +386,23 @@ class AgentConversationEngine(
         } catch (e: Exception) {
             onError(e.message ?: UNKNOWN_ERROR_MESSAGE)
         }
+    }
+
+    /** Builds the intentionally small prompt used by Offline Mode. */
+    private suspend fun buildOfflineSessionPrompt(
+        agent: Agent,
+        thinkingLevel: ThinkingLevel,
+        query: String,
+    ): SessionPrompt {
+        val memoryContext = offlineMemoryContextProvider.contextFor(query)
+        val content = buildOfflineModePrompt(resolvedSystemPrompt(agent), memoryContext)
+        return SessionPrompt(
+            content = content,
+            agentPromptFingerprint = fingerprint(resolvedSystemPrompt(agent)),
+            thinkingLevel = thinkingLevel,
+            toolFingerprint = OFFLINE_FINGERPRINT,
+            channelFingerprint = OFFLINE_FINGERPRINT,
+        )
     }
 
     /**
@@ -844,6 +880,8 @@ class AgentConversationEngine(
         private const val ROLE_USER = "user"
         private const val ROLE_ASSISTANT = "assistant"
         private const val MAX_SEEDED_MESSAGES = 50  // Reduced from 200 for 75% token savings
+        private const val MAX_OFFLINE_HISTORY_MESSAGES = 12
+        private const val OFFLINE_FINGERPRINT = "offline"
         private const val CANCELLED_MESSAGE = "Request cancelled."
         private const val EMPTY_RESPONSE_MESSAGE = "The model did not generate a text response."
         private const val UNKNOWN_ERROR_MESSAGE = "The request failed."

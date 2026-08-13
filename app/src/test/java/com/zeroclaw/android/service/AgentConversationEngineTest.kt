@@ -26,6 +26,38 @@ import org.junit.jupiter.api.Test
 @DisplayName("AgentConversationEngine")
 class AgentConversationEngineTest {
     @Test
+    @DisplayName("Offline Mode skips tool and channel catalogs")
+    fun `offline mode skips tool and channel catalogs`() =
+        runTest {
+            val localEngine = FakeLocalInferenceEngine()
+            val tools = FakeToolCatalogBridge(tools = listOf(testTool(name = "shell")))
+            val channels =
+                FakeChannelStatusBridge(
+                    channels = listOf(ChannelStatus(typeName = "discord", displayName = "Discord", isEnabled = true)),
+                )
+            val engine =
+                testEngine(
+                    toolCatalogBridge = tools,
+                    channelStatusBridge = channels,
+                    onDeviceEngine = localEngine,
+                    offlineMemoryContextProvider = OfflineMemoryContextProvider { "- remembers local preference" },
+                )
+
+            engine.sendMessage(
+                agent = testAgent(provider = "on-device"),
+                userMessage = "hello",
+                onChunk = {},
+                onComplete = {},
+                onError = { message -> throw AssertionError(message) },
+            )
+
+            assertEquals(0, tools.listCalls)
+            assertEquals(0, channels.listCalls)
+            assertTrue(localEngine.lastSystemPrompt.orEmpty().contains("remembers local preference"))
+            assertTrue(localEngine.lastTools.isEmpty())
+        }
+
+    @Test
     @DisplayName("delivers chunks while native send is still running")
     fun `delivers chunks while native send is still running`() =
         runTest {
@@ -359,23 +391,28 @@ class AgentConversationEngineTest {
         bridge: ConversationSessionBridge = FakeConversationSessionBridge(),
         toolCatalogBridge: ToolCatalogBridge = FakeToolCatalogBridge(),
         channelStatusBridge: ChannelStatusBridge = FakeChannelStatusBridge(),
+        onDeviceEngine: LocalInferenceEngine? = null,
+        offlineMemoryContextProvider: OfflineMemoryContextProvider = OfflineMemoryContextProvider { null },
     ): AgentConversationEngine =
         AgentConversationEngine(
             apiKeyRepository = apiKeyRepository,
             sessionBridge = bridge,
             toolCatalogBridge = toolCatalogBridge,
             channelStatusBridge = channelStatusBridge,
+            onDeviceEngine = onDeviceEngine,
+            offlineMemoryContextProvider = offlineMemoryContextProvider,
         )
 
     private fun testAgent(
         id: String = "agent-1",
         name: String = "Test Agent",
         systemPrompt: String = "",
+        provider: String = "openai",
     ): Agent =
         Agent(
             id = id,
             name = name,
-            provider = "openai",
+            provider = provider,
             modelName = "gpt-4o",
             systemPrompt = systemPrompt,
         )
@@ -400,7 +437,10 @@ private class FakeToolCatalogBridge(
     var tools: List<ToolSpec> = emptyList(),
     private val failure: Throwable? = null,
 ) : ToolCatalogBridge {
+    var listCalls = 0
+
     override suspend fun listTools(): List<ToolSpec> {
+        listCalls++
         failure?.let { throw it }
         return tools
     }
@@ -410,10 +450,54 @@ private class FakeChannelStatusBridge(
     var channels: List<ChannelStatus> = emptyList(),
     private val failure: Throwable? = null,
 ) : ChannelStatusBridge {
+    var listCalls = 0
+
     override suspend fun listChannels(): List<ChannelStatus> {
+        listCalls++
         failure?.let { throw it }
         return channels
     }
+}
+
+private class FakeLocalInferenceEngine : LocalInferenceEngine {
+    override val engineState = MutableStateFlow(EngineState.READY)
+    override val downloadingModelId = MutableStateFlow<String?>(null)
+    override val downloadProgress = MutableStateFlow<Float?>(null)
+    override val downloadError = MutableStateFlow<DownloadError?>(null)
+    override val currentModelId: String? = "test-model"
+    override val currentModelIdFlow = MutableStateFlow<String?>(currentModelId)
+    override val totalMemoryBytes: Long = 8L * 1024 * 1024 * 1024
+
+    var lastSystemPrompt: String? = null
+    var lastTools: List<LocalTool> = emptyList()
+
+    override suspend fun initialize(model: DownloadedModel, contextTokens: Int) = Unit
+
+    override suspend fun release() = Unit
+
+    override fun releaseInBackground() = Unit
+
+    override suspend fun chat(
+        messages: List<InferenceMessage>,
+        systemPrompt: String?,
+        tools: List<LocalTool>,
+    ): String {
+        lastSystemPrompt = systemPrompt
+        lastTools = tools
+        return "offline response"
+    }
+
+    override fun getDownloadedModels(): List<DownloadedModel> = emptyList()
+
+    override fun getAvailableModels(): List<LocalModel> = emptyList()
+
+    override fun getFreeSpaceBytes(): Long = 0L
+
+    override fun startDownload(model: LocalModel) = Unit
+
+    override fun cancelDownload() = Unit
+
+    override suspend fun deleteModel(modelId: String) = Unit
 }
 
 private class FakeConversationSessionBridge(

@@ -81,6 +81,13 @@ object ExternalAppLauncher {
             label = "Open Slack App Console",
         )
 
+    /** Opens Composio's project API keys page for creating or copying a key. */
+    val COMPOSIO_API_KEYS =
+        DeepLinkTarget(
+            uri = "https://platform.composio.dev/settings/api-keys",
+            label = "Get Composio API Key",
+        )
+
     /**
      * Provider-ID-to-console-URL lookup for AI provider API-key pages.
      *

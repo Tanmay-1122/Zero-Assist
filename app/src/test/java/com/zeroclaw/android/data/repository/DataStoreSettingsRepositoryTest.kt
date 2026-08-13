@@ -184,6 +184,15 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    @DisplayName("setOfflineModeMemoryEnabled persists and emits updated value")
+    fun `setOfflineModeMemoryEnabled persists and emits updated value`() =
+        runTest {
+            val repo = InMemorySettingsRepository()
+            repo.setOfflineModeMemoryEnabled(true)
+            assertEquals(true, repo.settings.first().offlineModeMemoryEnabled)
+        }
+
+    @Test
     @DisplayName("setIdentityJson persists and emits updated value")
     fun `setIdentityJson persists and emits updated value`() =
         runTest {
@@ -271,6 +280,10 @@ private class InMemorySettingsRepository : SettingsRepository {
 
     override suspend fun setMemoryAutoSave(enabled: Boolean) {
         _settings.update { it.copy(memoryAutoSave = enabled) }
+    }
+
+    override suspend fun setOfflineModeMemoryEnabled(enabled: Boolean) {
+        _settings.update { it.copy(offlineModeMemoryEnabled = enabled) }
     }
 
     override suspend fun setIdentityJson(json: String) {

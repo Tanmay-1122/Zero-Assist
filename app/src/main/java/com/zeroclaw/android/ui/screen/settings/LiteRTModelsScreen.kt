@@ -52,6 +52,7 @@ import com.zeroclaw.android.service.calculateDevicePerformance
 import com.zeroclaw.android.service.DevicePerformance
 import com.zeroclaw.android.ui.component.ErrorCard
 import com.zeroclaw.android.ui.component.SectionHeader
+import com.zeroclaw.android.ui.component.SettingsToggleRow
 import com.zeroclaw.android.viewmodel.LiteRTUiState
 import com.zeroclaw.android.viewmodel.LiteRTViewModel
 import kotlin.math.roundToInt
@@ -68,9 +69,12 @@ import kotlin.math.roundToInt
 fun LiteRTModelsScreen(
     edgeMargin: Dp,
     viewModel: LiteRTViewModel = viewModel(),
+    title: String = "On-Device AI Models",
+    showOfflineModeSettings: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val offlineModeMemoryEnabled by viewModel.offlineModeMemoryEnabled.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -80,7 +84,7 @@ fun LiteRTModelsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(modifier = Modifier.height(8.dp))
-        SectionHeader(title = "On-Device AI Models")
+        SectionHeader(title = title)
 
         Text(
             text = "Download Gemma 4 or Qwen3 models to run inference entirely on-device " +
@@ -88,6 +92,17 @@ fun LiteRTModelsScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        if (showOfflineModeSettings) {
+            SettingsToggleRow(
+                title = "Use memory in Offline Mode",
+                subtitle =
+                    "Optionally recall a few local memories. Tools, MCP, channels, and cloud context stay excluded.",
+                checked = offlineModeMemoryEnabled,
+                onCheckedChange = viewModel::setOfflineModeMemoryEnabled,
+                contentDescription = "Use memory in Offline Mode",
+            )
+        }
 
         // Error banner
         uiState.errorMessage?.let { msg ->

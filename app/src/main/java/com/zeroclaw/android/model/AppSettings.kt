@@ -24,6 +24,7 @@ package com.zeroclaw.android.model
  * @property fallbackProviders Comma-separated list of fallback provider IDs.
  * @property memoryBackend Memory backend name ("sqlite", "none", "markdown", "lucid").
  * @property memoryAutoSave Whether the memory backend auto-saves conversation context.
+ * @property offlineModeMemoryEnabled Whether Offline Mode may include recalled memory.
  * @property identityJson AIEOS v1.1 identity JSON blob.
  * @property autonomyLevel Autonomy level: "readonly", "supervised", or "full".
  * @property workspaceOnly Whether to restrict file access to the workspace directory.
@@ -144,6 +145,7 @@ data class AppSettings(
     val fallbackProviderConfigsJson: String = "[]",
     val memoryBackend: String = DEFAULT_MEMORY_BACKEND,
     val memoryAutoSave: Boolean = true,
+    val offlineModeMemoryEnabled: Boolean = false,
     val identityJson: String = "",
     val autonomyLevel: String = DEFAULT_AUTONOMY_LEVEL,
     val workspaceOnly: Boolean = true,

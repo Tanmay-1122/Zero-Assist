@@ -52,11 +52,14 @@ import com.zeroclaw.android.model.ComposioReadiness
 import com.zeroclaw.android.model.OfficialPlugins
 import com.zeroclaw.android.service.sandbox.SandboxState
 import com.zeroclaw.android.ui.component.SettingsToggleRow
+import com.zeroclaw.android.ui.component.setup.DeepLinkButton
 import com.zeroclaw.android.ui.screen.settings.SettingsViewModel
 import com.zeroclaw.android.ui.screen.settings.googleworkspace.ALL_GWS_SERVICES
 import com.zeroclaw.android.ui.screen.settings.googleworkspace.GWS_SERVICE_LABELS
 import com.zeroclaw.android.ui.theme.zeroAssistOutlinedTextFieldColors
 import com.zeroclaw.android.ui.theme.zeroAssistSecondaryActionButtonColors
+import com.zeroclaw.android.util.ExternalAppLauncher
+
 /** Available web search engine options. */
 private val WEB_SEARCH_ENGINES = listOf("duckduckgo", "brave")
 
@@ -392,6 +395,12 @@ private fun ComposioConfig(
         singleLine = true,
         enabled = settings.composioEnabled,
         visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+    DeepLinkButton(
+        target = ExternalAppLauncher.COMPOSIO_API_KEYS,
         modifier = Modifier.fillMaxWidth(),
     )
 

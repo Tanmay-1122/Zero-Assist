@@ -201,6 +201,10 @@ data object SetupRoute
 
 // ====== Hardware Expansion Routes ======
 
+/** Offline Mode model management and context policy screen. */
+@Serializable
+data object OfflineModeRoute
+
 /** Hardware devices management hub screen. */
 @Serializable
 data object HardwareDevicesRoute

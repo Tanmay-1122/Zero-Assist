@@ -297,6 +297,10 @@ private class TestSettingsRepository : SettingsRepository {
         _settings.value = _settings.value.copy(memoryAutoSave = enabled)
     }
 
+    override suspend fun setOfflineModeMemoryEnabled(enabled: Boolean) {
+        _settings.value = _settings.value.copy(offlineModeMemoryEnabled = enabled)
+    }
+
     override suspend fun setIdentityJson(json: String) {
         _settings.value = _settings.value.copy(identityJson = json)
     }

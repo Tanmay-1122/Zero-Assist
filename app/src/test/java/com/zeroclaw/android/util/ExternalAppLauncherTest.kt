@@ -85,6 +85,21 @@ class ExternalAppLauncherTest {
     }
 
     @Nested
+    @DisplayName("Composio target")
+    inner class ComposioTarget {
+        @Test
+        @DisplayName("COMPOSIO_API_KEYS opens the project API keys page")
+        fun `COMPOSIO_API_KEYS opens project API keys page`() {
+            assertEquals(
+                "https://platform.composio.dev/settings/api-keys",
+                ExternalAppLauncher.COMPOSIO_API_KEYS.uri,
+            )
+            assertEquals("Get Composio API Key", ExternalAppLauncher.COMPOSIO_API_KEYS.label)
+            assertNull(ExternalAppLauncher.COMPOSIO_API_KEYS.fallbackUri)
+        }
+    }
+
+    @Nested
     @DisplayName("providerConsoleTarget")
     inner class ProviderConsoleTarget {
         @Test

@@ -54,6 +54,9 @@ internal class TestSettingsRepository : SettingsRepository {
 
     override suspend fun setMemoryAutoSave(enabled: Boolean) = _settings.update { it.copy(memoryAutoSave = enabled) }
 
+    override suspend fun setOfflineModeMemoryEnabled(enabled: Boolean) =
+        _settings.update { it.copy(offlineModeMemoryEnabled = enabled) }
+
     override suspend fun setIdentityJson(json: String) = _settings.update { it.copy(identityJson = json) }
 
     override suspend fun setAutonomyLevel(level: String) = _settings.update { it.copy(autonomyLevel = level) }

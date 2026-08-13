@@ -272,6 +272,14 @@ fun ZeroAssistNavHost(
         }
 
         // ====== Hardware Routes ======
+        composable<OfflineModeRoute> {
+            LiteRTModelsScreen(
+                edgeMargin = edgeMargin,
+                title = "Offline Mode",
+                showOfflineModeSettings = true,
+            )
+        }
+
         composable<HardwareDevicesRoute> {
             HardwareDevicesScreen(
                 edgeMargin = edgeMargin,

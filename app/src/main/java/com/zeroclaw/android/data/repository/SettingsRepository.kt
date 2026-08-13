@@ -155,6 +155,9 @@ interface SettingsRepository {
      */
     suspend fun setMemoryAutoSave(enabled: Boolean)
 
+    /** Toggles recalled memory in Offline Mode. */
+    suspend fun setOfflineModeMemoryEnabled(enabled: Boolean)
+
     /**
      * Updates the AIEOS identity JSON blob.
      *

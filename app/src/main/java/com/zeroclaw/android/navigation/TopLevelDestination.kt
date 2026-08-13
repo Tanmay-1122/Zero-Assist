@@ -8,14 +8,14 @@ package com.zeroclaw.android.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SmartToy
-import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -60,12 +60,12 @@ enum class TopLevelDestination(
         route = TerminalRoute(),
     ),
 
-    /** Hardware device management and control. */
-    HARDWARE(
-        selectedIcon = Icons.Filled.SportsEsports,
-        unselectedIcon = Icons.Outlined.SportsEsports,
-        label = "Hardware",
-        route = HardwareDevicesRoute,
+    /** Downloaded local models and Offline Mode context policy. */
+    OFFLINE_MODE(
+        selectedIcon = Icons.Filled.Memory,
+        unselectedIcon = Icons.Outlined.Memory,
+        label = "Offline Mode",
+        route = OfflineModeRoute,
     ),
 
     /** Application settings and configuration. */

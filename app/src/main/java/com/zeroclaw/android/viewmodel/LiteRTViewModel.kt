@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -104,6 +105,23 @@ class LiteRTViewModel(
 
     /** Observable pass-through — needed for screens collecting engineState directly. */
     val engineState: StateFlow<EngineState> = engine.engineState
+
+    /** Whether recalled memory is allowed in Offline Mode prompts. */
+    val offlineModeMemoryEnabled: StateFlow<Boolean> =
+        app.settingsRepository.settings
+            .map { it.offlineModeMemoryEnabled }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                false,
+            )
+
+    /** Persists the Offline Mode memory preference. */
+    fun setOfflineModeMemoryEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            app.settingsRepository.setOfflineModeMemoryEnabled(enabled)
+        }
+    }
 
     // ---------------------------------------------------------------------------
     // Download operations

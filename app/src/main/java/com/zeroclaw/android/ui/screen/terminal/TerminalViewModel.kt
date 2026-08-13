@@ -63,6 +63,7 @@ import com.zeroclaw.android.service.termux.TermuxRuntimeContract
 import com.zeroclaw.android.service.getBackgroundProcessLogger
 import com.zeroclaw.android.service.InferenceMessage
 import com.zeroclaw.android.service.EngineState
+import com.zeroclaw.android.service.SettingsBackedOfflineMemoryContextProvider
 import com.zeroclaw.android.util.ErrorSanitizer
 import com.zeroclaw.android.util.ImageProcessor
 import kotlinx.coroutines.CancellationException
@@ -106,6 +107,11 @@ class TerminalViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
     private val app = application as ZeroClawApplication
+    private val offlineMemoryContextProvider =
+        SettingsBackedOfflineMemoryContextProvider(
+            settingsRepository = app.settingsRepository,
+            memoryBridge = app.memoryBridge,
+        )
     private val repository = app.terminalEntryRepository
     private val logRepository = app.logRepository
     private val settingsRepository = app.settingsRepository
@@ -808,7 +814,7 @@ class TerminalViewModel(
             listener.onThinking("")
             val history = repository.entries.first()
                 .filterChatConversationEntries()
-                .takeLast(MAX_SESSION_SEED_MESSAGES)
+                .takeLast(MAX_OFFLINE_HISTORY_MESSAGES)
                 .map { entry ->
                     InferenceMessage(
                         role = if (entry.entryType == ENTRY_TYPE_INPUT) "user" else "assistant",
@@ -817,7 +823,7 @@ class TerminalViewModel(
                 } + InferenceMessage(role = "user", content = message)
             val response = engine.chat(
                 messages = history,
-                systemPrompt = null,
+                systemPrompt = offlineMemoryContextProvider.contextFor(message),
             )
             listener.onResponseChunk(response)
             listener.onComplete(response)
@@ -2351,6 +2357,7 @@ class TerminalViewModel(
 
         /** Maximum number of historical messages to re-seed into the native session. */
         private const val MAX_SESSION_SEED_MESSAGES = 50  // Reduced from 200 for 75% token savings
+        private const val MAX_OFFLINE_HISTORY_MESSAGES = 12
 
         /** Maximum tool output text retained in the background process details. */
         private const val MAX_TOOL_OUTPUT_DETAILS_CHARS = 2_000

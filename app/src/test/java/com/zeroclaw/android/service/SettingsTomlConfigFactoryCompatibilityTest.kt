@@ -237,6 +237,7 @@ class SettingsTomlConfigFactoryCompatibilityTest {
                 "stripThinkingTags",
                 "fallbackProviders",
                 "fallbackProviderConfigsJson",
+                "offlineModeMemoryEnabled",
                 "terminalAutoDelegateEnabled",
                 "voiceWakeupRequested",
                 "theme",
