@@ -1,0 +1,238 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CognitiveComplexMethod:AddAgentViewModel.kt$AddAgentViewModel$fun saveAgent(): Flow&lt;SaveResult></ID>
+    <ID>CognitiveComplexMethod:AgentConversationEngine.kt$AgentConversationEngine$suspend fun sendMessage( agent: Agent, userMessage: String, onChunk: suspend (String) -> Unit, onComplete: suspend (String) -> Unit, onError: suspend (String) -> Unit, )</ID>
+    <ID>CognitiveComplexMethod:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$private suspend fun processAgentTurn( agent: Agent, prompt: String, originatingUserMessage: String, statusTask: String, allowDelegation: Boolean, )</ID>
+    <ID>CyclomaticComplexMethod:AddAgentViewModel.kt$AddAgentViewModel$fun updateField(field: AgentField, value: Any)</ID>
+    <ID>CyclomaticComplexMethod:AgentConversationEngine.kt$AgentConversationEngine$suspend fun sendMessage( agent: Agent, userMessage: String, onChunk: suspend (String) -> Unit, onComplete: suspend (String) -> Unit, onError: suspend (String) -> Unit, )</ID>
+    <ID>LongMethod:AgentConversationEngine.kt$AgentConversationEngine$suspend fun sendMessage( agent: Agent, userMessage: String, onChunk: suspend (String) -> Unit, onComplete: suspend (String) -> Unit, onError: suspend (String) -> Unit, )</ID>
+    <ID>LongMethod:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$private suspend fun processAgentTurn( agent: Agent, prompt: String, originatingUserMessage: String, statusTask: String, allowDelegation: Boolean, )</ID>
+    <ID>LongMethod:SyncRepository.kt$SyncRepository$suspend fun uploadToDrive()</ID>
+    <ID>LongParameterList:AgentChatMessage.kt$AgentChatMessage.Companion$( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, content: String, )</ID>
+    <ID>LongParameterList:AgentChatMessage.kt$AgentChatMessage.Companion$( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, content: String, targetAgentId: String, )</ID>
+    <ID>LongParameterList:AgentChatMessage.kt$AgentChatMessage.Companion$( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, content: String, targetAgentId: String, requiresApproval: Boolean = false, )</ID>
+    <ID>LongParameterList:AgentChatMessage.kt$AgentChatMessage.Companion$( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, content: String, targetAgentId: String? = null, )</ID>
+    <ID>LongParameterList:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, messageType: AgentMessageType, targetAgentId: String? = null, )</ID>
+    <ID>LongParameterList:SyncRepository.kt$SyncRepository$( private val context: Context, private val settingsDataStore: DataStore&lt;Preferences>, private val driveBackupManager: DriveBackupManager, private val agentDao: AgentDao, private val pluginDao: PluginDao, private val connectedChannelDao: ConnectedChannelDao, )</ID>
+    <ID>MagicNumber:AddAgentViewModel.kt$AddAgentViewModel$20</ID>
+    <ID>MagicNumber:AgentFormComponents.kt$6</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0.5f</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0.82f</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0.88f</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0.9f</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0xFF5C4300</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$0xFFFFF5D6</ID>
+    <ID>MagicNumber:AgentGroupChatComponents.kt$3</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0.18f</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0xFF16A34A</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0xFF4A7CFF</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0xFF8B5CF6</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0xFFEAB308</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$0xFFF28C28</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$140</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$210</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$280</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$2f</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$3_000</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$3f</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$420</ID>
+    <ID>MagicNumber:AgentStatusComponents.kt$70</ID>
+    <ID>MagicNumber:ConnectionsHubScreen.kt$3</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$0.5f</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$10f</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$20f</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$250</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$300</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$3f</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$60</ID>
+    <ID>MagicNumber:HalfCircleNavBar.kt$8f</ID>
+    <ID>MagicNumber:SyncStatusIndicator.kt$3000</ID>
+    <ID>MagicNumber:VisibleAgentChatFormatter.kt$VisibleAgentChatFormatter$3</ID>
+    <ID>MagicNumber:WorkManagerScheduler.kt$WorkManagerScheduler$6</ID>
+    <ID>MatchingDeclarationName:AgentMentionUtils.kt$MentionTargetMatch</ID>
+    <ID>MatchingDeclarationName:HalfCircleNavBar.kt$NavItem</ID>
+    <ID>OutdatedDocumentation:Agent.kt$Agent</ID>
+    <ID>OutdatedDocumentation:AgentChatMessageEntity.kt$AgentFamilyEntity</ID>
+    <ID>OutdatedDocumentation:AgentDetailScreen.kt$@Composable fun AgentDetailScreen( agentId: String, onSaved: () -> Unit, onDeleted: () -> Unit, onOpenInGroupChat: (String) -> Unit = {}, onNavigateToAddConnection: () -> Unit, edgeMargin: Dp, restartRequired: Boolean = false, onRestartDaemon: () -> Unit = {}, detailViewModel: AgentDetailViewModel = viewModel(), modifier: Modifier = Modifier, )</ID>
+    <ID>OutdatedDocumentation:AgentEntity.kt$AgentEntity</ID>
+    <ID>OutdatedDocumentation:AgentsScreen.kt$@Composable fun AgentsContent( state: AgentsState, edgeMargin: Dp, onNavigateToDetail: (String) -> Unit, onSearchChange: (String) -> Unit, onToggleAgent: (String) -> Unit, showSearch: Boolean = true, modifier: Modifier = Modifier, )</ID>
+    <ID>OutdatedDocumentation:AgentsScreen.kt$@Composable private fun AgentListItem( agent: Agent, liveState: AgentLiveState?, onToggle: () -> Unit, onClick: () -> Unit, )</ID>
+    <ID>OutdatedDocumentation:AgentsScreen.kt$AgentsState</ID>
+    <ID>OutdatedDocumentation:ConnectionsHubScreen.kt$@Composable fun ConnectionsHubScreen( onNavigateToAgentDetail: (String) -> Unit, onNavigateToAddAgent: () -> Unit, onNavigateToGroupChat: () -> Unit, onNavigateToPluginDetail: (String) -> Unit, onNavigateToChannelDetail: (String?, String?) -> Unit, edgeMargin: Dp, agentsViewModel: AgentsViewModel = viewModel(), pluginsViewModel: PluginsViewModel = viewModel(), skillsViewModel: SkillsViewModel = viewModel(), channelsViewModel: ChannelsViewModel = viewModel(), initialTabIndex: Int = 1, modifier: Modifier = Modifier, )</ID>
+    <ID>OutdatedDocumentation:DaemonServiceBridge.kt$DaemonServiceBridge</ID>
+    <ID>OutdatedDocumentation:SettingsScreen.kt$@Composable fun SettingsScreen( backupViewModel: BackupViewModel, onNavigate: (SettingsNavAction) -> Unit, onRerunWizard: () -> Unit, edgeMargin: Dp, settingsViewModel: SettingsViewModel = viewModel(), restartRequired: Boolean = false, onRestartDaemon: () -> Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>OutdatedDocumentation:SettingsScreen.kt$@Composable internal fun SettingsContent( settings: AppSettings, restartRequired: Boolean, edgeMargin: Dp, onNavigate: (SettingsNavAction) -> Unit, onRerunWizard: () -> Unit, onRestartDaemon: () -> Unit, onThemeSelected: (ThemeMode) -> Unit, backupViewModel: BackupViewModel, modifier: Modifier = Modifier, )</ID>
+    <ID>OutdatedDocumentation:SyncRepository.kt$SyncStatus</ID>
+    <ID>ReturnCount:AgentMentionUtils.kt$internal fun findTrailingMentionQuery(text: String): String?</ID>
+    <ID>SwallowedException:AgentChatMapper.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AddAgentViewModel.kt$AddAgentViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AgentChatMapper.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AgentConversationEngine.kt$AgentConversationEngine$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:SyncRepository.kt$SyncRepository$e: Exception</ID>
+    <ID>TooManyFunctions:AgentGroupChatViewModel.kt$AgentGroupChatViewModel : AndroidViewModelAgentGroupChatSink</ID>
+    <ID>TooManyFunctions:DaemonServiceBridge.kt$DaemonServiceBridge</ID>
+    <ID>UndocumentedPublicClass:AddAgentViewModel.kt$SaveResult$Error : SaveResult</ID>
+    <ID>UndocumentedPublicClass:AddAgentViewModel.kt$SaveResult$Success : SaveResult</ID>
+    <ID>UndocumentedPublicClass:AgentChatMessage.kt$AgentChatMessage$Companion</ID>
+    <ID>UndocumentedPublicClass:BackupViewModel.kt$BackupViewModel : ViewModel</ID>
+    <ID>UndocumentedPublicClass:DriveBackupManager.kt$DriveBackupManager</ID>
+    <ID>UndocumentedPublicClass:DriveBackupSyncWorker.kt$DriveBackupSyncWorker : CoroutineWorker</ID>
+    <ID>UndocumentedPublicClass:HalfCircleNavBar.kt$NavItem</ID>
+    <ID>UndocumentedPublicClass:RoomChannelConfigRepository.kt$RoomChannelConfigRepository : ChannelConfigRepository</ID>
+    <ID>UndocumentedPublicClass:RoomPluginRepository.kt$RoomPluginRepository : PluginRepository</ID>
+    <ID>UndocumentedPublicClass:RoomPluginRepository.kt$RoomPluginRepository$Companion</ID>
+    <ID>UndocumentedPublicClass:WorkManagerScheduler.kt$WorkManagerScheduler</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatScreen.kt$@Composable fun ActiveAgentsBar( agents: List&lt;Agent>, liveStates: Map&lt;String, AgentLiveState>, highlightedAgentId: String? = null, modifier: Modifier = Modifier, )</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatScreen.kt$@Composable fun AgentChip( agent: Agent, liveState: AgentLiveState?, isHighlighted: Boolean = false, modifier: Modifier = Modifier, )</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatScreen.kt$@Composable fun AgentGroupChatScreenPreview()</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GroupChatTopBar( familyId: String, agentCount: Int, hasPendingApprovals: Boolean, liveStates: Map&lt;String, AgentLiveState>, highlightedAgentName: String?, onNavigateBack: () -> Unit, onSettings: () -> Unit, onAddAgent: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentAssigning(fromAgent: Agent, toAgent: Agent, taskSummary: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentResult(agent: Agent, summary: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentStatusUpdate(agent: Agent, status: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentStreamingChunk(messageId: String, chunk: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentTypingStart(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatSink.kt$AgentGroupChatSink$fun onAgentTypingStop(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatState$fun liveStateFor(agentId: String): AgentLiveState?</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun addMessage(message: AgentChatMessage)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun addMessages(messages: List&lt;AgentChatMessage>)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun appendToStreamingMessage(messageId: String, text: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun approveMessage(messageId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun approveTask(messageId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun clearMessages()</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun completeStreamingMessage(messageId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun rejectMessage(messageId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun rejectTask(messageId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun selectMentionTarget(agent: Agent?)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun sendUserMessage(text: String, mentionedAgentId: String? = null)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun setFamilyId(familyId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun startStreamingMessage( senderId: String, senderName: String, senderAvatar: String, senderColor: Long, senderRole: AgentRole, messageType: AgentMessageType, targetAgentId: String? = null, ): String</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun submitUserMessage(content: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun updateMessage(messageId: String, update: (AgentChatMessage) -> AgentChatMessage)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$fun updateUserInput(text: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$suspend fun delegateTaskWithApproval( masterAgent: Agent, subAgent: Agent, task: String, rejectionResponse: String = "Delegation was rejected. I will re-plan instead.", ): Boolean</ID>
+    <ID>UndocumentedPublicFunction:AgentStatusComponents.kt$@Composable fun AgentStatusDot( status: AgentStatus, modifier: Modifier = Modifier, )</ID>
+    <ID>UndocumentedPublicFunction:AgentStatusRepository.kt$AgentStatusRepository$fun clearStatus(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:AgentStatusRepository.kt$AgentStatusRepository$fun getStatus(agentId: String): AgentLiveState?</ID>
+    <ID>UndocumentedPublicFunction:AgentStatusRepository.kt$AgentStatusRepository$fun updateStatus( agentId: String, status: AgentStatus, task: String = "", )</ID>
+    <ID>UndocumentedPublicFunction:BackupSettingsSection.kt$@Composable fun BackupSettingsSection(viewModel: BackupViewModel)</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun backupNow()</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun getSignInIntent(context: Context): Intent</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun handleSignInResult(data: Intent?)</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun onDataChanged()</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun restoreFromDrive()</ID>
+    <ID>UndocumentedPublicFunction:BackupViewModel.kt$BackupViewModel$fun signOut(context: Context)</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun clearAgentLiveState(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun emitAgentStreamingChunk(messageId: String, chunk: String)</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun emitAgentTypingStart(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun emitAgentTypingStop(agentId: String)</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun markAgentError( agentId: String, task: String = "", )</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun markAgentExecuting( agentId: String, task: String = "", )</ID>
+    <ID>UndocumentedPublicFunction:DaemonServiceBridge.kt$DaemonServiceBridge$fun markAgentWaiting( agentId: String, task: String = "", )</ID>
+    <ID>UndocumentedPublicFunction:DriveBackupManager.kt$DriveBackupManager$suspend fun backupToDrive(accountEmail: String, filename: String = BACKUP_FILE_NAME)</ID>
+    <ID>UndocumentedPublicFunction:DriveBackupManager.kt$DriveBackupManager$suspend fun download(accountEmail: String): BackupData?</ID>
+    <ID>UndocumentedPublicFunction:DriveBackupManager.kt$DriveBackupManager$suspend fun restoreFromDrive(accountEmail: String): String?</ID>
+    <ID>UndocumentedPublicFunction:DriveBackupManager.kt$DriveBackupManager$suspend fun upload(accountEmail: String, data: BackupData): Boolean</ID>
+    <ID>UndocumentedPublicFunction:HalfCircleNavBar.kt$@Composable fun HalfCircleNavScaffold( items: List&lt;NavItem>, selectedIndex: Int, onItemSelected: (Int) -> Unit, modifier: Modifier = Modifier, content: @Composable (PaddingValues) -> Unit )</ID>
+    <ID>UndocumentedPublicFunction:LoginScreen.kt$@Composable fun LoginScreen(viewModel: BackupViewModel)</ID>
+    <ID>UndocumentedPublicFunction:SyncStatusIndicator.kt$@Composable fun SyncStatusIndicator(status: SyncStatus)</ID>
+    <ID>UndocumentedPublicFunction:WorkManagerScheduler.kt$WorkManagerScheduler$fun cancelPeriodic(context: Context)</ID>
+    <ID>UndocumentedPublicFunction:WorkManagerScheduler.kt$WorkManagerScheduler$fun schedulePeriodic(context: Context)</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$AVATAR</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$CONNECTION_ID</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$DROIDRUN_CONNECTION_ID</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$DROIDRUN_ENABLED</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$DROIDRUN_MODEL_NAME</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$DROIDRUN_PROVIDER_ID</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$IS_ENABLED</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$IS_MASTER</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$MAX_DEPTH</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$MODEL_NAME</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$NAME</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$PRIORITY</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$PROVIDER</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$ROLE</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$SYSTEM_PROMPT</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$TAGS</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$TEMPERATURE</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$AgentField$USE_GLOBAL_TEMPERATURE</ID>
+    <ID>UndocumentedPublicProperty:AddAgentViewModel.kt$SaveResult.Error$val message: String</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val accentColor: Long = 0xFF6200EE</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val avatar: String = ""</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val isMaster: Boolean = false</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val priority: Int = 0</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val role: AgentRole = AgentRole.GENERAL</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val tags: List&lt;String> = emptyList()</ID>
+    <ID>UndocumentedPublicProperty:Agent.kt$Agent$val templateId: String? = null</ID>
+    <ID>UndocumentedPublicProperty:AgentChatMapper.kt$AgentFamily$val agentIds: List&lt;String></ID>
+    <ID>UndocumentedPublicProperty:AgentChatMapper.kt$AgentFamily$val createdAt: Long</ID>
+    <ID>UndocumentedPublicProperty:AgentChatMapper.kt$AgentFamily$val id: String</ID>
+    <ID>UndocumentedPublicProperty:AgentChatMapper.kt$AgentFamily$val lastMessageTime: Long</ID>
+    <ID>UndocumentedPublicProperty:AgentChatMapper.kt$AgentFamily$val name: String</ID>
+    <ID>UndocumentedPublicProperty:AgentChatMessageEntity.kt$AgentFamilyEntity$@ColumnInfo(name = "agent_ids_json") val agentIdsJson: String</ID>
+    <ID>UndocumentedPublicProperty:AgentConversationEngine.kt$ConversationMessage$val content: String</ID>
+    <ID>UndocumentedPublicProperty:AgentConversationEngine.kt$ConversationMessage$val role: String</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "accent_color", defaultValue = "-10420225") val accentColor: Long = 0xFF6200EE</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "avatar", defaultValue = "") val avatar: String = ""</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "is_master", defaultValue = "0") val isMaster: Boolean = false</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "priority", defaultValue = "0") val priority: Int = 0</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "role", defaultValue = "GENERAL") val role: String = "GENERAL"</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "tags_json", defaultValue = "[]") val tagsJson: String = "[]"</ID>
+    <ID>UndocumentedPublicProperty:AgentEntity.kt$AgentEntity$@ColumnInfo(name = "template_id") val templateId: String? = null</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val activeAgents: List&lt;Agent> = emptyList()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val agents: Map&lt;String, Agent> = emptyMap()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val hasPendingApprovals: Boolean get() = pendingApprovals.isNotEmpty()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val isMasterPresent: Boolean = false</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val liveStates: Map&lt;String, AgentLiveState> = emptyMap()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val masterAgent: Agent? get() = activeAgents.find { it.isMaster || it.role == AgentRole.MASTER }</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val messages: List&lt;AgentChatMessage> = emptyList()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val pendingApprovals: List&lt;AgentChatMessage> get() = messages.filter { it.requiresApproval &amp;&amp; it.approvalState == ApprovalState.PENDING }</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val subAgents: List&lt;Agent> get() = activeAgents.filterNot { it.isMaster || it.role == AgentRole.MASTER }</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatState$val typingAgentIds: Set&lt;String> = emptySet()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$// Backward-compatible alias for existing UI code. val typingAgentIds: StateFlow&lt;Set&lt;String>> = typingAgents</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val activeAgents: StateFlow&lt;List&lt;Agent>> = agentRepository.activeAgentsByPriority.stateIn( scope = viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList(), )</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val chatState: StateFlow&lt;AgentGroupChatState> = combine( messages, typingAgents, agentRepository.agents, activeAgents, liveStates, ) { currentMessages, currentTypingAgents, allAgents, currentActiveAgents, currentLiveStates -> AgentGroupChatState( messages = currentMessages, typingAgentIds = currentTypingAgents, isMasterPresent = currentActiveAgents.any { it.isMaster || it.role == AgentRole.MASTER }, agents = allAgents.associateBy { it.id }, activeAgents = currentActiveAgents, liveStates = currentLiveStates, ) }.stateIn( scope = viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = AgentGroupChatState(), )</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val familyId: StateFlow&lt;String> = _familyId.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val liveStates: StateFlow&lt;Map&lt;String, AgentLiveState>> = daemonBridge.agentLiveStates</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val messages: StateFlow&lt;List&lt;AgentChatMessage>> = _messages.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val pendingApproval: StateFlow&lt;AgentChatMessage?> = messages .map { currentMessages -> currentMessages.lastOrNull { it.requiresApproval &amp;&amp; it.approvalState == ApprovalState.PENDING } }.stateIn( scope = viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = null, )</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val selectedMentionTarget: StateFlow&lt;Agent?> = _selectedMentionTarget.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val typingAgents: StateFlow&lt;Set&lt;String>> = _typingAgentIds.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentGroupChatViewModel.kt$AgentGroupChatViewModel$val userInputText: StateFlow&lt;String> = _userInputText.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$ANALYST : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$CODER : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$EXECUTOR : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$GENERAL : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$MASTER : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$PLANNER : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$RESEARCHER : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentRole.kt$AgentRole$WRITER : AgentRole</ID>
+    <ID>UndocumentedPublicProperty:AgentStatusRepository.kt$AgentStatusRepository$val statuses: StateFlow&lt;Map&lt;String, AgentLiveState>> = _statuses.asStateFlow()</ID>
+    <ID>UndocumentedPublicProperty:AgentsScreen.kt$AgentsState$val liveStates: Map&lt;String, AgentLiveState></ID>
+    <ID>UndocumentedPublicProperty:BackupViewModel.kt$BackupViewModel$val isSignedIn: MutableStateFlow&lt;Boolean> = MutableStateFlow(false)</ID>
+    <ID>UndocumentedPublicProperty:BackupViewModel.kt$BackupViewModel$val syncStatus: StateFlow&lt;SyncStatus> = syncRepository.syncStatus</ID>
+    <ID>UndocumentedPublicProperty:BackupViewModel.kt$BackupViewModel$val userEmail: MutableStateFlow&lt;String?> = MutableStateFlow(null)</ID>
+    <ID>UndocumentedPublicProperty:HalfCircleNavBar.kt$NavItem$val icon: ImageVector</ID>
+    <ID>UndocumentedPublicProperty:HalfCircleNavBar.kt$NavItem$val label: String</ID>
+    <ID>UndocumentedPublicProperty:HalfCircleNavBar.kt$val appNavItems = listOf( NavItem("Dashboard", Icons.Default.Dashboard), NavItem("Connections", Icons.Default.SmartToy), NavItem("Plugins", Icons.Default.Extension), NavItem("Terminal", Icons.Default.Terminal), NavItem("DroidRun", Icons.Default.PlayArrow), NavItem("Settings", Icons.Outlined.Settings) )</ID>
+    <ID>UndocumentedPublicProperty:Route.kt$AgentGroupChatRoute$val familyId: String = "Active"</ID>
+    <ID>UndocumentedPublicProperty:Route.kt$AgentGroupChatRoute$val highlightedAgentId: String? = null</ID>
+    <ID>UndocumentedPublicProperty:Route.kt$ConnectionsHubRoute$val tabIndex: Int = 0</ID>
+    <ID>UndocumentedPublicProperty:SyncRepository.kt$SyncStatus$FAILED</ID>
+    <ID>UndocumentedPublicProperty:SyncRepository.kt$SyncStatus$IDLE</ID>
+    <ID>UndocumentedPublicProperty:SyncRepository.kt$SyncStatus$SUCCESS</ID>
+    <ID>UndocumentedPublicProperty:SyncRepository.kt$SyncStatus$SYNCING</ID>
+    <ID>UndocumentedPublicProperty:ZeroClawApplication.kt$ZeroClawApplication$val driveBackupManager: DriveBackupManager by lazy { DriveBackupManager(this) }</ID>
+    <ID>UndocumentedPublicProperty:ZeroClawApplication.kt$ZeroClawApplication$val syncRepository: SyncRepository by lazy { SyncRepository( context = this, settingsDataStore = settingsDataStore, driveBackupManager = driveBackupManager, agentDao = database.agentDao(), pluginDao = database.pluginDao(), connectedChannelDao = database.connectedChannelDao() ) }</ID>
+    <ID>UnusedParameter:AddAgentScreen.kt$edgeMargin: Dp</ID>
+    <ID>UnusedParameter:DriveBackupManager.kt$DriveBackupManager$accountEmail: String</ID>
+    <ID>UnusedParameter:DriveBackupManager.kt$DriveBackupManager$data: BackupData</ID>
+    <ID>UnusedParameter:DriveBackupManager.kt$DriveBackupManager$filename: String = BACKUP_FILE_NAME</ID>
+    <ID>UnusedParameter:SyncRepository.kt$SyncRepository$context: Context</ID>
+    <ID>UnusedPrivateProperty:AgentGroupChatScreen.kt$val statusColor = agentStatusColor(status)</ID>
+    <ID>UnusedPrivateProperty:DriveBackupManager.kt$DriveBackupManager$private val context: Context</ID>
+    <ID>UnusedPrivateProperty:DriveBackupManager.kt$private const val APP_DATA_FOLDER = "appDataFolder"</ID>
+    <ID>UnusedPrivateProperty:DriveBackupManager.kt$private const val MIME_TYPE = "application/json"</ID>
+  </CurrentIssues>
+</SmellBaseline>

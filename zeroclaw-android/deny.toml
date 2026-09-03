@@ -1,0 +1,53 @@
+[graph]
+targets = [
+    "aarch64-linux-android",
+    "x86_64-linux-android",
+]
+
+[advisories]
+unmaintained = "workspace"
+yanked = "warn"
+ignore = [
+    # rustls-webpki 0.102.x is pulled by rumqttc 0.25.1. The newer
+    # rustls-webpki 0.103.x copy is patched, and rumqttc has no newer
+    # compatible release yet. Keep these explicit until rumqttc can move.
+    { id = "RUSTSEC-2026-0049", reason = "rustls-webpki CRL matching bug in 0.102.x via rumqttc 0.25.1; awaiting rumqttc upgrade" },
+    { id = "RUSTSEC-2026-0098", reason = "rustls-webpki URI name constraints bug in 0.102.x via rumqttc 0.25.1; awaiting rumqttc upgrade" },
+    { id = "RUSTSEC-2026-0099", reason = "rustls-webpki wildcard name constraints bug in 0.102.x via rumqttc 0.25.1; awaiting rumqttc upgrade" },
+    { id = "RUSTSEC-2026-0104", reason = "rustls-webpki CRL parsing panic in 0.102.x via rumqttc 0.25.1; awaiting rumqttc upgrade" },
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+    "0BSD",
+    "CDLA-Permissive-2.0",
+    "CC0-1.0",
+]
+confidence-threshold = 0.8
+
+[[licenses.exceptions]]
+name = "ar_archive_writer"
+allow = ["Apache-2.0 WITH LLVM-exception"]
+
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

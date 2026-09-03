@@ -1,0 +1,124 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:preBuild UP-TO-DATE
+> Task :lib:preDebugBuild UP-TO-DATE
+> Task :app:ensureProotBinaries
+> Task :lib:writeDebugAarMetadata UP-TO-DATE
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :lib:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :lib:generateDebugResources UP-TO-DATE
+> Task :lib:packageDebugResources UP-TO-DATE
+> Task :lib:extractDeepLinksDebug UP-TO-DATE
+> Task :lib:processDebugManifest UP-TO-DATE
+> Task :lib:compileDebugLibraryResources UP-TO-DATE
+> Task :lib:parseDebugLocalResources UP-TO-DATE
+> Task :lib:generateDebugRFile UP-TO-DATE
+> Task :lib:rustUpTargetAddAndroidArmV7 UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :lib:cargoBuildAndroidArmV7Debug
+> Task :lib:cargoBuildAndroidArmV7Debug UP-TO-DATE
+> Task :lib:installUniffiBindgen UP-TO-DATE
+> Task :lib:mergeUniffiConfig UP-TO-DATE
+> Task :lib:buildUniffiBindings
+> Task :lib:buildUniffiBindings UP-TO-DATE
+> Task :lib:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:compileDebugKotlin UP-TO-DATE
+> Task :lib:javaPreCompileDebug UP-TO-DATE
+> Task :lib:compileDebugJavaWithJavac NO-SOURCE
+> Task :lib:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :lib:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :lib:processDebugJavaRes UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest
+
+GoalRuntimeBridgeTest > bridge streams tasks into the block runtime FAILED
+    org.junit.runners.model.TestTimedOutException at GoalRuntimeBridgeTest.kt:34
+
+GoalRuntimeBridgeTest > bridge renders a task tree container on progress FAILED
+    org.junit.runners.model.TestTimedOutException at GoalRuntimeBridgeTest.kt:74
+
+GoalSchedulerTest > emits progress events throughout execution FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:247
+
+GoalSchedulerTest > cancellation cancels running and pending tasks FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:148
+
+GoalSchedulerTest > executes parallel roots concurrently FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:80
+
+GoalSchedulerTest > task timeout marks task failed FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:166
+
+GoalSchedulerTest > respects per-capability backpressure FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:99
+
+GoalSchedulerTest > priority scheduling runs critical before low FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:118
+
+GoalSchedulerTest > dynamic graph update while running is picked up FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:202
+
+GoalSchedulerTest > executes sequential chain in dependency order FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:59
+
+GoalSchedulerTest > fails all tasks when root capability unknown FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:230
+
+GoalSchedulerTest > 1000 independent tasks complete under real concurrency FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSchedulerTest.kt:271
+
+GoalSecurityTest > scheduler blocks unauthorized tasks without executing them FAILED
+    org.junit.runners.model.TestTimedOutException at GoalSecurityTest.kt:81
+
+PerformanceTest > executes 1000 parallel tasks capped at concurrency limit FAILED
+    org.junit.runners.model.TestTimedOutException at PerformanceTest.kt:63
+
+PerformanceTest > broad fan-in merge handles 500 parallel producers FAILED
+    org.junit.runners.model.TestTimedOutException at PerformanceTest.kt:78
+
+PerformanceTest > executes a 1000 node chain within budget FAILED
+    org.junit.runners.model.TestTimedOutException at PerformanceTest.kt:46
+
+PersistenceTest > resume restarts an interrupted execution FAILED
+    org.junit.runners.model.TestTimedOutException at PersistenceTest.kt:120
+
+PersistenceTest > json store survives a fresh instance FAILED
+    java.lang.AssertionError at PersistenceTest.kt:69
+
+RecoveryTest > abort policy marks goal failed FAILED
+    org.junit.runners.model.TestTimedOutException at RecoveryTest.kt:258
+
+RecoveryTest > replan inserts alternative airports and continues without restart FAILED
+    org.junit.runners.model.TestTimedOutException at RecoveryTest.kt:179
+
+RecoveryTest > exhausted retries fail the task FAILED
+    org.junit.runners.model.TestTimedOutException at RecoveryTest.kt:83
+
+RecoveryTest > fallback provider recovery skips failing provider FAILED
+    org.junit.runners.model.TestTimedOutException at RecoveryTest.kt:102
+
+RecoveryTest > alternative capability recovery switches capabilities FAILED
+    org.junit.runners.model.TestTimedOutException at RecoveryTest.kt:149

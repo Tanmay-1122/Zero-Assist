@@ -1,0 +1,80 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:preBuild UP-TO-DATE
+> Task :lib:preDebugBuild UP-TO-DATE
+> Task :app:ensureProotBinaries
+> Task :app:preBuild
+> Task :lib:writeDebugAarMetadata UP-TO-DATE
+> Task :app:preDebugBuild
+> Task :lib:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :lib:generateDebugResources UP-TO-DATE
+> Task :lib:packageDebugResources UP-TO-DATE
+> Task :lib:extractDeepLinksDebug UP-TO-DATE
+> Task :lib:processDebugManifest UP-TO-DATE
+> Task :lib:compileDebugLibraryResources UP-TO-DATE
+> Task :lib:parseDebugLocalResources UP-TO-DATE
+> Task :lib:generateDebugRFile UP-TO-DATE
+> Task :lib:rustUpTargetAddAndroidArmV7 UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :lib:cargoBuildAndroidArmV7Debug UP-TO-DATE
+> Task :lib:installUniffiBindgen UP-TO-DATE
+> Task :lib:mergeUniffiConfig UP-TO-DATE
+> Task :lib:buildUniffiBindings UP-TO-DATE
+> Task :lib:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:compileDebugKotlin UP-TO-DATE
+> Task :lib:javaPreCompileDebug UP-TO-DATE
+> Task :lib:compileDebugJavaWithJavac NO-SOURCE
+> Task :lib:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestKotlin
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalRuntimeBridgeTest.kt:49:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalRuntimeBridgeTest.kt:85:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:62:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:85:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:104:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:134:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:149:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:152:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:170:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:188:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:204:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:214:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:233:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:253:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSchedulerTest.kt:276:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/GoalSecurityTest.kt:99:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:47:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:63:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PerformanceTest.kt:85:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/PersistenceTest.kt:146:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:66:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:88:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:133:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:163:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:205:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:238:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:243:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/RecoveryTest.kt:262:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/VerificationTest.kt:112:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/goal/VerificationTest.kt:154:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/AgentConversationEngineTest.kt:132:34 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'kotlin.Any?'.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/devicecontrol/DeviceControlExecutorTest.kt:244:20 Check for instance is always 'true'.
+w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/test/java/com/zeroclaw/android/service/devicecontrol/DeviceControlExecutorTest.kt:400:20 Check for instance is always 'true'.
+
+BUILD SUCCESSFUL in 1m 46s
+37 actionable tasks: 3 executed, 34 up-to-date

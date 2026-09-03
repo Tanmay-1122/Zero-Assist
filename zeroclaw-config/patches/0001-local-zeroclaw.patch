@@ -1,0 +1,61 @@
+diff --git a/zeroclaw/src/agent/history.rs b/zeroclaw/src/agent/history.rs
+index 95800e3e..021b042c 100644
+--- a/zeroclaw/src/agent/history.rs
++++ b/zeroclaw/src/agent/history.rs
+@@ -6,7 +6,7 @@ use std::path::Path;
+ /// Default trigger for auto-compaction when non-system message count exceeds this threshold.
+ /// Prefer passing the config-driven value via `run_tool_call_loop`; this constant is only
+ /// used when callers omit the parameter.
+-pub(crate) const DEFAULT_MAX_HISTORY_MESSAGES: usize = 50;
++pub(crate) const DEFAULT_MAX_HISTORY_MESSAGES: usize = 20;
+ 
+ /// Find the largest byte index `<= i` that is a valid char boundary.
+ /// MSRV-compatible replacement for `str::floor_char_boundary` (stable in 1.91).
+diff --git a/zeroclaw/src/providers/compatible.rs b/zeroclaw/src/providers/compatible.rs
+index 6ea8d2c5..befa5aa3 100644
+--- a/zeroclaw/src/providers/compatible.rs
++++ b/zeroclaw/src/providers/compatible.rs
+@@ -456,6 +456,7 @@ enum MessagePart {
+ #[derive(Debug, Serialize)]
+ struct ImageUrlPart {
+     url: String,
++    detail: String,
+ }
+ 
+ #[derive(Debug, Deserialize)]
+@@ -1370,7 +1371,10 @@ impl OpenAiCompatibleProvider {
+ 
+         for image_ref in image_refs {
+             parts.push(MessagePart::ImageUrl {
+-                image_url: ImageUrlPart { url: image_ref },
++                image_url: ImageUrlPart {
++                    url: image_ref,
++                    detail: "low".to_string(),
++                },
+             });
+         }
+ 
+diff --git a/zeroclaw/src/providers/openrouter.rs b/zeroclaw/src/providers/openrouter.rs
+index 9487fb6a..d2779d5b 100644
+--- a/zeroclaw/src/providers/openrouter.rs
++++ b/zeroclaw/src/providers/openrouter.rs
+@@ -50,6 +50,7 @@ enum MessagePart {
+ #[derive(Debug, Serialize)]
+ struct ImageUrlPart {
+     url: String,
++    detail: String,
+ }
+ 
+ #[derive(Debug, Deserialize)]
+@@ -293,7 +294,10 @@ impl OpenRouterProvider {
+ 
+         for image_ref in image_refs {
+             parts.push(MessagePart::ImageUrl {
+-                image_url: ImageUrlPart { url: image_ref },
++                image_url: ImageUrlPart {
++                    url: image_ref,
++                    detail: "low".to_string(),
++                },
+             });
+         }
+ 

@@ -1,0 +1,8 @@
+# External ZeroClaw TOML overlay
+#
+# This file is appended to the generated runtime config by Android startup.
+# Keep this additive: define sections/keys not emitted by the app UI builder.
+#
+# Example:
+# [skills]
+# open_skills_enabled = true

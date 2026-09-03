@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a problem in Zero-Assist
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest set of steps that shows the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version

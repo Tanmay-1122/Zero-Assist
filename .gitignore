@@ -1,0 +1,123 @@
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+.cargo/config.toml
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Android / Gradle
+*.iml
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Proot native libs (built by build-proot.sh) — committed to git for CI reproducibility.
+# Rebuild locally with: ./build-proot.sh
+
+# Rust-built zeroclaw native library (huge build artifact, rebuilt from zeroclaw/)
+app/src/main/jniLibs/armeabi-v7a/libzeroclaw.so
+
+# MCP config (local)
+.mcp.json
+
+# Design documents (local only)
+docs/
+doc/plans/
+
+# Hook scripts (local machine paths)
+scripts/hooks/
+
+# AI agent instructions (local only)
+.claude/
+CLAUDE.md
+agents.md
+
+# Agent task output files
+*.output
+
+# Git worktrees
+.worktrees/
+
+# Removed third-party/vendor snapshots
+/droidrun-main/
+
+# Temporary build / diagnostic output files
+gradle_out.txt
+gradle_trace.txt
+gradle_trace_utf8.txt
+out.txt
+out_gradle.txt
+latest_commit.patch
+latest_commit_utf8.patch
+zeroclaw/check.txt
+zeroclaw-android/clippy.log
+
+# Root-level diagnostic artifacts
+/app_unit_tests_after_ci_fix.txt
+/assemble*.txt
+/build*.log
+/build*.txt
+/cargo_review_test.log
+/ci_unit_tests.txt
+/compile*.txt
+/detekt*.txt
+/diff_output.txt
+/errors_clean.txt
+/gradle-*.txt
+/gradle-*.err.log
+/gradle-*.out.log
+/gradle-*.threads.log
+/gradle_review_test.log
+/hs_err_pid*.log
+/java_pid*.hprof
+/ksp*-err.txt
+/ksp*-out.txt
+/lib_unit_tests.txt
+/replay_pid*.log
+/roomagent_test*.txt
+/signing*.txt
+/uiagent-tests.*.log
+/wave1_*.png
+/wave1_*.xml
+/patch_*.py
+/insert_migration.py
+/patch_vm.ps1
+
+# Rust toolchain installer binary (not part of the project)
+rustup-init.exe
+
+
+# Build cache (local machines)
+.android-home/
+.android-user-home/
+.gradle-home/
+.gradle-home-test/
+.tmp/
+.tmp-tools/
+.kotlin/errors/
+.kotlin/sessions/
+

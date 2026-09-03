@@ -1,0 +1,7 @@
+[package]
+name = "zeroclaw-plugins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Plugin system stub"
+publish = false

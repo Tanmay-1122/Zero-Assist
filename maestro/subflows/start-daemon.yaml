@@ -1,0 +1,6 @@
+appId: com.zeroclaw.android
+---
+- tapOn: "Start Daemon"
+- extendedWaitUntil:
+    visible: "Running"
+    timeout: 10000

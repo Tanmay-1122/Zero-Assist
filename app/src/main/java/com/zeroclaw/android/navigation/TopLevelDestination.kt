@@ -1,0 +1,78 @@
+/*
+ * Copyright 2026 Zero-Assist Community
+ *
+ * Licensed under the MIT License. See LICENSE in the project root.
+ */
+
+package com.zeroclaw.android.navigation
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SmartToy
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.ui.graphics.vector.ImageVector
+
+/**
+ * Top-level navigation destinations displayed in the bottom navigation bar.
+ *
+ * Each entry defines both selected and unselected icons along with a
+ * content description label used for accessibility.
+ *
+ * @property selectedIcon Icon displayed when this destination is active.
+ * @property unselectedIcon Icon displayed when this destination is inactive.
+ * @property label Human-readable label for the destination.
+ * @property route Navigation route object for this destination.
+ */
+enum class TopLevelDestination(
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val label: String,
+    val route: Any,
+) {
+    /** Dashboard overview with daemon status and activity feed. */
+    DASHBOARD(
+        selectedIcon = Icons.Filled.Dashboard,
+        unselectedIcon = Icons.Outlined.Dashboard,
+        label = "Dashboard",
+        route = DashboardRoute,
+    ),
+
+    /** Combined hub for managing connections, plugins, and channels. */
+    HUB(
+        selectedIcon = Icons.Filled.SmartToy,
+        unselectedIcon = Icons.Outlined.SmartToy,
+        label = "Connections",
+        route = ConnectionsHubRoute(),
+    ),
+
+    /** Interactive terminal REPL for commands and scripting. */
+    TERMINAL(
+        selectedIcon = Icons.Filled.Terminal,
+        unselectedIcon = Icons.Outlined.Terminal,
+        label = "Terminal",
+        route = TerminalRoute(),
+    ),
+
+    /** Downloaded local models and Offline Mode context policy. */
+    OFFLINE_MODE(
+        selectedIcon = Icons.Filled.Memory,
+        unselectedIcon = Icons.Outlined.Memory,
+        label = "Offline Mode",
+        route = OfflineModeRoute,
+    ),
+
+    /** Application settings and configuration. */
+    SETTINGS(
+        selectedIcon = Icons.Filled.Settings,
+        unselectedIcon = Icons.Outlined.Settings,
+        label = "Settings",
+        route = SettingsRoute,
+    ),
+}
