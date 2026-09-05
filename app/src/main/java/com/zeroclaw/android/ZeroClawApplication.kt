@@ -117,6 +117,8 @@ import com.zeroclaw.android.service.OnDeviceImageDescriberBridge
 import com.zeroclaw.android.service.OnDeviceInferenceBridge
 import com.zeroclaw.android.service.LiteRTInferenceEngine
 import com.zeroclaw.android.service.LocalInferenceEngine
+import com.zeroclaw.android.service.needle.NeedleEngine
+import com.zeroclaw.android.service.needle.NeedleModelManager
 import com.zeroclaw.android.service.OnDeviceProofreaderBridge
 import com.zeroclaw.android.service.OnDeviceRewriterBridge
 import com.zeroclaw.android.service.OnDeviceSummarizerBridge
@@ -434,6 +436,16 @@ class ZeroClawApplication :
     /** Local on-device LiteRT LM inference engine. */
     val liteRtInferenceEngine: LocalInferenceEngine by lazy {
         LiteRTInferenceEngine(this)
+    }
+
+    /** Needle 2 native tool-calling engine (single process-global session). */
+    val needleEngine: NeedleEngine by lazy {
+        NeedleEngine(this)
+    }
+
+    /** Stages the bundled Needle 2 model file into app-private storage. */
+    val needleModelManager: NeedleModelManager by lazy {
+        NeedleModelManager(this)
     }
 
     /** Bridge for on-device text summarization. */

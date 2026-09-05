@@ -159,6 +159,13 @@ android {
             useLegacyPackaging = true
         }
     }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/needle/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 }
 
 tasks.withType<Test> {
@@ -433,4 +440,49 @@ private fun extractArSection(debFile: File, sectionName: String): ByteArray? {
 
 tasks.named("preBuild") {
     dependsOn(ensureProotBinaries)
+    dependsOn(ensureNeedleLib)
+}
+
+// ── Needle 2 prebuilt engine management ─────────────────────────────────────
+// Downloads android-arm64/libneedle.a from HuggingFace into
+// app/src/main/cpp/needle/libs/arm64-v8a/ when missing. The .a is a build-time
+// input only (gitignored); the runtime model (needle2.cact) ships as an asset.
+// Other ABIs compile a JNI stub (see app/src/main/cpp/needle/CMakeLists.txt).
+
+val needleLibVersion = "main"
+val needleLibMinBytes = 10_000_000L
+
+val ensureNeedleLib by tasks.registering {
+    group = "build setup"
+    description = "Download Needle 2 prebuilt engine (libneedle.a, arm64-v8a) if missing"
+
+    doLast {
+        val libFile = projectDir.resolve("src/main/cpp/needle/libs/arm64-v8a/libneedle.a")
+        if (libFile.isFile && libFile.length() >= needleLibMinBytes) {
+            logger.info("[needle] libneedle.a present (${libFile.length()} bytes)")
+            return@doLast
+        }
+        libFile.parentFile.mkdirs()
+        val url = "https://huggingface.co/Cactus-Compute/needle2/resolve/" +
+            "$needleLibVersion/android-arm64/libneedle.a?download=true"
+        logger.lifecycle("[needle] Downloading libneedle.a (~20MB) from HuggingFace...")
+        try {
+            URI(url).toURL().openStream().use { input: InputStream ->
+                libFile.outputStream().use { output: OutputStream -> input.copyTo(output) }
+            }
+        } catch (e: Exception) {
+            libFile.delete()
+            throw GradleException(
+                "Failed to download libneedle.a. Check network access to huggingface.co " +
+                    "or place android-arm64/libneedle.a at ${libFile.path} manually.", e
+            )
+        }
+        if (libFile.length() < needleLibMinBytes) {
+            libFile.delete()
+            throw GradleException(
+                "Downloaded libneedle.a is too small (${libFile.length()} bytes); deleted. Retry the build."
+            )
+        }
+        logger.lifecycle("[needle] Installed libneedle.a (${libFile.length()} bytes)")
+    }
 }

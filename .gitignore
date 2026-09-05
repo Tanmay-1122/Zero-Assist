@@ -41,6 +41,10 @@ desktop.ini
 # Rust-built zeroclaw native library (huge build artifact, rebuilt from zeroclaw/)
 app/src/main/jniLibs/armeabi-v7a/libzeroclaw.so
 
+# Needle 2 prebuilt engine (downloaded at build time from HuggingFace, ~20MB).
+# Fetched by the ensureNeedleLib Gradle task; see app/src/main/cpp/needle/.
+app/src/main/cpp/needle/libs/
+
 # MCP config (local)
 .mcp.json
 

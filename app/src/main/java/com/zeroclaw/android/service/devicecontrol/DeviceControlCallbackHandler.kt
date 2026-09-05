@@ -1,7 +1,12 @@
 package com.zeroclaw.android.service.devicecontrol
 
+import android.app.ActivityManager
+import android.content.Context
 import android.util.Log
+import com.zeroclaw.android.ZeroClawApplication
 import com.zeroclaw.android.service.DaemonServiceBridge
+import com.zeroclaw.android.service.needle.NeedleEngine
+import com.zeroclaw.android.service.needle.NeedleFlags
 import com.zeroclaw.ffi.DeviceControlHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +43,8 @@ class DeviceControlCallbackHandler(
         Log.i(TAG, "[$requestId] executeDeviceControl goal='$goal' maxSteps=$maxSteps thread=${Thread.currentThread().name}")
 
         return try {
-            val planner = ModelBackedDeviceControlPlanner(daemonBridge)
+            val planner: DeviceControlPlanner = needlePlannerOrNull()
+                ?: ModelBackedDeviceControlPlanner(daemonBridge)
             val executor = DeviceControlExecutor(context, planner, maxSteps = maxSteps)
 
             val result = runBlocking(Dispatchers.IO) {
@@ -97,6 +103,31 @@ class DeviceControlCallbackHandler(
         return null
     }
 
+        /**
+     * Needle-first planner when the feature flag is ON, the device ABI is
+     * supported, and the engine finished its daemon-start warm-up. Any miss
+     * returns null and the caller falls back to cloud-only behavior.
+     */
+    private fun needlePlannerOrNull(): DeviceControlPlanner? {
+        if (!NeedleFlags.plannerEnabled) return null
+        if (!NeedleEngine.isDeviceSupported()) return null
+        if (!hasEnoughRam()) return null
+        val app = context.applicationContext as? ZeroClawApplication ?: return null
+        if (!app.needleEngine.isReady()) return null
+        return NeedleFirstPlanner(
+            NeedleDeviceControlPlanner(app.needleEngine),
+            ModelBackedDeviceControlPlanner(daemonBridge),
+        )
+    }
+
+    private fun hasEnoughRam(): Boolean {
+        val activityManager =
+            context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memInfo)
+        return memInfo.totalMem >= MIN_TOTAL_RAM_BYTES
+    }
+
     private fun extractGoal(json: JSONObject): String =
         GOAL_KEYS
             .asSequence()
@@ -120,5 +151,8 @@ class DeviceControlCallbackHandler(
     companion object {
         private const val TAG = "DeviceControlCB"
         private val GOAL_KEYS = listOf("goal", "instruction", "command", "task", "request", "query", "text")
+
+        /** Minimum device RAM for the Needle path; below this, cloud-only. */
+        private const val MIN_TOTAL_RAM_BYTES = 3L * 1024 * 1024 * 1024
     }
 }

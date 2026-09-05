@@ -610,6 +610,12 @@ class ZeroClawDaemonService : Service() {
                                     daemonBridge = (application as ZeroClawApplication).daemonBridge,
                                 )
                             )
+                            // Needle warm-up runs parallel to bridge.start(): model copy +
+                            // load off the user-command path. No-ops on unsupported ABIs;
+                            // failures only log — the planner gate falls back to cloud.
+                            serviceScope.launch(Dispatchers.IO) {
+                                runCatching { warmNeedleEngine() }
+                            }
                             bridge.start(
                                 configToml = configToml,
                                 host = host,
@@ -650,6 +656,23 @@ class ZeroClawDaemonService : Service() {
                     releaseWakeLock()
                 }
             }
+    }
+
+    /**
+     * Eager Needle 2 warm-up: stage the bundled model and load it into the
+     * native engine. Called parallel to [bridge.start] from [attemptStart],
+     * never on a user-command path. Any failure only logs; an unready engine
+     * routes device control to the cloud planner via the callback gate.
+     */
+    private suspend fun warmNeedleEngine() {
+        if (!com.zeroclaw.android.service.needle.NeedleEngine.isDeviceSupported()) return
+        val app = application as ZeroClawApplication
+        val modelFile = app.needleModelManager.ensureModel()
+        if (!app.needleEngine.load(modelFile)) return
+        app.needleEngine.initialize(
+            com.zeroclaw.android.service.needle.NeedlePromptCompressor.SYSTEM_HINT,
+            com.zeroclaw.android.service.needle.NeedleToolSchema.toolsJson,
+        )
     }
 
     /**
