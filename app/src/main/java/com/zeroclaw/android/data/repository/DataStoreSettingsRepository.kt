@@ -49,8 +49,14 @@ class DataStoreSettingsRepository(
     private val context: Context,
     private val settingsDataStore: DataStore<Preferences>,
 ) : SettingsRepository {
-    private val securePrefs: SharedPreferences =
+    // Phase 1: keystore-backed prefs are created lazily instead of at
+    // construction. This repo is built in Application.onCreate on the main
+    // thread, and SecurePrefsProvider.create() does keystore + disk IO.
+    // First access happens on Dispatchers.IO via the settings-DataStore
+    // mapping; SYNCHRONIZED keeps a main-thread race correct without crashing.
+    private val securePrefs: SharedPreferences by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         SecurePrefsProvider.create(context, SECURE_SETTINGS_PREFS).first
+    }
 
     private val secureRevision = MutableStateFlow(0)
 

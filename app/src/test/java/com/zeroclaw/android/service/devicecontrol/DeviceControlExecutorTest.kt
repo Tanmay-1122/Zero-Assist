@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -679,7 +680,7 @@ class DeviceControlExecutorTest {
     @DisplayName("awaitUiChange replaces delay in recovery path")
     fun `recovery path uses event-driven wait`() = runTest {
         val recoveryTimeouts = mutableListOf<Long>()
-        every { mockService.waitForUiChange(any(), any(), any()) } answers {
+        coEvery { mockService.waitForUiChange(any(), any(), any()) } answers {
             if ((firstArg<String>()).startsWith("loop_recovery")) {
                 recoveryTimeouts.add(secondArg())
             }

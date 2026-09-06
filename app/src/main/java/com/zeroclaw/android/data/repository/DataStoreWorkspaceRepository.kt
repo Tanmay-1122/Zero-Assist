@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -46,12 +45,11 @@ class DataStoreWorkspaceRepository(
     private val context: Context,
 ) : WorkspaceRepository {
 
-    init {
-        // Ensure default workspace exists on first run.
-        runBlocking(Dispatchers.IO) {
-            ensureDefaultWorkspace()
-        }
-    }
+    // Phase 1: the old init block ran ensureDefaultWorkspace() via runBlocking,
+    // stalling the main thread on every cold start (this repo is built in
+    // Application.onCreate). The default-workspace seed now runs from an IO
+    // coroutine in ZeroClawApplication.onCreate; all readers observe Flows,
+    // so they update reactively once the seed completes.
 
     // NOTE: activeWorkspaceId MUST be declared before activeWorkspace because
     // activeWorkspace's initializer references it.

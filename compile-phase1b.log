@@ -1,14 +1,12 @@
-﻿Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
 > Task :lib:preBuild UP-TO-DATE
-> Task :lib:preDebugBuild UP-TO-DATE
 > Task :app:ensureProotBinaries
 > Task :app:preBuild
+> Task :lib:preDebugBuild UP-TO-DATE
 > Task :app:preDebugBuild
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :app:generateDebugBuildConfig UP-TO-DATE
 > Task :lib:writeDebugAarMetadata UP-TO-DATE
-> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
 > Task :lib:generateDebugResValues UP-TO-DATE
 > Task :lib:generateDebugResources UP-TO-DATE
 > Task :lib:packageDebugResources UP-TO-DATE
@@ -19,6 +17,7 @@
 > Task :lib:generateDebugRFile UP-TO-DATE
 > Task :lib:rustUpTargetAddAndroidArmV7 UP-TO-DATE
 > Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
 > Task :app:mapDebugSourceSetPaths UP-TO-DATE
 > Task :app:generateDebugResources UP-TO-DATE
 > Task :app:mergeDebugResources UP-TO-DATE
@@ -33,13 +32,13 @@
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:desugarDebugFileDependencies UP-TO-DATE
-> Task :lib:cargoBuildAndroidArmV7Debug
 > Task :app:checkDebugDuplicateClasses UP-TO-DATE
 > Task :app:mergeExtDexDebug UP-TO-DATE
 > Task :app:mergeDebugJniLibFolders UP-TO-DATE
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :lib:cargoBuildAndroidArmV7Debug
 > Task :lib:cargoBuildAndroidArmV7Debug UP-TO-DATE
 > Task :lib:installUniffiBindgen UP-TO-DATE
 > Task :lib:mergeUniffiConfig UP-TO-DATE
@@ -58,24 +57,22 @@
 > Task :lib:processDebugJavaRes UP-TO-DATE
 > Task :lib:bundleLibRuntimeToDirDebug UP-TO-DATE
 > Task :lib:rustUpTargetAddAndroidArm64 UP-TO-DATE
-> Task :app:kspDebugKotlin
-> Task :lib:cargoBuildAndroidArm64Debug
 > Task :app:mergeDebugAssets UP-TO-DATE
 > Task :app:compressDebugAssets UP-TO-DATE
-> Task :app:mergeLibDexDebug
-> Task :lib:cargoBuildAndroidArm64Debug UP-TO-DATE
-> Task :lib:findDynamicLibrariesAndroidArm64Debug
-> Task :lib:copyAndroidAndroidArm64Debug
-> Task :lib:findDynamicLibrariesAndroidArmV7Debug
-> Task :lib:copyAndroidAndroidArmV7Debug
-> Task :lib:mergeDebugJniLibFolders
-> Task :lib:mergeDebugNativeLibs
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:kspDebugKotlin
+> Task :lib:cargoBuildAndroidArm64Debug
 > Task :app:compileDebugKotlin
-> Task :lib:copyDebugJniLibsProjectOnly
-> Task :app:mergeDebugNativeLibs
-
-> Task :app:stripDebugDebugSymbols
-Unable to strip the following libraries, packaging them as they are: libjnidispatch.so.
+> Task :lib:cargoBuildAndroidArm64Debug UP-TO-DATE
+> Task :lib:findDynamicLibrariesAndroidArm64Debug UP-TO-DATE
+> Task :lib:copyAndroidAndroidArm64Debug UP-TO-DATE
+> Task :lib:findDynamicLibrariesAndroidArmV7Debug UP-TO-DATE
+> Task :lib:copyAndroidAndroidArmV7Debug UP-TO-DATE
+> Task :lib:mergeDebugJniLibFolders UP-TO-DATE
+> Task :lib:mergeDebugNativeLibs UP-TO-DATE
+> Task :lib:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
 
 > Task :app:compileDebugKotlin
 w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/backup/BackupViewModel.kt:8:8 'class GoogleSignInAccount : AbstractSafeParcelable, ReflectedParcelable' is deprecated. Deprecated in Java.
@@ -138,15 +135,15 @@ w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/a
 w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:139:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
 w: file:///C:/Users/tanma/Downloads/Zero-Assist/app/src/main/java/com/zeroclaw/android/viewmodel/DaemonViewModel.kt:154:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
 
-> Task :app:compileDebugJavaWithJavac
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
-> Task :app:processDebugJavaRes
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:mergeProjectDexDebug
-> Task :app:mergeDebugJavaResource
 > Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 8m 44s
-68 actionable tasks: 21 executed, 47 up-to-date
+BUILD SUCCESSFUL in 19m 6s
+68 actionable tasks: 6 executed, 62 up-to-date

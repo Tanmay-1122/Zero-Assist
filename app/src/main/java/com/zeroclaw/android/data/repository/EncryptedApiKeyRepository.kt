@@ -47,21 +47,27 @@ class EncryptedApiKeyRepository(
     private val ioScope: CoroutineScope? = null,
     prefsOverride: SharedPreferences? = null,
 ) : ApiKeyRepository {
+    // Phase 1: keystore-backed prefs are created lazily instead of in init.
+    // The constructor previously ran SecurePrefsProvider.create() synchronously,
+    // stalling whichever thread built the repository (main thread at app start).
+    // First access now happens on Dispatchers.IO via the key-load coroutine
+    // below; SYNCHRONIZED keeps a main-thread race correct (single blocking
+    // init) without crashing.
+    private val prefsInit: Lazy<Pair<SharedPreferences, StorageHealth>> =
+        lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+            if (prefsOverride != null) {
+                prefsOverride to StorageHealth.Healthy
+            } else {
+                requireNotNull(context) { "context required when prefsOverride is null" }
+                SecurePrefsProvider.create(context, PREFS_NAME)
+            }
+        }
+
     override val storageHealth: StorageHealth
+        get() = prefsInit.value.second
 
     private val prefs: SharedPreferences
-
-    init {
-        if (prefsOverride != null) {
-            prefs = prefsOverride
-            storageHealth = StorageHealth.Healthy
-        } else {
-            requireNotNull(context) { "context required when prefsOverride is null" }
-            val (created, health) = SecurePrefsProvider.create(context, PREFS_NAME)
-            prefs = created
-            storageHealth = health
-        }
-    }
+        get() = prefsInit.value.first
 
     private val _corruptKeyCount = MutableStateFlow(0)
     override val corruptKeyCount: StateFlow<Int> = _corruptKeyCount.asStateFlow()

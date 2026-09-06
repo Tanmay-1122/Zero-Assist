@@ -10,6 +10,7 @@ package com.zeroclaw.android
 
 import android.app.Application
 import android.content.Context
+import android.os.StrictMode
 import android.os.SystemClock
 import android.system.ErrnoException
 import android.system.Os
@@ -656,6 +657,25 @@ class ZeroClawApplication :
 
     override fun onCreate() {
         super.onCreate()
+        // Phase 0 (measure only): log main-thread IO in debug builds so we can
+        // find startup jank. Log-only — never crashes or changes behavior.
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork()
+                    .detectCustomSlowCalls()
+                    .penaltyLog()
+                    .build(),
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build(),
+            )
+        }
         AppStartupTrace.section("workmanager_initialize") {
             WorkManager.initialize(this, workManagerConfiguration)
         }
@@ -679,6 +699,13 @@ class ZeroClawApplication :
         // All heavy I/O (native library loading, web asset extraction, sandbox server
         // startup) is moved to a background thread to prevent ANR under memory pressure.
         ioScope.launch {
+            // Phase 1: seed the default workspace off the main thread.
+            // Previously DataStoreWorkspaceRepository.init did this via
+            // runBlocking on the constructing (main) thread. Readers observe
+            // Flows, so they pick up the seed reactively when it lands.
+            AppStartupTrace.suspendSection("workspace_ensure_default") {
+                workspaceRepository.ensureDefaultWorkspace()
+            }
             AppStartupTrace.section("native_runtime_gate_create") {
                 nativeRuntimeGate = NativeRuntimeGate()
             }

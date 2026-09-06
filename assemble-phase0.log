@@ -1,0 +1,86 @@
+> Task :lib:preBuild UP-TO-DATE
+> Task :lib:preDebugBuild UP-TO-DATE
+> Task :lib:writeDebugAarMetadata UP-TO-DATE
+> Task :app:ensureProotBinaries
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :lib:generateDebugResValues UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :lib:generateDebugResources UP-TO-DATE
+> Task :lib:packageDebugResources UP-TO-DATE
+> Task :lib:extractDeepLinksDebug UP-TO-DATE
+> Task :lib:processDebugManifest UP-TO-DATE
+> Task :lib:compileDebugLibraryResources UP-TO-DATE
+> Task :lib:parseDebugLocalResources UP-TO-DATE
+> Task :lib:generateDebugRFile UP-TO-DATE
+> Task :lib:rustUpTargetAddAndroidArmV7 UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :lib:cargoBuildAndroidArmV7Debug
+> Task :lib:cargoBuildAndroidArmV7Debug UP-TO-DATE
+> Task :lib:installUniffiBindgen UP-TO-DATE
+> Task :lib:mergeUniffiConfig UP-TO-DATE
+> Task :lib:buildUniffiBindings
+> Task :lib:buildUniffiBindings UP-TO-DATE
+> Task :lib:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lib:compileDebugKotlin UP-TO-DATE
+> Task :lib:javaPreCompileDebug UP-TO-DATE
+> Task :lib:compileDebugJavaWithJavac NO-SOURCE
+> Task :lib:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :lib:mergeDebugShaders UP-TO-DATE
+> Task :lib:compileDebugShaders NO-SOURCE
+> Task :lib:generateDebugAssets UP-TO-DATE
+> Task :lib:packageDebugAssets UP-TO-DATE
+> Task :lib:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :lib:processDebugJavaRes UP-TO-DATE
+> Task :lib:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :lib:rustUpTargetAddAndroidArm64 UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :lib:cargoBuildAndroidArm64Debug UP-TO-DATE
+> Task :lib:findDynamicLibrariesAndroidArm64Debug UP-TO-DATE
+> Task :lib:copyAndroidAndroidArm64Debug UP-TO-DATE
+> Task :lib:findDynamicLibrariesAndroidArmV7Debug
+> Task :lib:copyAndroidAndroidArmV7Debug UP-TO-DATE
+> Task :lib:mergeDebugJniLibFolders UP-TO-DATE
+> Task :lib:mergeDebugNativeLibs UP-TO-DATE
+> Task :lib:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 5m 40s
+68 actionable tasks: 5 executed, 63 up-to-date
